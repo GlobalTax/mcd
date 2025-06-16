@@ -40,6 +40,19 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
     return firstYearSales * Math.pow(1 + growthRate, yearIndex);
   };
 
+  // Función para calcular MISCELL con crecimiento por inflación
+  const calculateMiscellForYear = (yearIndex: number): number => {
+    if (yearIndex === 0) {
+      return yearlyData[0]?.miscell || 0;
+    }
+    
+    const firstYearMiscell = yearlyData[0]?.miscell || 0;
+    if (firstYearMiscell === 0) return 0;
+    
+    const inflationRate = inputs.inflationRate / 100;
+    return firstYearMiscell * Math.pow(1 + inflationRate, yearIndex);
+  };
+
   // Función para manejar cambios en inputs con formato
   const handleInputChange = (yearIndex: number, field: keyof YearlyData, value: string) => {
     // Remover puntos y convertir a número
@@ -73,7 +86,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
       <CardHeader className="bg-white">
         <CardTitle className="text-gray-900 font-manrope">Proyección Manual por Años ({inputs.remainingYears.toFixed(4)} años exactos)</CardTitle>
         <p className="text-sm text-gray-600 mt-2 font-manrope">
-          Introduce las ventas del primer año. Los años siguientes se calcularán automáticamente con el crecimiento del {inputs.growthRate}%.
+          Introduce las ventas del primer año y MISCELL del primer año. Los años siguientes se calcularán automáticamente con el crecimiento del {inputs.growthRate}% para ventas e inflación del {inputs.inflationRate}% para MISCELL.
         </p>
       </CardHeader>
       <CardContent className="bg-white font-manrope">
@@ -296,23 +309,30 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                 })}
               </tr>
               
-              {/* MISCELL row - Manual input in euros */}
+              {/* MISCELL row - Manual input for first year, auto-calculated with inflation for rest */}
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">MISCELL (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
                   const salesValue = calculateSalesForYear(i);
-                  const miscell = yearlyData[i]?.miscell || 0;
+                  const miscell = calculateMiscellForYear(i);
+                  const isFirstYear = i === 0;
                   
                   return (
                     <React.Fragment key={`miscell-${i}`}>
-                      <td className="border border-gray-300 p-1 bg-blue-50">
-                        <Input
-                          type="text"
-                          value={miscell > 0 ? formatNumber(miscell) : ''}
-                          onChange={(e) => handleInputChange(i, 'miscell', e.target.value)}
-                          placeholder="0"
-                          className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
-                        />
+                      <td className={`border border-gray-300 p-1 ${isFirstYear ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                        {isFirstYear ? (
+                          <Input
+                            type="text"
+                            value={yearlyData[0]?.miscell > 0 ? formatNumber(yearlyData[0].miscell) : ''}
+                            onChange={(e) => handleInputChange(i, 'miscell', e.target.value)}
+                            placeholder="0"
+                            className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
+                          />
+                        ) : (
+                          <div className="w-full text-right text-sm p-1 font-manrope text-gray-700">
+                            {miscell > 0 ? formatNumber(miscell) + ' €' : <span className="text-gray-400">0 €</span>}
+                          </div>
+                        )}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-white font-manrope">
                         {miscell > 0 && salesValue > 0 ? 
@@ -336,7 +356,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const depreciation = yearlyData[i]?.depreciation || 0;
                   const interest = yearlyData[i]?.interest || 0;
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
-                  const miscell = yearlyData[i]?.miscell || 0;
+                  const miscell = calculateMiscellForYear(i);
                   const totalNonControllables = rentAmount + serviceFees + depreciation + interest + rentIndex + miscell;
                   
                   return (
@@ -368,7 +388,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const depreciation = yearlyData[i]?.depreciation || 0;
                   const interest = yearlyData[i]?.interest || 0;
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
-                  const miscell = yearlyData[i]?.miscell || 0;
+                  const miscell = calculateMiscellForYear(i);
                   const totalNonControllables = rentAmount + serviceFees + depreciation + interest + rentIndex + miscell;
                   const soi = pacAmount - totalNonControllables;
                   
@@ -457,7 +477,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const rentAmount = salesValue * rentPercentage / 100;
                   const serviceFees = salesValue * 0.05; // Fixed 5%
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
-                  const miscell = yearlyData[i]?.miscell || 0;
+                  const miscell = calculateMiscellForYear(i);
                   const loanPayment = yearlyData[i]?.loanPayment || 0;
                   const cashflow = pacAmount - rentAmount - serviceFees - rentIndex - miscell - loanPayment;
                   

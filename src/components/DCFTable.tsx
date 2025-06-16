@@ -87,6 +87,19 @@ const DCFTable = () => {
     });
   };
 
+  // Función para calcular MISCELL con crecimiento por inflación
+  const calculateMiscellForYear = (yearIndex: number): number => {
+    if (yearIndex === 0) {
+      return yearlyData[0]?.miscell || 0;
+    }
+    
+    const firstYearMiscell = yearlyData[0]?.miscell || 0;
+    if (firstYearMiscell === 0) return 0;
+    
+    const inflationRate = inputs.inflationRate / 100;
+    return firstYearMiscell * Math.pow(1 + inflationRate, yearIndex);
+  };
+
   // Función para calcular las ventas automáticamente
   const calculateSalesForYear = (yearIndex: number): number => {
     if (yearIndex === 0) {
@@ -125,9 +138,11 @@ const DCFTable = () => {
       // Calcular montos basados en las nuevas fórmulas:
       const pacAmount = salesValue * (yearData.pacPercentage || 0) / 100;
       const rentAmount = salesValue * (yearData.rentPercentage || 0) / 100;
+      const serviceFees = salesValue * 0.05; // Fixed 5%
+      const miscellAmount = calculateMiscellForYear(i);
       
       // CASHFLOW = PAC - RENT - SERVICE FEES - RENT INDEX - MISCELL - LOAN PAYMENT
-      const cashflow = pacAmount - rentAmount - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
+      const cashflow = pacAmount - rentAmount - serviceFees - yearData.rentIndex - miscellAmount - yearData.loanPayment;
       
       // CASH AFTER REINV = CASHFLOW - REINVERSION
       const cashAfterReinv = cashflow - yearData.reinversion;
