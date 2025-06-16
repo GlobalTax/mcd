@@ -87,6 +87,19 @@ const DCFTable = () => {
     });
   };
 
+  // Función para calcular las ventas automáticamente
+  const calculateSalesForYear = (yearIndex: number): number => {
+    if (yearIndex === 0) {
+      return yearlyData[0]?.sales || 0;
+    }
+    
+    const firstYearSales = yearlyData[0]?.sales || 0;
+    if (firstYearSales === 0) return 0;
+    
+    const growthRate = inputs.growthRate / 100;
+    return firstYearSales * Math.pow(1 + growthRate, yearIndex);
+  };
+
   // Calcular proyecciones con la nueva fórmula de cashflow
   const calculateProjections = (): ProjectionData[] => {
     if (yearlyData.length === 0) return [];
@@ -100,15 +113,18 @@ const DCFTable = () => {
       
       if (timeToNextYear <= 0) break;
       
-      // Solo calcular si hay datos introducidos
-      if (yearData.sales === 0) {
+      // Usar las ventas calculadas automáticamente
+      const salesValue = calculateSalesForYear(i);
+      
+      // Solo calcular si hay ventas para este año
+      if (salesValue === 0) {
         currentTime += timeToNextYear;
         continue;
       }
       
       // Calcular montos basados en las nuevas fórmulas:
-      const pacAmount = yearData.sales * (yearData.pacPercentage || 0) / 100;
-      const rentAmount = yearData.sales * (yearData.rentPercentage || 0) / 100;
+      const pacAmount = salesValue * (yearData.pacPercentage || 0) / 100;
+      const rentAmount = salesValue * (yearData.rentPercentage || 0) / 100;
       
       // CASHFLOW = PAC - RENT - SERVICE FEES - RENT INDEX - MISCELL - LOAN PAYMENT
       const cashflow = pacAmount - rentAmount - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
@@ -127,12 +143,18 @@ const DCFTable = () => {
       const discountTime = currentTime + timeToNextYear;
       const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
       
+      // Crear yearData actualizado con las ventas calculadas
+      const updatedYearData = {
+        ...yearData,
+        sales: salesValue
+      };
+      
       projections.push({
         year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
         cfValue,
         presentValue,
         timeToNextYear,
-        yearData
+        yearData: updatedYearData
       });
       
       currentTime += timeToNextYear;
