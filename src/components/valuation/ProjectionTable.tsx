@@ -98,11 +98,14 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               
               {/* P.A.C. row - Manual percentage, calculated amount */}
               <tr className="bg-white">
-                <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">P.A.C. (%)</td>
+                <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">P.A.C. (€)</td>
                 {yearlyData.map((yearData, i) => {
                   const pacAmount = yearData.sales * (yearData.pacPercentage || 0) / 100;
                   return (
                     <React.Fragment key={`pac-${i}`}>
+                      <td className="border border-gray-300 p-2 text-right bg-white font-manrope">
+                        {pacAmount > 0 ? formatNumber(pacAmount) + ' €' : <span className="text-gray-300">0 €</span>}
+                      </td>
                       <td className="border border-gray-300 p-1 bg-blue-50">
                         <Input
                           type="text"
@@ -112,9 +115,6 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                           className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
                         />
                       </td>
-                      <td className="border border-gray-300 p-2 text-right text-xs bg-white font-manrope">
-                        {pacAmount > 0 ? formatNumber(pacAmount) + ' €' : <span className="text-gray-300">0 €</span>}
-                      </td>
                     </React.Fragment>
                   );
                 })}
@@ -122,11 +122,14 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               
               {/* RENT row - Manual percentage, calculated amount */}
               <tr className="bg-white">
-                <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">RENT (%)</td>
+                <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">RENT (€)</td>
                 {yearlyData.map((yearData, i) => {
                   const rentAmount = yearData.sales * (yearData.rentPercentage || 0) / 100;
                   return (
                     <React.Fragment key={`rent-${i}`}>
+                      <td className="border border-gray-300 p-2 text-right bg-white font-manrope">
+                        {rentAmount > 0 ? formatNumber(rentAmount) + ' €' : <span className="text-gray-300">0 €</span>}
+                      </td>
                       <td className="border border-gray-300 p-1 bg-blue-50">
                         <Input
                           type="text"
@@ -135,9 +138,6 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                           placeholder="0"
                           className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
                         />
-                      </td>
-                      <td className="border border-gray-300 p-2 text-right text-xs bg-white font-manrope">
-                        {rentAmount > 0 ? formatNumber(rentAmount) + ' €' : <span className="text-gray-300">0 €</span>}
                       </td>
                     </React.Fragment>
                   );
