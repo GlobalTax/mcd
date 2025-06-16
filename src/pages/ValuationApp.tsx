@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant';
 import { FranchiseeSelector } from '@/components/FranchiseeSelector';
 import { RestaurantManager } from '@/components/RestaurantManager';
 import { RestaurantDataManager } from '@/components/RestaurantDataManager';
+import { RestaurantDashboard } from '@/components/RestaurantDashboard';
 import { ValuationForm } from '@/components/ValuationForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Database } from 'lucide-react';
@@ -13,7 +13,7 @@ export default function ValuationApp() {
   const [franchisees, setFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
   const [selectedFranchisee, setSelectedFranchisee] = useState<Franchisee | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [currentView, setCurrentView] = useState<'franchisees' | 'restaurants' | 'valuation' | 'dataManager'>('franchisees');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'franchisees' | 'restaurants' | 'valuation' | 'dataManager'>('dashboard');
 
   const handleAddFranchisee = (newFranchiseeData: Omit<Franchisee, 'id' | 'createdAt' | 'restaurants'>) => {
     const newFranchisee: Franchisee = {
@@ -55,6 +55,11 @@ export default function ValuationApp() {
 
   const handleSelectRestaurant = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant);
+    // Find the franchisee for this restaurant
+    const franchisee = franchisees.find(f => f.id === restaurant.franchiseeId);
+    if (franchisee) {
+      setSelectedFranchisee(franchisee);
+    }
     setCurrentView('valuation');
   };
 
@@ -92,13 +97,16 @@ export default function ValuationApp() {
 
   const handleBack = () => {
     if (currentView === 'valuation') {
-      setCurrentView('restaurants');
+      setCurrentView('dashboard');
       setSelectedRestaurant(null);
+      setSelectedFranchisee(null);
     } else if (currentView === 'restaurants') {
       setCurrentView('franchisees');
       setSelectedFranchisee(null);
     } else if (currentView === 'dataManager') {
-      setCurrentView('franchisees');
+      setCurrentView('dashboard');
+    } else if (currentView === 'franchisees') {
+      setCurrentView('dashboard');
     }
   };
 
@@ -108,7 +116,7 @@ export default function ValuationApp() {
         {/* Header moderno */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
-            {currentView !== 'franchisees' && (
+            {currentView !== 'dashboard' && (
               <Button 
                 variant="ghost" 
                 onClick={handleBack} 
@@ -128,33 +136,39 @@ export default function ValuationApp() {
                     McDonald's Valuation
                   </h1>
                   <p className="text-gray-600 font-medium">
-                    Professional Restaurant Valuation Tool
+                    Herramienta Profesional de Valoración de Restaurantes
                   </p>
                 </div>
               </div>
             </div>
-            {currentView === 'franchisees' && (
-              <Button 
-                onClick={() => setCurrentView('dataManager')}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6"
-              >
-                <Database className="w-4 h-4 mr-2" />
-                Panel Central
-              </Button>
+            {currentView === 'dashboard' && (
+              <div className="flex gap-3">
+                <Button 
+                  onClick={() => setCurrentView('dataManager')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6"
+                >
+                  <Database className="w-4 h-4 mr-2" />
+                  Panel Central
+                </Button>
+                <Button 
+                  onClick={() => setCurrentView('franchisees')}
+                  variant="outline"
+                  className="font-medium px-6"
+                >
+                  Gestionar Franquiciados
+                </Button>
+              </div>
             )}
           </div>
           
           {/* Breadcrumb moderno */}
           <div className="flex items-center text-sm text-gray-500 bg-white px-4 py-3 rounded-lg border border-gray-200">
             <span className="text-gray-700 font-medium">
-              {currentView === 'dataManager' ? 'Panel Central' : 'Franquiciados'}
+              {currentView === 'dashboard' ? 'Mis Restaurantes' : 
+               currentView === 'dataManager' ? 'Panel Central' : 
+               currentView === 'franchisees' ? 'Franquiciados' : 
+               selectedFranchisee ? selectedFranchisee.name : 'Dashboard'}
             </span>
-            {selectedFranchisee && currentView !== 'dataManager' && (
-              <>
-                <span className="mx-3 text-gray-300">/</span>
-                <span className="text-gray-700 font-medium">{selectedFranchisee.name}</span>
-              </>
-            )}
             {selectedRestaurant && (
               <>
                 <span className="mx-3 text-gray-300">/</span>
@@ -166,6 +180,13 @@ export default function ValuationApp() {
 
         {/* Content con fondo blanco */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          {currentView === 'dashboard' && (
+            <RestaurantDashboard
+              franchisees={franchisees}
+              onSelectRestaurant={handleSelectRestaurant}
+            />
+          )}
+
           {currentView === 'franchisees' && (
             <FranchiseeSelector
               franchisees={franchisees}
