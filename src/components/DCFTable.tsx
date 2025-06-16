@@ -77,11 +77,16 @@ const DCFTable = () => {
   const cashAfterReinv = cashflow; // Sin reinversión por ahora
   const cfLibre = cashAfterReinv + inputs.loanPayment;
 
-  // Proyección basada en años restantes del contrato
+  // Proyección basada en años restantes exactos del contrato
   const projections = [];
-  const yearsToProject = inputs.remainingYears > 0 ? Math.ceil(inputs.remainingYears) : 20; // Usar años restantes o 20 por defecto
+  const yearsToProject = inputs.remainingYears > 0 ? inputs.remainingYears : 20; // Usar años restantes exactos o 20 por defecto
   
-  for (let year = 1; year <= yearsToProject; year++) {
+  // Crear proyecciones para años completos y la fracción final
+  const fullYears = Math.floor(yearsToProject);
+  const remainingFraction = yearsToProject - fullYears;
+  
+  // Proyecciones para años completos
+  for (let year = 1; year <= fullYears; year++) {
     let cfValue;
     if (year === 1) {
       cfValue = cfLibre;
@@ -94,6 +99,24 @@ const DCFTable = () => {
     const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, year);
     projections.push({
       year,
+      cfValue,
+      presentValue
+    });
+  }
+  
+  // Si hay una fracción de año restante, calcular proporcionalmente
+  if (remainingFraction > 0) {
+    const finalYear = fullYears + 1;
+    const growthFactor = Math.pow(1 + inputs.growthRate / 100, finalYear - 1);
+    const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, finalYear - 1);
+    const fullYearCfValue = cfLibre * growthFactor * inflationFactor;
+    
+    // Calcular el flujo proporcional para la fracción del año
+    const cfValue = fullYearCfValue * remainingFraction;
+    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, finalYear);
+    
+    projections.push({
+      year: parseFloat(finalYear.toFixed(1)),
       cfValue,
       presentValue
     });
