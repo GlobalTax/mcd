@@ -13,6 +13,7 @@ export interface ValuationResult {
     soi: number;
     cashflow: number;
     freeCashFlow: number;
+    cashAfterReinv: number;
   }[];
 }
 
@@ -47,13 +48,14 @@ export function calculateRestaurantValuation(data: ValuationFormData): Valuation
     // CASHFLOW = S.O.I. + LOAN PAYMENT
     const cashflow = soi + (data.loanPayment * inflationFactor);
     
-    // CASH AFTER REINV (asumiendo 0% reinversión como en el Excel)
-    const cashAfterReinv = cashflow;
+    // CASH AFTER REINV = CASHFLOW - REINVERSION (asumiendo 0% reinversión como en el Excel)
+    const cashAfterReinv = cashflow; // Sin reinversión por ahora
     
     // CF LIBRE = CASH AFTER REINV + DEPRECIATION (ya que la depreciación es gasto no efectivo)
     const freeCashFlow = cashAfterReinv + (data.depreciation * inflationFactor);
     
-    projectedCashFlows.push(freeCashFlow);
+    // Usar CASH AFTER REINV para el cálculo del VNA (no Free Cash Flow)
+    projectedCashFlows.push(cashAfterReinv);
     
     yearlyProjections.push({
       year: 2024 + year,
@@ -63,16 +65,15 @@ export function calculateRestaurantValuation(data: ValuationFormData): Valuation
       serviceFees,
       soi,
       cashflow,
-      freeCashFlow
+      freeCashFlow,
+      cashAfterReinv
     });
   }
   
-  // Implementación de la fórmula VNA de Excel: =+VNA(C31;F28:INDICE(F28:F47;C29))
-  // Donde C31 es la tasa de descuento y los flujos van desde F28 hasta el índice calculado
+  // Implementación de la fórmula VNA usando CASH AFTER REINV
   const discountRate = data.discountRate / 100;
   
-  // VNA en Excel suma todos los flujos de caja descontados desde el período 1
-  // usando exactamente el número de años especificado
+  // VNA basado en CASH AFTER REINV
   let finalValuation = 0;
   for (let i = 0; i < years && i < projectedCashFlows.length; i++) {
     const presentValue = projectedCashFlows[i] / Math.pow(1 + discountRate, i + 1);
@@ -81,8 +82,8 @@ export function calculateRestaurantValuation(data: ValuationFormData): Valuation
   
   console.log('Años utilizados para el cálculo:', years);
   console.log('Tasa de descuento:', discountRate);
-  console.log('Flujos de caja proyectados:', projectedCashFlows);
-  console.log('VNA calculado (Precio):', finalValuation);
+  console.log('CASH AFTER REINV proyectados:', projectedCashFlows);
+  console.log('VNA calculado (Precio) basado en CASH AFTER REINV:', finalValuation);
   
   return {
     finalValuation,
