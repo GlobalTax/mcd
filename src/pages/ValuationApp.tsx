@@ -152,7 +152,7 @@ export default function ValuationApp() {
               <>
                 <span className="mx-3 text-gray-300">/</span>
                 <span className="text-red-600 font-medium">{selectedRestaurant.name}</span>
-              </div>
+              </>
             )}
           </div>
         </div>
