@@ -189,29 +189,20 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                 })}
               </tr>
               
-              {/* SERVICE FEES row - Manual input in euros */}
+              {/* SERVICE FEES row - Fixed 5% calculation */}
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">SERVICE FEES (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
                   const salesValue = calculateSalesForYear(i);
-                  const serviceFees = yearlyData[i]?.serviceFees || 0;
+                  const serviceFees = salesValue * 0.05; // Fixed 5%
                   
                   return (
                     <React.Fragment key={`serviceFees-${i}`}>
-                      <td className="border border-gray-300 p-1 bg-blue-50">
-                        <Input
-                          type="text"
-                          value={serviceFees > 0 ? formatNumber(serviceFees) : ''}
-                          onChange={(e) => handleInputChange(i, 'serviceFees', e.target.value)}
-                          placeholder="0"
-                          className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
-                        />
+                      <td className="border border-gray-300 p-2 text-right bg-gray-50 font-manrope">
+                        {serviceFees > 0 ? formatNumber(serviceFees) + ' €' : <span className="text-gray-300">0 €</span>}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-white font-manrope">
-                        {serviceFees > 0 && salesValue > 0 ? 
-                          formatPercentage((serviceFees / salesValue) * 100) : 
-                          <span className="text-gray-300">0%</span>
-                        }
+                        {salesValue > 0 ? formatPercentage(5) : <span className="text-gray-300">5%</span>}
                       </td>
                     </React.Fragment>
                   );
@@ -341,7 +332,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const salesValue = calculateSalesForYear(i);
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
                   const rentAmount = salesValue * rentPercentage / 100;
-                  const serviceFees = yearlyData[i]?.serviceFees || 0;
+                  const serviceFees = salesValue * 0.05; // Fixed 5%
                   const depreciation = yearlyData[i]?.depreciation || 0;
                   const interest = yearlyData[i]?.interest || 0;
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
@@ -373,7 +364,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const pacAmount = salesValue * pacPercentage / 100;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
                   const rentAmount = salesValue * rentPercentage / 100;
-                  const serviceFees = yearlyData[i]?.serviceFees || 0;
+                  const serviceFees = salesValue * 0.05; // Fixed 5%
                   const depreciation = yearlyData[i]?.depreciation || 0;
                   const interest = yearlyData[i]?.interest || 0;
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
@@ -464,7 +455,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const pacAmount = salesValue * pacPercentage / 100;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
                   const rentAmount = salesValue * rentPercentage / 100;
-                  const serviceFees = yearlyData[i]?.serviceFees || 0;
+                  const serviceFees = salesValue * 0.05; // Fixed 5%
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
                   const miscell = yearlyData[i]?.miscell || 0;
                   const loanPayment = yearlyData[i]?.loanPayment || 0;
