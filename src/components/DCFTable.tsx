@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -76,9 +77,11 @@ const DCFTable = () => {
   const cashAfterReinv = cashflow; // Sin reinversión por ahora
   const cfLibre = cashAfterReinv + inputs.loanPayment;
 
-  // Proyección de 20 años
+  // Proyección basada en años restantes del contrato
   const projections = [];
-  for (let year = 1; year <= 20; year++) {
+  const yearsToProject = inputs.remainingYears > 0 ? Math.ceil(inputs.remainingYears) : 20; // Usar años restantes o 20 por defecto
+  
+  for (let year = 1; year <= yearsToProject; year++) {
     let cfValue;
     if (year === 1) {
       cfValue = cfLibre;
@@ -397,6 +400,9 @@ const DCFTable = () => {
                 {formatCurrency(totalPrice)}
               </p>
               <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
+              <p className="text-xs text-gray-500 mt-1">
+                ({yearsToProject} años de proyección)
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -418,10 +424,10 @@ const DCFTable = () => {
         </Card>
       </div>
 
-      {/* Proyección completa de 20 años */}
+      {/* Proyección completa */}
       <Card>
         <CardHeader>
-          <CardTitle>Desglose CF (20 años)</CardTitle>
+          <CardTitle>Desglose CF ({yearsToProject} años)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="max-h-96 overflow-y-auto">
