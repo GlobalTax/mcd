@@ -28,7 +28,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <th className="border border-gray-300 p-2 text-left font-bold bg-gray-50">Concepto</th>
                 {Array.from({ length: yearsCount }, (_, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`year-${i}`}>
                     <th className="border border-gray-300 p-2 text-center font-bold bg-gray-50">
                       Año {i + 1}
                       {i === yearsCount - 1 && inputs.remainingYears % 1 !== 0 && (
@@ -48,7 +48,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-blue-50">
                 <td className="border border-gray-300 p-2 font-semibold">SALES</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`sales-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -66,7 +66,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-yellow-50">
                 <td className="border border-gray-300 p-2 font-semibold">P.A.C.</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`pac-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -84,7 +84,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">RENT</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`rent-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -102,7 +102,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">SERVICE FEES</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`serviceFees-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -120,7 +120,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">DEPRECIATION</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`depreciation-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -138,7 +138,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">INTEREST</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`interest-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -156,7 +156,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">RENT INDEX</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`rentIndex-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -174,7 +174,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">MISCELL</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`miscell-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -192,7 +192,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <td className="border border-gray-300 p-2">LOAN PAYMENT</td>
                 {yearlyData.map((yearData, i) => (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={`loanPayment-${i}`}>
                     <td className="border border-gray-300 p-1">
                       <Input
                         type="number"
@@ -213,7 +213,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const yearCashAfterReinv = yearData.pac - yearData.rent - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
                   const yearCfLibre = yearCashAfterReinv + yearData.loanPayment;
                   return (
-                    <React.Fragment key={i}>
+                    <React.Fragment key={`cfLibre-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold">
                         {formatCurrency(yearCfLibre)}
                       </td>
