@@ -100,70 +100,83 @@ export default function ValuationApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Header moderno */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-6">
             {currentView !== 'franchisees' && (
-              <Button variant="ghost" onClick={handleBack} className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={handleBack} 
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 Volver
               </Button>
             )}
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                Sistema de Valoración McDonald's
-              </h1>
-              <p className="text-lg text-gray-600">
-                Herramienta profesional para valoración de restaurantes
-              </p>
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">M</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    McDonald's Valuation
+                  </h1>
+                  <p className="text-gray-600 font-medium">
+                    Professional Restaurant Valuation Tool
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
           
-          {/* Breadcrumb */}
-          <div className="text-sm text-gray-500">
-            <span>Franquiciados</span>
+          {/* Breadcrumb moderno */}
+          <div className="flex items-center text-sm text-gray-500 bg-white px-4 py-3 rounded-lg border border-gray-200">
+            <span className="text-gray-700 font-medium">Franquiciados</span>
             {selectedFranchisee && (
               <>
-                <span className="mx-2">→</span>
-                <span>{selectedFranchisee.name}</span>
+                <span className="mx-3 text-gray-300">/</span>
+                <span className="text-gray-700 font-medium">{selectedFranchisee.name}</span>
               </>
             )}
             {selectedRestaurant && (
               <>
-                <span className="mx-2">→</span>
-                <span>{selectedRestaurant.name}</span>
+                <span className="mx-3 text-gray-300">/</span>
+                <span className="text-red-600 font-medium">{selectedRestaurant.name}</span>
               </>
             )}
           </div>
         </div>
 
-        {/* Content */}
-        {currentView === 'franchisees' && (
-          <FranchiseeSelector
-            franchisees={franchisees}
-            selectedFranchisee={selectedFranchisee}
-            onSelectFranchisee={handleSelectFranchisee}
-            onAddFranchisee={handleAddFranchisee}
-          />
-        )}
+        {/* Content con fondo blanco */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          {currentView === 'franchisees' && (
+            <FranchiseeSelector
+              franchisees={franchisees}
+              selectedFranchisee={selectedFranchisee}
+              onSelectFranchisee={handleSelectFranchisee}
+              onAddFranchisee={handleAddFranchisee}
+            />
+          )}
 
-        {currentView === 'restaurants' && selectedFranchisee && (
-          <RestaurantManager
-            franchisee={selectedFranchisee}
-            onAddRestaurant={handleAddRestaurant}
-            onSelectRestaurant={handleSelectRestaurant}
-            selectedRestaurant={selectedRestaurant}
-          />
-        )}
+          {currentView === 'restaurants' && selectedFranchisee && (
+            <RestaurantManager
+              franchisee={selectedFranchisee}
+              onAddRestaurant={handleAddRestaurant}
+              onSelectRestaurant={handleSelectRestaurant}
+              selectedRestaurant={selectedRestaurant}
+            />
+          )}
 
-        {currentView === 'valuation' && selectedRestaurant && (
-          <ValuationForm
-            restaurant={selectedRestaurant}
-            onSaveValuation={handleSaveValuation}
-          />
-        )}
+          {currentView === 'valuation' && selectedRestaurant && (
+            <ValuationForm
+              restaurant={selectedRestaurant}
+              onSaveValuation={handleSaveValuation}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
