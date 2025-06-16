@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,13 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
     const endDate = `15-jun-${endYear.toString().slice(-2)}`;
     
     return `${startDate} / ${endDate}`;
+  };
+
+  // Función para manejar cambios en inputs con formato
+  const handleInputChange = (yearIndex: number, field: keyof YearlyData, value: string) => {
+    // Remover puntos y convertir a número
+    const numericValue = parseFloat(value.replace(/\./g, '')) || 0;
+    onYearlyDataChange(yearIndex, field, numericValue);
   };
 
   return (
@@ -66,9 +74,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`sales-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.sales}
-                        onChange={(e) => onYearlyDataChange(i, 'sales', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.sales)}
+                        onChange={(e) => handleInputChange(i, 'sales', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -86,9 +94,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`pac-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.pac}
-                        onChange={(e) => onYearlyDataChange(i, 'pac', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.pac)}
+                        onChange={(e) => handleInputChange(i, 'pac', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -106,9 +114,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`rent-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.rent}
-                        onChange={(e) => onYearlyDataChange(i, 'rent', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.rent)}
+                        onChange={(e) => handleInputChange(i, 'rent', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -126,9 +134,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`serviceFees-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.serviceFees}
-                        onChange={(e) => onYearlyDataChange(i, 'serviceFees', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.serviceFees)}
+                        onChange={(e) => handleInputChange(i, 'serviceFees', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -146,9 +154,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`depreciation-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.depreciation}
-                        onChange={(e) => onYearlyDataChange(i, 'depreciation', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.depreciation)}
+                        onChange={(e) => handleInputChange(i, 'depreciation', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -166,9 +174,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`interest-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.interest}
-                        onChange={(e) => onYearlyDataChange(i, 'interest', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.interest)}
+                        onChange={(e) => handleInputChange(i, 'interest', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -186,9 +194,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`rentIndex-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.rentIndex}
-                        onChange={(e) => onYearlyDataChange(i, 'rentIndex', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.rentIndex)}
+                        onChange={(e) => handleInputChange(i, 'rentIndex', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -206,9 +214,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`miscell-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.miscell}
-                        onChange={(e) => onYearlyDataChange(i, 'miscell', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.miscell)}
+                        onChange={(e) => handleInputChange(i, 'miscell', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
@@ -263,9 +271,9 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   <React.Fragment key={`loanPayment-${i}`}>
                     <td className="border border-gray-300 p-1 bg-green-100">
                       <Input
-                        type="number"
-                        value={yearData.loanPayment}
-                        onChange={(e) => onYearlyDataChange(i, 'loanPayment', Number(e.target.value))}
+                        type="text"
+                        value={formatNumber(yearData.loanPayment)}
+                        onChange={(e) => handleInputChange(i, 'loanPayment', e.target.value)}
                         className="w-full text-right text-sm border-0 bg-transparent p-1"
                       />
                     </td>
