@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -121,6 +120,10 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
   const handleViewRestaurant = (restaurant: Restaurant & { franchiseeName: string }) => {
     // Navigate to the restaurant's dedicated page
     window.open(`/restaurant/${restaurant.siteNumber}`, '_blank');
+  };
+
+  const handleNavigateToDemo = () => {
+    window.open('/demo', '_blank');
   };
 
   const formatNumber = (value: number | undefined | null): string => {
@@ -440,20 +443,11 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleValuationClick(restaurant)}
+                          onClick={handleNavigateToDemo}
                           className="text-blue-600 hover:text-blue-900 hover:bg-blue-100 font-manrope"
                           title="Ir a Valoración"
                         >
                           <TrendingUp className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewRestaurant(restaurant)}
-                          className="text-green-600 hover:text-green-900 hover:bg-green-100 font-manrope"
-                          title="Ver Detalles"
-                        >
-                          <MapPin className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
