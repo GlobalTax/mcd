@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
-import { calculateRemainingYears } from '@/utils/valuationUtils';
+import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
 import FranchiseInfo from './valuation/FranchiseInfo';
 import BaseYearTable from './valuation/BaseYearTable';
 import ProjectionTable from './valuation/ProjectionTable';
