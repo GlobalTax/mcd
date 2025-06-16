@@ -31,6 +31,7 @@ const FranchiseInfo = ({ inputs, onInputChange }: FranchiseInfoProps) => {
             <Input
               type="date"
               value={inputs.franchiseEndDate}
+              max="2100-12-31"
               onChange={(e) => onInputChange('franchiseEndDate', e.target.value)}
               className="w-full"
             />
