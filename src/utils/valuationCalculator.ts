@@ -17,6 +17,7 @@ export interface ValuationResult {
 }
 
 export function calculateRestaurantValuation(data: ValuationFormData): ValuationResult {
+  // Usar directamente el número de años especificado
   const years = data.yearsRemaining;
   const projectedCashFlows: number[] = [];
   const yearlyProjections = [];
@@ -67,16 +68,18 @@ export function calculateRestaurantValuation(data: ValuationFormData): Valuation
   }
   
   // Implementación de la fórmula VNA de Excel: =+VNA(C31;F28:INDICE(F28:F47;C29))
-  // Donde C31 es la tasa de descuento y F28:F47 son los flujos de caja
+  // Donde C31 es la tasa de descuento y los flujos van desde F28 hasta el índice calculado
   const discountRate = data.discountRate / 100;
   
   // VNA en Excel suma todos los flujos de caja descontados desde el período 1
+  // usando exactamente el número de años especificado
   let finalValuation = 0;
-  for (let i = 0; i < projectedCashFlows.length; i++) {
+  for (let i = 0; i < years && i < projectedCashFlows.length; i++) {
     const presentValue = projectedCashFlows[i] / Math.pow(1 + discountRate, i + 1);
     finalValuation += presentValue;
   }
   
+  console.log('Años utilizados para el cálculo:', years);
   console.log('Tasa de descuento:', discountRate);
   console.log('Flujos de caja proyectados:', projectedCashFlows);
   console.log('VNA calculado (Precio):', finalValuation);
