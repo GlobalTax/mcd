@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +29,7 @@ const defaultStyles: TableStyles = {
   editableCellBg: '#dbeafe',
   borderColor: '#d1d5db',
   fontSize: '14px',
-  fontFamily: 'Inter, system-ui, sans-serif'
+  fontFamily: 'Manrope, Inter, system-ui, sans-serif'
 };
 
 const TableStyleEditor = ({ styles, onStylesChange }: TableStyleEditorProps) => {
@@ -213,6 +212,7 @@ const TableStyleEditor = ({ styles, onStylesChange }: TableStyleEditorProps) => 
                 onChange={(e) => handleStyleChange('fontFamily', e.target.value)}
                 className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md"
               >
+                <option value="Manrope, Inter, system-ui, sans-serif">Manrope</option>
                 <option value="Inter, system-ui, sans-serif">Inter</option>
                 <option value="system-ui, sans-serif">System UI</option>
                 <option value="Arial, sans-serif">Arial</option>
