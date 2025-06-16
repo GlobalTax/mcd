@@ -3,7 +3,17 @@ export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('es-ES', {
     style: 'decimal',
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
+    useGrouping: true
+  }).format(value) + ' €';
+};
+
+export const formatNumber = (value: number) => {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    useGrouping: true
   }).format(value);
 };
 

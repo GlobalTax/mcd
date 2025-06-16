@@ -137,11 +137,11 @@ export function NotionTable() {
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
+      style: 'decimal',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+      maximumFractionDigits: 0,
+      useGrouping: true
+    }).format(value) + ' €';
   };
 
   const formatYear = (year: number) => {

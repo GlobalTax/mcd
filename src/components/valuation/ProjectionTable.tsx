@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ValuationInputs, YearlyData } from '@/types/valuation';
-import { formatCurrency, formatPercentage } from '@/utils/valuationUtils';
+import { formatNumber, formatPercentage } from '@/utils/valuationUtils';
 
 interface ProjectionTableProps {
   inputs: ValuationInputs;
@@ -228,7 +227,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   return (
                     <React.Fragment key={`totalNonControllables-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold bg-green-100">
-                        {formatCurrency(totalNonControllables)}
+                        {formatNumber(totalNonControllables)}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-green-100">
                         {formatPercentage((totalNonControllables / yearData.sales) * 100)}
@@ -247,7 +246,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   return (
                     <React.Fragment key={`soi-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold bg-green-100">
-                        {formatCurrency(soi)}
+                        {formatNumber(soi)}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-green-100 font-bold">
                         {formatPercentage((soi / yearData.sales) * 100)}
@@ -287,7 +286,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   return (
                     <React.Fragment key={`cashflow-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold bg-green-100">
-                        {formatCurrency(cashflow)}
+                        {formatNumber(cashflow)}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-green-100 font-bold">
                         {formatPercentage((cashflow / yearData.sales) * 100)}
@@ -323,7 +322,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   return (
                     <React.Fragment key={`cashAfterReinv-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold bg-green-100">
-                        {formatCurrency(cashAfterReinv)}
+                        {formatNumber(cashAfterReinv)}
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-green-100 font-bold">
                         {formatPercentage((cashAfterReinv / yearData.sales) * 100)}
