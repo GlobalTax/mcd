@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
@@ -39,6 +38,24 @@ const DCFTable = () => {
     franchiseEndDate: '',
     remainingYears: 0
   });
+
+  // Calcular años restantes automáticamente cuando cambien las fechas
+  useEffect(() => {
+    if (inputs.changeDate && inputs.franchiseEndDate) {
+      const changeDate = new Date(inputs.changeDate);
+      const endDate = new Date(inputs.franchiseEndDate);
+      
+      if (endDate > changeDate) {
+        const diffTime = endDate.getTime() - changeDate.getTime();
+        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25); // Considerar años bisiestos
+        
+        setInputs(prev => ({
+          ...prev,
+          remainingYears: Math.round(diffYears * 10) / 10 // Redondear a 1 decimal
+        }));
+      }
+    }
+  }, [inputs.changeDate, inputs.franchiseEndDate]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -130,8 +147,9 @@ const DCFTable = () => {
                 type="number"
                 step="0.1"
                 value={inputs.remainingYears}
-                onChange={(e) => handleInputChange('remainingYears', Number(e.target.value))}
-                className="w-full"
+                readOnly
+                className="w-full bg-gray-100"
+                title="Se calcula automáticamente basado en las fechas"
               />
             </div>
           </div>
