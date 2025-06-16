@@ -1,5 +1,5 @@
 
-import { DCFTable } from "@/components/DCFTable";
+import DCFTable from "@/components/DCFTable";
 
 const Index = () => {
   return <DCFTable />;
