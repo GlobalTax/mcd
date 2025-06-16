@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -441,6 +442,7 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                           size="sm"
                           onClick={() => handleValuationClick(restaurant)}
                           className="text-blue-600 hover:text-blue-900 hover:bg-blue-100 font-manrope"
+                          title="Ir a Valoración"
                         >
                           <TrendingUp className="w-4 h-4" />
                         </Button>
@@ -449,6 +451,7 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                           size="sm"
                           onClick={() => handleViewRestaurant(restaurant)}
                           className="text-green-600 hover:text-green-900 hover:bg-green-100 font-manrope"
+                          title="Ver Detalles"
                         >
                           <MapPin className="w-4 h-4" />
                         </Button>
