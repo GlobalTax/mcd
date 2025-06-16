@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -51,10 +52,10 @@ const DCFTable = () => {
     return `${value.toFixed(decimals)}%`;
   };
 
-  // Cálculos principales - CORRIGIENDO S.O.I.
+  // Cálculos principales
   const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
   const soi = inputs.pac - totalNonControllables; // S.O.I. = P.A.C. - TOTAL NON-CONTROLLABLES
-  const cashflow = soi - inputs.loanPayment;
+  const cashflow = inputs.pac - inputs.rent - inputs.serviceFees - inputs.rentIndex - inputs.miscell - inputs.loanPayment; // CASHFLOW corregido
   const cashAfterReinv = cashflow; // Sin reinversión por ahora
   const cfLibre = cashAfterReinv + inputs.loanPayment;
 
