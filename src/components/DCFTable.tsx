@@ -151,48 +151,50 @@ const DCFTable = () => {
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
   return (
-    <div className="space-y-6 p-6 max-w-full mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Valoración Rte. PARC CENTRAL
-        </h1>
-        <p className="text-gray-600">
-          Modelo de valoración por flujo de caja descontado (Entrada manual por años)
-        </p>
-      </div>
+    <div className="font-manrope bg-white min-h-screen">
+      <div className="space-y-6 p-6 max-w-full mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Valoración Rte. PARC CENTRAL
+          </h1>
+          <p className="text-gray-600">
+            Modelo de valoración por flujo de caja descontado (Entrada manual por años)
+          </p>
+        </div>
 
-      <FranchiseInfo 
-        inputs={inputs} 
-        onInputChange={handleInputChange}
-      />
-
-      <BaseYearTable 
-        inputs={inputs} 
-        onInputChange={handleInputChange}
-      />
-
-      <ProjectionTable 
-        inputs={inputs}
-        yearlyData={yearlyData}
-        onYearlyDataChange={handleYearlyDataChange}
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ValuationParameters 
+        <FranchiseInfo 
           inputs={inputs} 
           onInputChange={handleInputChange}
         />
 
-        <ValuationResult 
+        <BaseYearTable 
+          inputs={inputs} 
+          onInputChange={handleInputChange}
+        />
+
+        <ProjectionTable 
+          inputs={inputs}
+          yearlyData={yearlyData}
+          onYearlyDataChange={handleYearlyDataChange}
+        />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ValuationParameters 
+            inputs={inputs} 
+            onInputChange={handleInputChange}
+          />
+
+          <ValuationResult 
+            totalPrice={totalPrice}
+            remainingYears={inputs.remainingYears}
+          />
+        </div>
+
+        <ProjectionSummary 
+          projections={projections}
           totalPrice={totalPrice}
-          remainingYears={inputs.remainingYears}
         />
       </div>
-
-      <ProjectionSummary 
-        projections={projections}
-        totalPrice={totalPrice}
-      />
     </div>
   );
 };
