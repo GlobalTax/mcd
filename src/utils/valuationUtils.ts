@@ -18,7 +18,7 @@ export const formatNumber = (value: number) => {
 };
 
 export const formatPercentage = (value: number, decimals: number = 2) => {
-  return `${value.toFixed(decimals)}%`;
+  return `${value.toFixed(decimals).replace('.', ',')}%`;
 };
 
 export const calculateRemainingYears = (changeDate: string, franchiseEndDate: string): number => {
