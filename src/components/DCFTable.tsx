@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -40,7 +39,7 @@ const DCFTable = () => {
     remainingYears: 0
   });
 
-  // Calcular años restantes automáticamente cuando cambien las fechas
+  // Calcular años restantes con máxima precisión
   useEffect(() => {
     if (inputs.changeDate && inputs.franchiseEndDate) {
       const changeDate = new Date(inputs.changeDate);
@@ -48,11 +47,13 @@ const DCFTable = () => {
       
       if (endDate > changeDate) {
         const diffTime = endDate.getTime() - changeDate.getTime();
-        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25); // Considerar años bisiestos
+        // Usar días exactos para máxima precisión
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        const diffYears = diffDays / 365.25; // Considerar años bisiestos con precisión
         
         setInputs(prev => ({
           ...prev,
-          remainingYears: Math.round(diffYears * 10) / 10 // Redondear a 1 decimal
+          remainingYears: Math.round(diffYears * 10000) / 10000 // Precisión a 4 decimales
         }));
       }
     }
@@ -77,49 +78,47 @@ const DCFTable = () => {
   const cashAfterReinv = cashflow; // Sin reinversión por ahora
   const cfLibre = cashAfterReinv + inputs.loanPayment;
 
-  // Proyección basada en años restantes exactos del contrato
+  // Proyección con máxima precisión temporal
   const projections = [];
-  const yearsToProject = inputs.remainingYears > 0 ? inputs.remainingYears : 20; // Usar años restantes exactos o 20 por defecto
+  const yearsToProject = inputs.remainingYears > 0 ? inputs.remainingYears : 20;
   
-  // Crear proyecciones para años completos y la fracción final
-  const fullYears = Math.floor(yearsToProject);
-  const remainingFraction = yearsToProject - fullYears;
+  // Dividir en períodos de tiempo exactos
+  let currentTime = 0;
+  let yearCounter = 1;
   
-  // Proyecciones para años completos
-  for (let year = 1; year <= fullYears; year++) {
+  while (currentTime < yearsToProject) {
+    const timeToNextYear = Math.min(1, yearsToProject - currentTime);
+    const effectiveYear = currentTime + (timeToNextYear / 2); // Punto medio del período para mejor aproximación
+    
     let cfValue;
-    if (year === 1) {
+    if (yearCounter === 1 && timeToNextYear === 1) {
+      // Primer año completo
       cfValue = cfLibre;
     } else {
-      const growthFactor = Math.pow(1 + inputs.growthRate / 100, year - 1);
-      const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, year - 1);
+      // Calcular factores basados en el tiempo efectivo transcurrido
+      const growthFactor = Math.pow(1 + inputs.growthRate / 100, effectiveYear);
+      const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, effectiveYear);
       cfValue = cfLibre * growthFactor * inflationFactor;
+      
+      // Si es una fracción de año, ajustar proporcionalmente
+      if (timeToNextYear < 1) {
+        cfValue = cfValue * timeToNextYear;
+      }
     }
     
-    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, year);
-    projections.push({
-      year,
-      cfValue,
-      presentValue
-    });
-  }
-  
-  // Si hay una fracción de año restante, calcular proporcionalmente
-  if (remainingFraction > 0) {
-    const finalYear = fullYears + 1;
-    const growthFactor = Math.pow(1 + inputs.growthRate / 100, finalYear - 1);
-    const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, finalYear - 1);
-    const fullYearCfValue = cfLibre * growthFactor * inflationFactor;
-    
-    // Calcular el flujo proporcional para la fracción del año
-    const cfValue = fullYearCfValue * remainingFraction;
-    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, finalYear);
+    // Descuento usando el tiempo exacto desde el inicio
+    const discountTime = currentTime + timeToNextYear;
+    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
     
     projections.push({
-      year: parseFloat(finalYear.toFixed(1)),
+      year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
       cfValue,
-      presentValue
+      presentValue,
+      timeToNextYear
     });
+    
+    currentTime += timeToNextYear;
+    yearCounter++;
   }
 
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
@@ -138,7 +137,7 @@ const DCFTable = () => {
           Valoración Rte. PARC CENTRAL
         </h1>
         <p className="text-gray-600">
-          Modelo de valoración por flujo de caja descontado
+          Modelo de valoración por flujo de caja descontado (Precisión máxima)
         </p>
       </div>
 
@@ -171,11 +170,11 @@ const DCFTable = () => {
               <label className="block text-sm font-medium mb-2">Años restantes contratos de franquicia</label>
               <Input
                 type="number"
-                step="0.1"
+                step="0.0001"
                 value={inputs.remainingYears}
                 readOnly
                 className="w-full bg-gray-100"
-                title="Se calcula automáticamente basado en las fechas"
+                title="Se calcula automáticamente con precisión de 4 decimales"
               />
             </div>
           </div>
@@ -383,7 +382,7 @@ const DCFTable = () => {
                 <span className="text-sm">Inflación:</span>
                 <Input
                   type="number"
-                  step="0.1"
+                  step="0.01"
                   value={inputs.inflationRate}
                   onChange={(e) => handleInputChange('inflationRate', Number(e.target.value))}
                   className="w-20 text-right text-sm"
@@ -393,7 +392,7 @@ const DCFTable = () => {
                 <span className="text-sm">Tasa de Descuento:</span>
                 <Input
                   type="number"
-                  step="0.1"
+                  step="0.01"
                   value={inputs.discountRate}
                   onChange={(e) => handleInputChange('discountRate', Number(e.target.value))}
                   className="w-20 text-right text-sm"
@@ -403,7 +402,7 @@ const DCFTable = () => {
                 <span className="text-sm">Crecimiento Ventas:</span>
                 <Input
                   type="number"
-                  step="0.1"
+                  step="0.01"
                   value={inputs.growthRate}
                   onChange={(e) => handleInputChange('growthRate', Number(e.target.value))}
                   className="w-20 text-right text-sm"
@@ -424,7 +423,7 @@ const DCFTable = () => {
               </p>
               <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
               <p className="text-xs text-gray-500 mt-1">
-                ({yearsToProject} años de proyección)
+                ({yearsToProject.toFixed(4)} años exactos)
               </p>
             </div>
           </CardContent>
@@ -432,13 +431,13 @@ const DCFTable = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Desglose CF (Primeros 5 años)</CardTitle>
+            <CardTitle>Desglose CF (Primeros períodos)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {projections.slice(0, 5).map(p => (
-                <div key={p.year} className="flex justify-between text-sm">
-                  <span>Año {p.year}</span>
+              {projections.slice(0, 5).map((p, index) => (
+                <div key={index} className="flex justify-between text-sm">
+                  <span>Período {p.year}</span>
                   <span>{formatCurrency(p.cfValue)}</span>
                 </div>
               ))}
@@ -450,17 +449,22 @@ const DCFTable = () => {
       {/* Proyección completa */}
       <Card>
         <CardHeader>
-          <CardTitle>Desglose CF ({yearsToProject} años)</CardTitle>
+          <CardTitle>Desglose CF Completo ({yearsToProject.toFixed(4)} años exactos)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="max-h-96 overflow-y-auto">
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
-              {projections.map(p => (
-                <div key={p.year} className="flex justify-between">
-                  <span>Año {p.year}</span>
-                  <span>{formatCurrency(p.cfValue)}</span>
+            <div className="grid grid-cols-1 gap-y-1 text-sm">
+              {projections.map((p, index) => (
+                <div key={index} className="flex justify-between border-b border-gray-100 py-1">
+                  <span className="flex-1">Período {p.year} ({(p.timeToNextYear * 12).toFixed(1)} meses)</span>
+                  <span className="flex-1 text-center">{formatCurrency(p.cfValue)}</span>
+                  <span className="flex-1 text-right text-gray-600">{formatCurrency(p.presentValue)}</span>
                 </div>
               ))}
+              <div className="flex justify-between font-bold border-t-2 border-gray-300 pt-2 mt-2">
+                <span>TOTAL VALOR PRESENTE:</span>
+                <span className="text-green-600">{formatCurrency(totalPrice)}</span>
+              </div>
             </div>
           </div>
         </CardContent>
