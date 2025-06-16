@@ -117,6 +117,11 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
     }
   };
 
+  const handleViewRestaurant = (restaurant: Restaurant & { franchiseeName: string }) => {
+    // Navigate to the restaurant's dedicated page
+    window.open(`/restaurant/${restaurant.siteNumber}`, '_blank');
+  };
+
   const formatNumber = (value: number | undefined | null): string => {
     if (value === undefined || value === null || isNaN(value)) {
       return '0';
@@ -438,6 +443,14 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                           className="text-blue-600 hover:text-blue-900 hover:bg-blue-100 font-manrope"
                         >
                           <TrendingUp className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewRestaurant(restaurant)}
+                          className="text-green-600 hover:text-green-900 hover:bg-green-100 font-manrope"
+                        >
+                          <MapPin className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
