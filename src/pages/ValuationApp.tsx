@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant';
@@ -149,13 +150,6 @@ export default function ValuationApp() {
                 >
                   <Database className="w-4 h-4 mr-2" />
                   Panel Central
-                </Button>
-                <Button 
-                  onClick={() => setCurrentView('franchisees')}
-                  variant="outline"
-                  className="font-medium px-6"
-                >
-                  Gestionar Franquiciados
                 </Button>
               </div>
             )}
