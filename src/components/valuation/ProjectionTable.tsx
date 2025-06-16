@@ -27,19 +27,6 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
     return `${startDate} / ${endDate}`;
   };
 
-  // Función para calcular las ventas automáticamente después del primer año
-  const calculateSalesForYear = (yearIndex: number): number => {
-    if (yearIndex === 0) {
-      return yearlyData[0]?.sales || 0;
-    }
-    
-    const firstYearSales = yearlyData[0]?.sales || 0;
-    if (firstYearSales === 0) return 0;
-    
-    const growthRate = inputs.growthRate / 100;
-    return firstYearSales * Math.pow(1 + growthRate, yearIndex);
-  };
-
   // Función para calcular MISCELL con crecimiento por inflación
   const calculateMiscellForYear = (yearIndex: number): number => {
     if (yearIndex === 0) {
@@ -58,13 +45,6 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
     // Remover puntos y convertir a número
     const numericValue = parseFloat(value.replace(/\./g, '')) || 0;
     onYearlyDataChange(yearIndex, field, numericValue);
-  };
-
-  // Función especial para manejar cambios en ventas del primer año
-  const handleSalesChange = (yearIndex: number, value: string) => {
-    if (yearIndex === 0) {
-      handleInputChange(yearIndex, 'sales', value);
-    }
   };
 
   // Función para manejar cambios en porcentajes con soporte para comas
@@ -86,7 +66,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
       <CardHeader className="bg-white">
         <CardTitle className="text-gray-900 font-manrope">Proyección Manual por Años ({inputs.remainingYears.toFixed(4)} años exactos)</CardTitle>
         <p className="text-sm text-gray-600 mt-2 font-manrope">
-          Introduce las ventas del primer año y MISCELL del primer año. Los años siguientes se calcularán automáticamente con el crecimiento del {inputs.growthRate}% para ventas e inflación del {inputs.inflationRate}% para MISCELL.
+          Introduce manualmente las ventas y MISCELL para cada año. MISCELL del primer año crecerá automáticamente con inflación del {inputs.inflationRate}% para los años siguientes.
         </p>
       </CardHeader>
       <CardContent className="bg-white font-manrope">
@@ -116,29 +96,22 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               </tr>
             </thead>
             <tbody className="bg-white font-manrope">
-              {/* SALES row - Manual input for first year, auto-calculated for rest */}
+              {/* SALES row - Manual input for ALL years */}
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">SALES (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
-                  const isFirstYear = i === 0;
+                  const salesValue = yearlyData[i]?.sales || 0;
                   
                   return (
                     <React.Fragment key={`sales-${i}`}>
-                      <td className={`border border-gray-300 p-1 ${isFirstYear ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                        {isFirstYear ? (
-                          <Input
-                            type="text"
-                            value={yearlyData[0]?.sales > 0 ? formatNumber(yearlyData[0].sales) : ''}
-                            onChange={(e) => handleSalesChange(i, e.target.value)}
-                            placeholder="0"
-                            className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
-                          />
-                        ) : (
-                          <div className="w-full text-right text-sm p-1 font-manrope text-gray-700">
-                            {salesValue > 0 ? formatNumber(salesValue) : <span className="text-gray-400">0</span>}
-                          </div>
-                        )}
+                      <td className="border border-gray-300 p-1 bg-blue-50">
+                        <Input
+                          type="text"
+                          value={salesValue > 0 ? formatNumber(salesValue) : ''}
+                          onChange={(e) => handleInputChange(i, 'sales', e.target.value)}
+                          placeholder="0"
+                          className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
+                        />
                       </td>
                       <td className="border border-gray-300 p-2 text-right text-xs bg-white font-manrope">
                         {salesValue > 0 ? formatPercentage(100) : <span className="text-gray-300">100%</span>}
@@ -152,7 +125,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">P.A.C. (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const pacPercentage = yearlyData[i]?.pacPercentage || 0;
                   const pacAmount = salesValue * pacPercentage / 100;
                   
@@ -179,7 +152,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">RENT (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
                   const rentAmount = salesValue * rentPercentage / 100;
                   
@@ -206,7 +179,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">SERVICE FEES (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const serviceFees = salesValue * 0.05; // Fixed 5%
                   
                   return (
@@ -226,7 +199,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">DEPRECIATION (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const depreciation = yearlyData[i]?.depreciation || 0;
                   
                   return (
@@ -255,7 +228,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">INTEREST (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const interest = yearlyData[i]?.interest || 0;
                   
                   return (
@@ -284,7 +257,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">RENT INDEX (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const rentIndex = yearlyData[i]?.rentIndex || 0;
                   
                   return (
@@ -313,7 +286,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">MISCELL (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const miscell = calculateMiscellForYear(i);
                   const isFirstYear = i === 0;
                   
@@ -349,7 +322,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">TOTAL NON-CONTROLLABLES</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
                   const rentAmount = salesValue * rentPercentage / 100;
                   const serviceFees = salesValue * 0.05; // Fixed 5%
@@ -379,7 +352,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">S.O.I.</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const pacPercentage = yearlyData[i]?.pacPercentage || 0;
                   const pacAmount = salesValue * pacPercentage / 100;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;
@@ -412,7 +385,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">LOAN PAYMENT (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const loanPayment = yearlyData[i]?.loanPayment || 0;
                   
                   return (
@@ -441,7 +414,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">REMODELACION / REINVERSION (€)</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const reinversion = yearlyData[i]?.reinversion || 0;
                   
                   return (
@@ -470,7 +443,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr className="bg-white font-bold">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-bold font-manrope">CASHFLOW</td>
                 {Array.from({ length: yearsCount }, (_, i) => {
-                  const salesValue = calculateSalesForYear(i);
+                  const salesValue = yearlyData[i]?.sales || 0;
                   const pacPercentage = yearlyData[i]?.pacPercentage || 0;
                   const pacAmount = salesValue * pacPercentage / 100;
                   const rentPercentage = yearlyData[i]?.rentPercentage || 0;

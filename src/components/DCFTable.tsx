@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
@@ -100,19 +101,6 @@ const DCFTable = () => {
     return firstYearMiscell * Math.pow(1 + inflationRate, yearIndex);
   };
 
-  // Función para calcular las ventas automáticamente
-  const calculateSalesForYear = (yearIndex: number): number => {
-    if (yearIndex === 0) {
-      return yearlyData[0]?.sales || 0;
-    }
-    
-    const firstYearSales = yearlyData[0]?.sales || 0;
-    if (firstYearSales === 0) return 0;
-    
-    const growthRate = inputs.growthRate / 100;
-    return firstYearSales * Math.pow(1 + growthRate, yearIndex);
-  };
-
   // Calcular proyecciones con la nueva fórmula de cashflow
   const calculateProjections = (): ProjectionData[] => {
     if (yearlyData.length === 0) return [];
@@ -126,8 +114,8 @@ const DCFTable = () => {
       
       if (timeToNextYear <= 0) break;
       
-      // Usar las ventas calculadas automáticamente
-      const salesValue = calculateSalesForYear(i);
+      // Usar las ventas manuales introducidas
+      const salesValue = yearData.sales || 0;
       
       // Solo calcular si hay ventas para este año
       if (salesValue === 0) {
@@ -158,18 +146,12 @@ const DCFTable = () => {
       const discountTime = currentTime + timeToNextYear;
       const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
       
-      // Crear yearData actualizado con las ventas calculadas
-      const updatedYearData = {
-        ...yearData,
-        sales: salesValue
-      };
-      
       projections.push({
         year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
         cfValue,
         presentValue,
         timeToNextYear,
-        yearData: updatedYearData
+        yearData
       });
       
       currentTime += timeToNextYear;
