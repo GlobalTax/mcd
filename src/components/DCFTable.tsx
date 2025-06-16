@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface ValuationInputs {
   sales: number;
@@ -89,117 +87,11 @@ const DCFTable = () => {
           Valoración Rte. PARC CENTRAL
         </h1>
         <p className="text-gray-600">
-          Modelo de valoración por flujo de caja descontado - Réplica exacta
+          Modelo de valoración por flujo de caja descontado
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Panel de Inputs */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-blue-700">Parámetros de Entrada</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="sales">Ventas (€)</Label>
-              <Input
-                id="sales"
-                type="number"
-                value={inputs.sales}
-                onChange={(e) => handleInputChange('sales', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="pac">P.A.C. (€)</Label>
-              <Input
-                id="pac"
-                type="number"
-                value={inputs.pac}
-                onChange={(e) => handleInputChange('pac', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="loanPayment">Pago Préstamo (€)</Label>
-              <Input
-                id="loanPayment"
-                type="number"
-                value={inputs.loanPayment}
-                onChange={(e) => handleInputChange('loanPayment', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="inflationRate">Inflación (%)</Label>
-              <Input
-                id="inflationRate"
-                type="number"
-                step="0.1"
-                value={inputs.inflationRate}
-                onChange={(e) => handleInputChange('inflationRate', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="discountRate">Tasa de Descuento (%)</Label>
-              <Input
-                id="discountRate"
-                type="number"
-                step="0.1"
-                value={inputs.discountRate}
-                onChange={(e) => handleInputChange('discountRate', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="growthRate">Crecimiento en Ventas (%)</Label>
-              <Input
-                id="growthRate"
-                type="number"
-                step="0.1"
-                value={inputs.growthRate}
-                onChange={(e) => handleInputChange('growthRate', Number(e.target.value))}
-                className="bg-blue-50"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Resultado Final */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-green-700">Precio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-5xl font-bold text-green-600">
-                {formatCurrency(totalPrice)}
-              </p>
-              <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Proyección 5 años */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">Desglose CF (Primeros 5 años)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {projections.slice(0, 5).map(p => (
-                <div key={p.year} className="flex justify-between">
-                  <span className="font-medium">Año {p.year}</span>
-                  <span>{formatCurrency(p.cfValue)}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabla Principal P&L */}
+      {/* Tabla Principal P&L con inputs editables */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL - 2024</CardTitle>
@@ -218,7 +110,14 @@ const DCFTable = () => {
               <tbody>
                 <tr className="bg-gray-50">
                   <td className="border border-gray-300 p-3 font-semibold">SALES</td>
-                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(inputs.sales)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.sales}
+                      onChange={(e) => handleInputChange('sales', Number(e.target.value))}
+                      className="text-right font-semibold border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">100,00%</td>
                 </tr>
                 <tr>
@@ -228,7 +127,14 @@ const DCFTable = () => {
                 </tr>
                 <tr className="bg-yellow-50">
                   <td className="border border-gray-300 p-3 font-semibold">P.A.C.</td>
-                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(inputs.pac)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.pac}
+                      onChange={(e) => handleInputChange('pac', Number(e.target.value))}
+                      className="text-right font-semibold border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((inputs.pac / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
@@ -238,32 +144,74 @@ const DCFTable = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">RENT</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.rent)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.rent}
+                      onChange={(e) => handleInputChange('rent', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.rent / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">SERVICE FEES</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.serviceFees)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.serviceFees}
+                      onChange={(e) => handleInputChange('serviceFees', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.serviceFees / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">DEPRECIATION</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.depreciation)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.depreciation}
+                      onChange={(e) => handleInputChange('depreciation', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.depreciation / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">INTEREST</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.interest)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.interest}
+                      onChange={(e) => handleInputChange('interest', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.interest / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">RENT INDEX</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.rentIndex)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.rentIndex}
+                      onChange={(e) => handleInputChange('rentIndex', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.rentIndex / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3 pl-6">MISCELL</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.miscell)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.miscell}
+                      onChange={(e) => handleInputChange('miscell', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.miscell / inputs.sales) * 100)}</td>
                 </tr>
                 <tr className="bg-orange-100 font-semibold">
@@ -283,7 +231,14 @@ const DCFTable = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3">LOAN PAYMENT</td>
-                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.loanPayment)}</td>
+                  <td className="border border-gray-300 p-1">
+                    <Input
+                      type="number"
+                      value={inputs.loanPayment}
+                      onChange={(e) => handleInputChange('loanPayment', Number(e.target.value))}
+                      className="text-right border-0 bg-transparent p-2"
+                    />
+                  </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.loanPayment / inputs.sales) * 100)}</td>
                 </tr>
                 <tr className="bg-green-100">
@@ -317,37 +272,43 @@ const DCFTable = () => {
         </CardContent>
       </Card>
 
-      {/* Tabla de Parámetros y Proyección Completa */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Parámetros y Proyección */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Parámetros del Modelo</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Fecha de cambio:</span>
-                <span>31/12/2024</span>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Inflación:</span>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={inputs.inflationRate}
+                  onChange={(e) => handleInputChange('inflationRate', Number(e.target.value))}
+                  className="w-20 text-right text-sm"
+                />
               </div>
-              <div className="flex justify-between">
-                <span>Fecha finalización contrato:</span>
-                <span>28/09/2026</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Tasa de Descuento:</span>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={inputs.discountRate}
+                  onChange={(e) => handleInputChange('discountRate', Number(e.target.value))}
+                  className="w-20 text-right text-sm"
+                />
               </div>
-              <div className="flex justify-between">
-                <span>Años restantes:</span>
-                <span>20</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Inflación:</span>
-                <span>{formatPercentage(inputs.inflationRate)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tasa de Descuento:</span>
-                <span>{formatPercentage(inputs.discountRate)}</span>
-              </div>
-              <div className="mt-4">
-                <p className="font-semibold">Crecimientos en ventas:</p>
-                <p>Año 2-20: {formatPercentage(inputs.growthRate)}</p>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Crecimiento Ventas:</span>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={inputs.growthRate}
+                  onChange={(e) => handleInputChange('growthRate', Number(e.target.value))}
+                  className="w-20 text-right text-sm"
+                />
               </div>
             </div>
           </CardContent>
@@ -355,22 +316,53 @@ const DCFTable = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Desglose CF (20 años)</CardTitle>
+            <CardTitle className="text-lg font-semibold text-green-700">Precio Final</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="max-h-96 overflow-y-auto">
-              <div className="space-y-1 text-sm">
-                {projections.map(p => (
-                  <div key={p.year} className="flex justify-between">
-                    <span>Año {p.year}</span>
-                    <span>{formatCurrency(p.cfValue)}</span>
-                  </div>
-                ))}
-              </div>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-green-600">
+                {formatCurrency(totalPrice)}
+              </p>
+              <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Desglose CF (Primeros 5 años)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {projections.slice(0, 5).map(p => (
+                <div key={p.year} className="flex justify-between text-sm">
+                  <span>Año {p.year}</span>
+                  <span>{formatCurrency(p.cfValue)}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Proyección completa de 20 años */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Desglose CF (20 años)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+              {projections.map(p => (
+                <div key={p.year} className="flex justify-between">
+                  <span>Año {p.year}</span>
+                  <span>{formatCurrency(p.cfValue)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
