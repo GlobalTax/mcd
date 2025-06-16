@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant';
@@ -142,17 +141,6 @@ export default function ValuationApp() {
                 </div>
               </div>
             </div>
-            {currentView === 'dashboard' && (
-              <div className="flex gap-3">
-                <Button 
-                  onClick={() => setCurrentView('dataManager')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6"
-                >
-                  <Database className="w-4 h-4 mr-2" />
-                  Panel Central
-                </Button>
-              </div>
-            )}
           </div>
           
           {/* Breadcrumb moderno */}
