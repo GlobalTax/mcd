@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Franchisee, Restaurant } from '@/types/restaurant';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Calendar, Euro, Building2, Hash, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Euro, Building2, Hash, Shield, TrendingUp } from 'lucide-react';
 
 export default function RestaurantPage() {
   const { siteNumber } = useParams<{ siteNumber: string }>();
@@ -38,6 +38,12 @@ export default function RestaurantPage() {
       </div>
     );
   }
+
+  const handleNavigateToValuation = () => {
+    // Simulate selecting the restaurant and navigating to valuation
+    // This will require updating the state in the main app
+    navigate('/', { state: { selectRestaurant: restaurant } });
+  };
 
   const formatNumber = (value: number | undefined | null): string => {
     if (value === undefined || value === null || isNaN(value)) {
@@ -75,6 +81,13 @@ export default function RestaurantPage() {
                 </div>
               </div>
             </div>
+            <Button 
+              onClick={handleNavigateToValuation}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6"
+            >
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Valorar Restaurante
+            </Button>
           </div>
           
           {/* Breadcrumb */}
@@ -189,7 +202,17 @@ export default function RestaurantPage() {
           {/* Valuation Info */}
           {restaurant.currentValuation && (
             <div className="border-t pt-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Valoración Actual</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Valoración Actual</h2>
+                <Button 
+                  onClick={handleNavigateToValuation}
+                  variant="outline"
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Nueva Valoración
+                </Button>
+              </div>
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -212,7 +235,14 @@ export default function RestaurantPage() {
           {!restaurant.currentValuation && (
             <div className="border-t pt-8">
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
-                <p className="text-gray-500 font-medium">Este restaurante aún no ha sido valorado</p>
+                <p className="text-gray-500 font-medium mb-4">Este restaurante aún no ha sido valorado</p>
+                <Button 
+                  onClick={handleNavigateToValuation}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Realizar Primera Valoración
+                </Button>
               </div>
             </div>
           )}

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant';
 import { FranchiseeSelector } from '@/components/FranchiseeSelector';
@@ -10,10 +11,26 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Database } from 'lucide-react';
 
 export default function ValuationApp() {
+  const location = useLocation();
   const [franchisees, setFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
   const [selectedFranchisee, setSelectedFranchisee] = useState<Franchisee | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [currentView, setCurrentView] = useState<'dashboard' | 'franchisees' | 'restaurants' | 'valuation' | 'dataManager'>('dataManager');
+
+  // Handle navigation from restaurant page
+  useEffect(() => {
+    if (location.state?.selectRestaurant) {
+      const restaurant = location.state.selectRestaurant as Restaurant;
+      const franchisee = franchisees.find(f => f.id === restaurant.franchiseeId);
+      if (franchisee) {
+        setSelectedFranchisee(franchisee);
+        setSelectedRestaurant(restaurant);
+        setCurrentView('valuation');
+      }
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, franchisees]);
 
   const handleAddFranchisee = (newFranchiseeData: Omit<Franchisee, 'id' | 'createdAt' | 'restaurants'>) => {
     const newFranchisee: Franchisee = {
