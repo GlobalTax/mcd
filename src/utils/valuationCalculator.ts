@@ -66,19 +66,20 @@ export function calculateRestaurantValuation(data: ValuationFormData): Valuation
     });
   }
   
-  // Cálculo del VPN usando la función equivalente a VNA de Excel
+  // Implementación de la fórmula VNA de Excel: =+VNA(C31;F28:INDICE(F28:F47;C29))
+  // Donde C31 es la tasa de descuento y F28:F47 son los flujos de caja
   const discountRate = data.discountRate / 100;
-  let finalValuation = 0;
   
-  // VNA en Excel: suma de flujos de caja descontados (no incluye inversión inicial)
+  // VNA en Excel suma todos los flujos de caja descontados desde el período 1
+  let finalValuation = 0;
   for (let i = 0; i < projectedCashFlows.length; i++) {
     const presentValue = projectedCashFlows[i] / Math.pow(1 + discountRate, i + 1);
     finalValuation += presentValue;
   }
   
-  console.log('Primer flujo de caja (CF Libre):', projectedCashFlows[0]);
-  console.log('Valoración final (Precio):', finalValuation);
-  console.log('Datos de entrada:', data);
+  console.log('Tasa de descuento:', discountRate);
+  console.log('Flujos de caja proyectados:', projectedCashFlows);
+  console.log('VNA calculado (Precio):', finalValuation);
   
   return {
     finalValuation,
