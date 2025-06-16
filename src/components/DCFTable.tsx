@@ -46,9 +46,9 @@ const DCFTable = () => {
   };
 
   // Cálculos principales - CORRIGIENDO S.O.I.
-  const soi = inputs.sales - inputs.pac; // S.O.I. = SALES - P.A.C.
   const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
-  const cashflow = soi - totalNonControllables - inputs.loanPayment;
+  const soi = inputs.pac - totalNonControllables; // S.O.I. = P.A.C. - TOTAL NON-CONTROLLABLES
+  const cashflow = soi - inputs.loanPayment;
   const cashAfterReinv = cashflow; // Sin reinversión por ahora
   const cfLibre = cashAfterReinv + inputs.loanPayment;
 
