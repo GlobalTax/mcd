@@ -16,6 +16,18 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
 
   if (yearsCount === 0) return null;
 
+  // Función para generar las fechas de cada período
+  const generatePeriodDates = (yearIndex: number) => {
+    const baseYear = 2025;
+    const startYear = baseYear + yearIndex;
+    const endYear = startYear + 1;
+    
+    const startDate = `16-jun-${startYear.toString().slice(-2)}`;
+    const endDate = `15-jun-${endYear.toString().slice(-2)}`;
+    
+    return `${startDate} / ${endDate}`;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -29,10 +41,13 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                 <th className="border border-gray-300 p-2 text-left font-bold bg-gray-50">Concepto</th>
                 {Array.from({ length: yearsCount }, (_, i) => (
                   <React.Fragment key={i}>
-                    <th className="border border-gray-300 p-2 text-center font-bold bg-gray-50">
-                      Año {i + 1}
+                    <th className="border border-gray-300 p-2 text-center font-bold bg-green-500 text-white">
+                      <div>{2025 + i}</div>
+                      <div className="text-xs font-normal mt-1">
+                        {generatePeriodDates(i)}
+                      </div>
                       {i === yearsCount - 1 && inputs.remainingYears % 1 !== 0 && (
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-gray-200 mt-1">
                           ({((inputs.remainingYears % 1) * 12).toFixed(1)} meses)
                         </div>
                       )}
@@ -45,6 +60,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               </tr>
             </thead>
             <tbody>
+              {/* SALES row */}
               <tr className="bg-green-200">
                 <td className="border border-gray-300 p-2 font-semibold bg-green-600 text-white">SALES</td>
                 {yearlyData.map((yearData, i) => (
@@ -63,6 +79,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* P.A.C. row */}
               <tr className="bg-green-200">
                 <td className="border border-gray-300 p-2 font-semibold bg-green-600 text-white">P.A.C.</td>
                 {yearlyData.map((yearData, i) => (
@@ -81,6 +99,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* RENT row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">RENT</td>
                 {yearlyData.map((yearData, i) => (
@@ -99,6 +119,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* SERVICE FEES row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">SERVICE FEES</td>
                 {yearlyData.map((yearData, i) => (
@@ -117,6 +139,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* DEPRECIATION row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">DEPRECIATION</td>
                 {yearlyData.map((yearData, i) => (
@@ -135,6 +159,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* INTEREST row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">INTEREST</td>
                 {yearlyData.map((yearData, i) => (
@@ -153,6 +179,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* RENT INDEX row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">RENT INDEX</td>
                 {yearlyData.map((yearData, i) => (
@@ -171,6 +199,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* MISCELL row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">MISCELL</td>
                 {yearlyData.map((yearData, i) => (
@@ -189,6 +219,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* TOTAL NON-CONTROLLABLES row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">TOTAL NON-CONTROLLABLES</td>
                 {yearlyData.map((yearData, i) => {
@@ -205,6 +237,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   );
                 })}
               </tr>
+              
+              {/* S.O.I. row */}
               <tr className="bg-green-200">
                 <td className="border border-gray-300 p-2 font-semibold bg-green-600 text-white">S.O.I.</td>
                 {yearlyData.map((yearData, i) => {
@@ -222,6 +256,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   );
                 })}
               </tr>
+              
+              {/* LOAN PAYMENT row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">LOAN PAYMENT</td>
                 {yearlyData.map((yearData, i) => (
@@ -240,6 +276,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* CASHFLOW row */}
               <tr className="bg-green-200">
                 <td className="border border-gray-300 p-2 font-semibold bg-green-600 text-white">CASHFLOW</td>
                 {yearlyData.map((yearData, i) => {
@@ -258,6 +296,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   );
                 })}
               </tr>
+              
+              {/* REMODELACION / REINVERSION row */}
               <tr>
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-semibold">REMODELACION / REINVERSION</td>
                 {yearlyData.map((yearData, i) => (
@@ -271,6 +311,8 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   </React.Fragment>
                 ))}
               </tr>
+              
+              {/* CASH AFTER REINV row */}
               <tr className="bg-green-200 font-bold">
                 <td className="border border-gray-300 p-2 bg-green-600 text-white font-bold">CASH AFTER REINV</td>
                 {yearlyData.map((yearData, i) => {
