@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
@@ -51,13 +50,16 @@ const DCFTable = () => {
         newYearlyData.push({
           sales: 0,
           pac: 0,
+          pacPercentage: 0,
           rent: 0,
+          rentPercentage: 0,
           serviceFees: 0,
           depreciation: 0,
           interest: 0,
           rentIndex: 0,
           miscell: 0,
-          loanPayment: 0
+          loanPayment: 0,
+          reinversion: 0
         });
       }
       
@@ -85,7 +87,7 @@ const DCFTable = () => {
     });
   };
 
-  // Calcular proyecciones con datos manuales
+  // Calcular proyecciones con la nueva fórmula de cashflow
   const calculateProjections = (): ProjectionData[] => {
     if (yearlyData.length === 0) return [];
     
@@ -99,28 +101,24 @@ const DCFTable = () => {
       if (timeToNextYear <= 0) break;
       
       // Solo calcular si hay datos introducidos
-      if (yearData.sales === 0 && yearData.pac === 0) {
+      if (yearData.sales === 0) {
         currentTime += timeToNextYear;
         continue;
       }
       
-      // Cálculo correcto siguiendo el modelo Excel:
-      // Total Non-Controllables = Rent + Service Fees + Depreciation + Interest + Rent Index + Miscell
-      const totalNonControllables = yearData.rent + yearData.serviceFees + yearData.depreciation + yearData.interest + yearData.rentIndex + yearData.miscell;
+      // Calcular montos basados en las nuevas fórmulas:
+      const pacAmount = yearData.sales * (yearData.pacPercentage || 0) / 100;
+      const rentAmount = yearData.sales * (yearData.rentPercentage || 0) / 100;
       
-      // S.O.I. = Sales - P.A.C. - Total Non-Controllables
-      const soi = yearData.sales - yearData.pac - totalNonControllables;
+      // CASHFLOW = PAC - RENT - SERVICE FEES - RENT INDEX - MISCELL - LOAN PAYMENT
+      const cashflow = pacAmount - rentAmount - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
       
-      // CASHFLOW = S.O.I. + LOAN PAYMENT
-      const cashflow = soi + yearData.loanPayment;
+      // CASH AFTER REINV = CASHFLOW - REINVERSION
+      const cashAfterReinv = cashflow - yearData.reinversion;
       
-      // CASH AFTER REINV = CASHFLOW (sin reinversión)
-      const cashAfterReinv = cashflow;
-      
-      // CF LIBRE = CASH AFTER REINV + DEPRECIATION (porque la depreciación es gasto no efectivo)
+      // CF LIBRE = CASH AFTER REINV + DEPRECIATION
       const cfLibre = cashAfterReinv + yearData.depreciation;
       
-      // Para el VNA usamos CF LIBRE (no CASH AFTER REINV como estaba antes)
       let cfValue = cfLibre;
       if (timeToNextYear < 1) {
         cfValue = cfLibre * timeToNextYear;

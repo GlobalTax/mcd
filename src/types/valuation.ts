@@ -20,13 +20,16 @@ export interface ValuationInputs {
 export interface YearlyData {
   sales: number;
   pac: number;
+  pacPercentage: number;
   rent: number;
+  rentPercentage: number;
   serviceFees: number;
   depreciation: number;
   interest: number;
   rentIndex: number;
   miscell: number;
   loanPayment: number;
+  reinversion: number;
 }
 
 export interface ProjectionData {
