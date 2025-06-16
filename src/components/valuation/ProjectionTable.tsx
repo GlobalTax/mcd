@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -55,10 +54,18 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
     }
   };
 
-  // Función para manejar cambios en porcentajes
+  // Función para manejar cambios en porcentajes con soporte para comas
   const handlePercentageChange = (yearIndex: number, field: 'pacPercentage' | 'rentPercentage', value: string) => {
-    const numericValue = parseFloat(value) || 0;
+    // Reemplazar coma por punto para parseFloat
+    const normalizedValue = value.replace(',', '.');
+    const numericValue = parseFloat(normalizedValue) || 0;
     onYearlyDataChange(yearIndex, field as keyof YearlyData, numericValue);
+  };
+
+  // Función para formatear el valor del porcentaje para mostrar
+  const formatPercentageValue = (value: number): string => {
+    if (value === 0) return '';
+    return value.toString().replace('.', ',');
   };
 
   return (
@@ -144,7 +151,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                       <td className="border border-gray-300 p-1 bg-blue-50">
                         <Input
                           type="text"
-                          value={pacPercentage > 0 ? pacPercentage.toString() : ''}
+                          value={formatPercentageValue(pacPercentage)}
                           onChange={(e) => handlePercentageChange(i, 'pacPercentage', e.target.value)}
                           placeholder="0"
                           className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
@@ -171,7 +178,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                       <td className="border border-gray-300 p-1 bg-blue-50">
                         <Input
                           type="text"
-                          value={rentPercentage > 0 ? rentPercentage.toString() : ''}
+                          value={formatPercentageValue(rentPercentage)}
                           onChange={(e) => handlePercentageChange(i, 'rentPercentage', e.target.value)}
                           placeholder="0"
                           className="w-full text-right text-sm border-0 bg-blue-50 p-1 placeholder:text-gray-400 font-manrope"
