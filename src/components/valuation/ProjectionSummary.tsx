@@ -11,7 +11,10 @@ interface ProjectionSummaryProps {
 }
 
 const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) => {
-  const [tableStyles, setTableStyles] = useState<TableStyles>(defaultStyles);
+  const [tableStyles, setTableStyles] = useState<TableStyles>({
+    ...defaultStyles,
+    fontFamily: 'Manrope, Inter, system-ui, sans-serif'
+  });
 
   if (projections.length === 0) return null;
 
@@ -24,46 +27,49 @@ const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) 
       
       <Card>
         <CardHeader>
-          <CardTitle>Resumen de Proyecciones</CardTitle>
+          <CardTitle className="font-manrope">Resumen de Proyecciones</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table 
-              className="w-full min-w-[600px] border-collapse"
+              className="w-full min-w-[600px] border-collapse font-manrope"
               style={{
                 fontSize: tableStyles.fontSize,
-                fontFamily: tableStyles.fontFamily,
+                fontFamily: 'Manrope, Inter, system-ui, sans-serif',
                 borderColor: tableStyles.borderColor
               }}
             >
               <thead>
                 <tr>
                   <th 
-                    className="border p-2 text-left min-w-[120px]"
+                    className="border p-3 text-left min-w-[120px] font-semibold"
                     style={{
                       backgroundColor: tableStyles.headerBg,
                       color: tableStyles.headerTextColor,
-                      borderColor: tableStyles.borderColor
+                      borderColor: tableStyles.borderColor,
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     Período
                   </th>
                   <th 
-                    className="border p-2 text-right min-w-[140px]"
+                    className="border p-3 text-right min-w-[140px] font-semibold"
                     style={{
                       backgroundColor: tableStyles.headerBg,
                       color: tableStyles.headerTextColor,
-                      borderColor: tableStyles.borderColor
+                      borderColor: tableStyles.borderColor,
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     CF Libre
                   </th>
                   <th 
-                    className="border p-2 text-right min-w-[140px]"
+                    className="border p-3 text-right min-w-[140px] font-semibold"
                     style={{
                       backgroundColor: tableStyles.headerBg,
                       color: tableStyles.headerTextColor,
-                      borderColor: tableStyles.borderColor
+                      borderColor: tableStyles.borderColor,
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     Valor Presente
@@ -72,68 +78,71 @@ const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) 
               </thead>
               <tbody>
                 {projections.map((p, index) => (
-                  <tr key={index}>
+                  <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td 
-                      className="border p-2 min-w-[120px]"
+                      className="border p-3 min-w-[120px]"
                       style={{
                         backgroundColor: tableStyles.cellBg,
                         color: tableStyles.cellTextColor,
-                        borderColor: tableStyles.borderColor
+                        borderColor: tableStyles.borderColor,
+                        fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                       }}
                     >
-                      Año {index + 1}
+                      <span className="font-medium">Año {index + 1}</span>
                       {p.timeToNextYear < 1 && (
-                        <span className="text-xs opacity-60">
-                          {" "}({(p.timeToNextYear * 12).toFixed(1)} meses)
+                        <span className="text-xs opacity-60 ml-1">
+                          ({(p.timeToNextYear * 12).toFixed(1)} meses)
                         </span>
                       )}
                     </td>
                     <td 
-                      className="border p-2 text-right min-w-[140px]"
+                      className="border p-3 text-right min-w-[140px] font-medium"
                       style={{
                         backgroundColor: tableStyles.cellBg,
                         color: tableStyles.cellTextColor,
-                        borderColor: tableStyles.borderColor
+                        borderColor: tableStyles.borderColor,
+                        fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                       }}
                     >
                       {formatCurrency(p.cfValue)}
                     </td>
                     <td 
-                      className="border p-2 text-right min-w-[140px]"
+                      className="border p-3 text-right min-w-[140px] font-medium"
                       style={{
                         backgroundColor: tableStyles.cellBg,
                         color: tableStyles.cellTextColor,
-                        borderColor: tableStyles.borderColor
+                        borderColor: tableStyles.borderColor,
+                        fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                       }}
                     >
                       {formatCurrency(p.presentValue)}
                     </td>
                   </tr>
                 ))}
-                <tr className="font-bold">
+                <tr className="font-bold bg-green-50 border-t-2 border-green-200">
                   <td 
-                    className="border p-2 min-w-[120px] bg-green-100"
+                    className="border p-4 min-w-[120px] text-green-800 font-bold"
                     style={{
                       borderColor: tableStyles.borderColor,
-                      fontFamily: tableStyles.fontFamily
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     TOTAL
                   </td>
                   <td 
-                    className="border p-2 text-right min-w-[140px] bg-green-100"
+                    className="border p-4 text-right min-w-[140px] text-green-800 font-bold"
                     style={{
                       borderColor: tableStyles.borderColor,
-                      fontFamily: tableStyles.fontFamily
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     {formatCurrency(totalCfLibre)}
                   </td>
                   <td 
-                    className="border p-2 text-right min-w-[140px] bg-green-100 text-green-600"
+                    className="border p-4 text-right min-w-[140px] text-green-600 font-bold"
                     style={{
                       borderColor: tableStyles.borderColor,
-                      fontFamily: tableStyles.fontFamily
+                      fontFamily: 'Manrope, Inter, system-ui, sans-serif'
                     }}
                   >
                     {formatCurrency(totalPresentValue)}
