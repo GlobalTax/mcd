@@ -14,6 +14,14 @@ interface RestaurantManagerProps {
   selectedRestaurant: Restaurant | null;
 }
 
+// Helper function to safely format numbers
+const formatNumber = (value: number | undefined | null): string => {
+  if (value === undefined || value === null || isNaN(value)) {
+    return '0';
+  }
+  return value.toLocaleString('es-ES');
+};
+
 export function RestaurantManager({ 
   franchisee, 
   onAddRestaurant, 
@@ -245,14 +253,14 @@ export function RestaurantManager({
                     <Euro className="w-4 h-4 text-green-600" />
                     <div>
                       <p className="text-xs text-gray-500">Facturación</p>
-                      <p className="font-medium">€{restaurant.lastYearRevenue.toLocaleString('es-ES')}</p>
+                      <p className="font-medium">€{formatNumber(restaurant.lastYearRevenue)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-gray-600">
                     <Building2 className="w-4 h-4 text-blue-600" />
                     <div>
                       <p className="text-xs text-gray-500">Renta Base</p>
-                      <p className="font-medium">€{restaurant.baseRent.toLocaleString('es-ES')}</p>
+                      <p className="font-medium">€{formatNumber(restaurant.baseRent)}</p>
                     </div>
                   </div>
                 </div>
@@ -264,7 +272,7 @@ export function RestaurantManager({
                 
                 <div className="flex items-center gap-3 text-gray-600">
                   <Calendar className="w-5 h-5" />
-                  <span>Franquicia hasta: <span className="font-medium">{new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES')}</span></span>
+                  <span>Franquicia hasta: <span className="font-medium">{restaurant.franchiseEndDate ? new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES') : 'N/A'}</span></span>
                 </div>
                 
                 {restaurant.isOwnedByMcD ? (
@@ -286,7 +294,7 @@ export function RestaurantManager({
                     <span className="font-semibold text-green-800">Valoración Actual</span>
                   </div>
                   <p className="text-2xl font-bold text-green-800">
-                    €{restaurant.currentValuation.finalValuation.toLocaleString('es-ES')}
+                    €{formatNumber(restaurant.currentValuation.finalValuation)}
                   </p>
                   <p className="text-sm text-green-600 mt-1">
                     Actualizada: {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
