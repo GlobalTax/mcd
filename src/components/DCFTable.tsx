@@ -1,473 +1,376 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-interface DCFAssumptions {
-  salesGrowthRate: number;
-  cogsMargin: number;
-  opexMargin: number;
-  taxRate: number;
-  capexMargin: number;
-  workingCapitalMargin: number;
-  wacc: number;
-  terminalGrowthRate: number;
-  initialSales: number;
+interface ValuationInputs {
+  sales: number;
+  pac: number;
+  rent: number;
+  serviceFees: number;
+  depreciation: number;
+  interest: number;
+  rentIndex: number;
+  miscell: number;
+  loanPayment: number;
+  inflationRate: number;
+  discountRate: number;
+  growthRate: number;
 }
 
 const DCFTable = () => {
-  const [assumptions, setAssumptions] = useState<DCFAssumptions>({
-    salesGrowthRate: 0.05,
-    cogsMargin: 0.60,
-    opexMargin: 0.15,
-    taxRate: 0.25,
-    capexMargin: 0.03,
-    workingCapitalMargin: 0.02,
-    wacc: 0.10,
-    terminalGrowthRate: 0.02,
-    initialSales: 500000
+  const [inputs, setInputs] = useState<ValuationInputs>({
+    sales: 2454919,
+    pac: 800058,
+    rent: 281579,
+    serviceFees: 122746,
+    depreciation: 72092,
+    interest: 19997,
+    rentIndex: 75925,
+    miscell: 85521,
+    loanPayment: 31478,
+    inflationRate: 1.5,
+    discountRate: 21.0,
+    growthRate: 3.0
   });
-
-  const [projections, setProjections] = useState<any[]>([]);
-  const [enterpriseValue, setEnterpriseValue] = useState(0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
+      style: 'decimal',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(value);
   };
 
-  const formatPercentage = (value: number) => {
-    return `${(value * 100).toFixed(1)}%`;
+  const formatPercentage = (value: number, decimals: number = 2) => {
+    return `${value.toFixed(decimals)}%`;
   };
 
-  const calculateProjections = () => {
-    const years = 30;
-    const newProjections = [];
+  // Cálculos principales
+  const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
+  const soi = inputs.sales - inputs.pac - totalNonControllables;
+  const cashflow = soi - inputs.loanPayment;
+  const cfLibre = cashflow + inputs.loanPayment;
 
-    for (let year = 1; year <= years; year++) {
-      const sales = assumptions.initialSales * Math.pow(1 + assumptions.salesGrowthRate, year - 1);
-      const cogs = sales * assumptions.cogsMargin;
-      const grossMargin = sales - cogs;
-      const opex = sales * assumptions.opexMargin;
-      const ebitda = grossMargin - opex;
-      const depreciation = (sales * assumptions.capexMargin) * 0.5; // Asumimos D&A como 50% de CAPEX
-      const ebit = ebitda - depreciation;
-      const taxes = ebit > 0 ? ebit * assumptions.taxRate : 0;
-      const nopat = ebit - taxes;
-      const capex = sales * assumptions.capexMargin;
-      const workingCapitalChange = sales * assumptions.workingCapitalMargin;
-      const fcf = nopat + depreciation - capex - workingCapitalChange;
-      const presentValue = fcf / Math.pow(1 + assumptions.wacc, year);
-
-      newProjections.push({
-        year,
-        sales,
-        cogs,
-        grossMargin,
-        opex,
-        ebitda,
-        depreciation,
-        ebit,
-        taxes,
-        nopat,
-        capex,
-        workingCapitalChange,
-        fcf,
-        presentValue
-      });
+  // Proyección de 20 años
+  const projections = [];
+  for (let year = 1; year <= 20; year++) {
+    let cfValue;
+    if (year === 1) {
+      cfValue = cfLibre;
+    } else {
+      const growthFactor = Math.pow(1 + inputs.growthRate / 100, year - 1);
+      const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, year - 1);
+      cfValue = cfLibre * growthFactor * inflationFactor;
     }
-
-    // Calcular valor terminal
-    const lastYearFCF = newProjections[years - 1].fcf;
-    const terminalValue = (lastYearFCF * (1 + assumptions.terminalGrowthRate)) / (assumptions.wacc - assumptions.terminalGrowthRate);
-    const terminalValuePV = terminalValue / Math.pow(1 + assumptions.wacc, years);
     
-    // Valor de empresa
-    const sumPVFCF = newProjections.reduce((sum, projection) => sum + projection.presentValue, 0);
-    const totalEnterpriseValue = sumPVFCF + terminalValuePV;
+    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, year);
+    projections.push({
+      year,
+      cfValue,
+      presentValue
+    });
+  }
 
-    setProjections(newProjections);
-    setEnterpriseValue(totalEnterpriseValue);
-  };
+  const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
-  useEffect(() => {
-    calculateProjections();
-  }, [assumptions]);
-
-  const handleAssumptionChange = (key: keyof DCFAssumptions, value: number) => {
-    setAssumptions(prev => ({
+  const handleInputChange = (key: keyof ValuationInputs, value: number) => {
+    setInputs(prev => ({
       ...prev,
       [key]: value
     }));
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 max-w-7xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Modelo de Valoración por Flujo de Caja Descontado (DCF)
+          Valoración Rte. PARC CENTRAL
         </h1>
         <p className="text-gray-600">
-          Recreación fiel del modelo financiero. Modifica los supuestos para ver los cambios en tiempo real.
+          Modelo de valoración por flujo de caja descontado - Réplica exacta
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Supuestos Clave */}
+        {/* Panel de Inputs */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-blue-700">Supuestos Clave</CardTitle>
+            <CardTitle className="text-lg font-semibold text-blue-700">Parámetros de Entrada</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="initialSales">Ventas Iniciales (€)</Label>
+              <Label htmlFor="sales">Ventas (€)</Label>
               <Input
-                id="initialSales"
+                id="sales"
                 type="number"
-                value={assumptions.initialSales}
-                onChange={(e) => handleAssumptionChange('initialSales', Number(e.target.value))}
+                value={inputs.sales}
+                onChange={(e) => handleInputChange('sales', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
             <div>
-              <Label htmlFor="salesGrowth">Tasa de Crecimiento en Ventas (%)</Label>
+              <Label htmlFor="pac">P.A.C. (€)</Label>
               <Input
-                id="salesGrowth"
+                id="pac"
                 type="number"
-                step="0.01"
-                value={assumptions.salesGrowthRate * 100}
-                onChange={(e) => handleAssumptionChange('salesGrowthRate', Number(e.target.value) / 100)}
+                value={inputs.pac}
+                onChange={(e) => handleInputChange('pac', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
             <div>
-              <Label htmlFor="cogsMargin">Margen Coste de Ventas (% Ventas)</Label>
+              <Label htmlFor="loanPayment">Pago Préstamo (€)</Label>
               <Input
-                id="cogsMargin"
+                id="loanPayment"
                 type="number"
-                step="0.01"
-                value={assumptions.cogsMargin * 100}
-                onChange={(e) => handleAssumptionChange('cogsMargin', Number(e.target.value) / 100)}
+                value={inputs.loanPayment}
+                onChange={(e) => handleInputChange('loanPayment', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
             <div>
-              <Label htmlFor="opexMargin">Gastos Operativos (% Ventas)</Label>
+              <Label htmlFor="inflationRate">Inflación (%)</Label>
               <Input
-                id="opexMargin"
+                id="inflationRate"
                 type="number"
-                step="0.01"
-                value={assumptions.opexMargin * 100}
-                onChange={(e) => handleAssumptionChange('opexMargin', Number(e.target.value) / 100)}
+                step="0.1"
+                value={inputs.inflationRate}
+                onChange={(e) => handleInputChange('inflationRate', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
             <div>
-              <Label htmlFor="taxRate">Tasa Impositiva (%)</Label>
+              <Label htmlFor="discountRate">Tasa de Descuento (%)</Label>
               <Input
-                id="taxRate"
+                id="discountRate"
                 type="number"
-                step="0.01"
-                value={assumptions.taxRate * 100}
-                onChange={(e) => handleAssumptionChange('taxRate', Number(e.target.value) / 100)}
+                step="0.1"
+                value={inputs.discountRate}
+                onChange={(e) => handleInputChange('discountRate', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
             <div>
-              <Label htmlFor="capexMargin">CAPEX (% Ventas)</Label>
+              <Label htmlFor="growthRate">Crecimiento en Ventas (%)</Label>
               <Input
-                id="capexMargin"
+                id="growthRate"
                 type="number"
-                step="0.01"
-                value={assumptions.capexMargin * 100}
-                onChange={(e) => handleAssumptionChange('capexMargin', Number(e.target.value) / 100)}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="workingCapital">Var. Fondo Maniobra (% Ventas)</Label>
-              <Input
-                id="workingCapital"
-                type="number"
-                step="0.01"
-                value={assumptions.workingCapitalMargin * 100}
-                onChange={(e) => handleAssumptionChange('workingCapitalMargin', Number(e.target.value) / 100)}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="wacc">Tasa de Descuento (WACC) (%)</Label>
-              <Input
-                id="wacc"
-                type="number"
-                step="0.01"
-                value={assumptions.wacc * 100}
-                onChange={(e) => handleAssumptionChange('wacc', Number(e.target.value) / 100)}
-                className="bg-blue-50"
-              />
-            </div>
-            <div>
-              <Label htmlFor="terminalGrowth">Tasa Crecimiento a Perpetuidad (%)</Label>
-              <Input
-                id="terminalGrowth"
-                type="number"
-                step="0.01"
-                value={assumptions.terminalGrowthRate * 100}
-                onChange={(e) => handleAssumptionChange('terminalGrowthRate', Number(e.target.value) / 100)}
+                step="0.1"
+                value={inputs.growthRate}
+                onChange={(e) => handleInputChange('growthRate', Number(e.target.value))}
                 className="bg-blue-50"
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Valoración */}
+        {/* Resultado Final */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-green-700">Valoración</CardTitle>
+            <CardTitle className="text-lg font-semibold text-green-700">Precio</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Valor de Empresa</p>
-              <p className="text-4xl font-bold text-green-600">
-                {formatCurrency(enterpriseValue)}
+              <p className="text-5xl font-bold text-green-600">
+                {formatCurrency(totalPrice)}
               </p>
+              <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Primeros 5 años - Vista resumida */}
+        {/* Proyección 5 años */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Primeros 5 Años</CardTitle>
+            <CardTitle className="text-lg font-semibold">Desglose CF (Primeros 5 años)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-1"></th>
-                    {projections.slice(0, 5).map(p => (
-                      <th key={p.year} className="text-center py-1">Año {p.year}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="text-xs">
-                  <tr>
-                    <td className="py-1 font-medium">Ventas</td>
-                    {projections.slice(0, 5).map(p => (
-                      <td key={p.year} className="text-center py-1">{formatCurrency(p.sales)}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-medium">EBITDA</td>
-                    {projections.slice(0, 5).map(p => (
-                      <td key={p.year} className="text-center py-1">{formatCurrency(p.ebitda)}</td>
-                    ))}
-                  </tr>
-                  <tr>
-                    <td className="py-1 font-medium">FCF</td>
-                    {projections.slice(0, 5).map(p => (
-                      <td key={p.year} className="text-center py-1">{formatCurrency(p.fcf)}</td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
+            <div className="space-y-2">
+              {projections.slice(0, 5).map(p => (
+                <div key={p.year} className="flex justify-between">
+                  <span className="font-medium">Año {p.year}</span>
+                  <span>{formatCurrency(p.cfValue)}</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabla completa de proyecciones */}
+      {/* Tabla Principal P&L */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Proyecciones Financieras Completas (30 años)</CardTitle>
+          <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL - 2024</CardTitle>
+          <p className="text-center text-sm text-gray-600">31-dic-24 / 30-dic-25</p>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-blue-700 text-white">
-                  <th className="border p-2 text-left">Concepto</th>
-                  {Array.from({length: 10}, (_, i) => (
-                    <th key={i} className="border p-2 text-center">Año {i + 1}</th>
-                  ))}
-                  <th className="border p-2 text-center">...</th>
-                  {Array.from({length: 5}, (_, i) => (
-                    <th key={i + 26} className="border p-2 text-center">Año {i + 26}</th>
-                  ))}
+                <tr className="bg-green-700 text-white">
+                  <th className="border border-gray-300 p-3 text-left font-bold">P&L</th>
+                  <th className="border border-gray-300 p-3 text-right font-bold">€</th>
+                  <th className="border border-gray-300 p-3 text-right font-bold">%</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-gray-100 font-semibold">
-                  <td className="border p-2" colSpan={17}>ESTADO DE RESULTADOS</td>
+                <tr className="bg-gray-50">
+                  <td className="border border-gray-300 p-3 font-semibold">SALES</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(inputs.sales)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">100,00%</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">Ventas</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.sales)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.sales)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                </tr>
+                <tr className="bg-yellow-50">
+                  <td className="border border-gray-300 p-3 font-semibold">P.A.C.</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(inputs.pac)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((inputs.pac / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">Coste de Ventas</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.cogs)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.cogs)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">MARGEN BRUTO</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.grossMargin)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.grossMargin)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3 pl-6">RENT</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.rent)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.rent / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">Gastos Operativos</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.opex)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.opex)}</td>
-                  ))}
-                </tr>
-                <tr className="border-t-2 border-blue-600">
-                  <td className="border p-2 font-bold">EBITDA</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.ebitda)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.ebitda)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3 pl-6">SERVICE FEES</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.serviceFees)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.serviceFees / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">D&A</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.depreciation)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.depreciation)}</td>
-                  ))}
-                </tr>
-                <tr className="border-t-2 border-blue-600">
-                  <td className="border p-2 font-bold">EBIT</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.ebit)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.ebit)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3 pl-6">DEPRECIATION</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.depreciation)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.depreciation / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">Impuestos</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.taxes)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.taxes)}</td>
-                  ))}
-                </tr>
-                <tr className="border-t-2 border-blue-600">
-                  <td className="border p-2 font-bold">NOPAT</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.nopat)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-semibold">{formatCurrency(p.nopat)}</td>
-                  ))}
-                </tr>
-                
-                <tr className="bg-gray-100 font-semibold">
-                  <td className="border p-2" colSpan={17}>FLUJO DE CAJA LIBRE</td>
+                  <td className="border border-gray-300 p-3 pl-6">INTEREST</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.interest)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.interest / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">(+) NOPAT</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.nopat)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.nopat)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3 pl-6">RENT INDEX</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.rentIndex)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.rentIndex / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">(+) D&A</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.depreciation)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.depreciation)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3 pl-6">MISCELL</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.miscell)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.miscell / inputs.sales) * 100)}</td>
+                </tr>
+                <tr className="bg-orange-100 font-semibold">
+                  <td className="border border-gray-300 p-3">TOTAL NON-CONTROLLABLES</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(totalNonControllables)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((totalNonControllables / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">(-) CAPEX</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.capex)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.capex)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                </tr>
+                <tr className="bg-blue-100">
+                  <td className="border border-gray-300 p-3 font-semibold">S.O.I.</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(soi)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((soi / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">(-) Var. Fondo Maniobra</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.workingCapitalChange)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">-{formatCurrency(p.workingCapitalChange)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3">LOAN PAYMENT</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatCurrency(inputs.loanPayment)}</td>
+                  <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.loanPayment / inputs.sales) * 100)}</td>
                 </tr>
-                <tr className="border-t-2 border-blue-600 bg-blue-50">
-                  <td className="border p-2 font-bold">FLUJO DE CAJA LIBRE</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-bold">{formatCurrency(p.fcf)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right font-bold">{formatCurrency(p.fcf)}</td>
-                  ))}
-                </tr>
-                <tr className="bg-gray-100 font-semibold">
-                  <td className="border p-2" colSpan={17}>VALORACIÓN</td>
+                <tr className="bg-green-100">
+                  <td className="border border-gray-300 p-3 font-semibold">CASHFLOW</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(cashflow)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((cashflow / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
-                  <td className="border p-2 font-medium">Valor Presente del FCF</td>
-                  {projections.slice(0, 10).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.presentValue)}</td>
-                  ))}
-                  <td className="border p-2 text-center">...</td>
-                  {projections.slice(25, 30).map(p => (
-                    <td key={p.year} className="border p-2 text-right">{formatCurrency(p.presentValue)}</td>
-                  ))}
+                  <td className="border border-gray-300 p-3">REMODELACION / REINVERSION</td>
+                  <td className="border border-gray-300 p-3 text-right">0</td>
+                  <td className="border border-gray-300 p-3 text-right">0,00%</td>
+                </tr>
+                <tr className="bg-green-200">
+                  <td className="border border-gray-300 p-3 font-bold">CASH AFTER REINV</td>
+                  <td className="border border-gray-300 p-3 text-right font-bold">{formatCurrency(cashflow)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-bold">{formatPercentage((cashflow / inputs.sales) * 100)}</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                </tr>
+                <tr className="bg-green-300">
+                  <td className="border border-gray-300 p-3 font-bold text-lg">CF LIBRE</td>
+                  <td className="border border-gray-300 p-3 text-right font-bold text-lg">{formatCurrency(cfLibre)}</td>
+                  <td className="border border-gray-300 p-3"></td>
                 </tr>
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
+
+      {/* Tabla de Parámetros y Proyección Completa */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Parámetros del Modelo</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Fecha de cambio:</span>
+                <span>31/12/2024</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Fecha finalización contrato:</span>
+                <span>28/09/2026</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Años restantes:</span>
+                <span>20</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Inflación:</span>
+                <span>{formatPercentage(inputs.inflationRate)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tasa de Descuento:</span>
+                <span>{formatPercentage(inputs.discountRate)}</span>
+              </div>
+              <div className="mt-4">
+                <p className="font-semibold">Crecimientos en ventas:</p>
+                <p>Año 2-20: {formatPercentage(inputs.growthRate)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Desglose CF (20 años)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="space-y-1 text-sm">
+                {projections.map(p => (
+                  <div key={p.year} className="flex justify-between">
+                    <span>Año {p.year}</span>
+                    <span>{formatCurrency(p.cfValue)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
