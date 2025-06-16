@@ -277,7 +277,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                   const totalNonControllables = yearData.rent + yearData.serviceFees + yearData.depreciation + yearData.interest + yearData.rentIndex + yearData.miscell;
                   const soi = yearData.sales - yearData.pac - totalNonControllables;
                   const cashflow = soi + yearData.loanPayment;
-                  const cashAfterReinv = cashflow; // Sin reinversión
+                  const cashAfterReinv = cashflow;
                   return (
                     <React.Fragment key={`cashAfterReinv-${i}`}>
                       <td className="border border-gray-300 p-2 text-right font-bold bg-green-100">
