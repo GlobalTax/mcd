@@ -45,11 +45,12 @@ const DCFTable = () => {
     return `${value.toFixed(decimals)}%`;
   };
 
-  // Cálculos principales
+  // Cálculos principales - CORRIGIENDO S.O.I.
+  const soi = inputs.sales - inputs.pac; // S.O.I. = SALES - P.A.C.
   const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
-  const soi = inputs.sales - inputs.pac - totalNonControllables;
-  const cashflow = soi - inputs.loanPayment;
-  const cfLibre = cashflow + inputs.loanPayment;
+  const cashflow = soi - totalNonControllables - inputs.loanPayment;
+  const cashAfterReinv = cashflow; // Sin reinversión por ahora
+  const cfLibre = cashAfterReinv + inputs.loanPayment;
 
   // Proyección de 20 años
   const projections = [];
@@ -91,24 +92,32 @@ const DCFTable = () => {
         </p>
       </div>
 
-      {/* Tabla Principal P&L con inputs editables */}
+      {/* Tabla Principal P&L */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL - 2024</CardTitle>
-          <p className="text-center text-sm text-gray-600">31-dic-24 / 30-dic-25</p>
+          <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL</CardTitle>
+          <div className="text-center">
+            <p className="text-lg font-semibold">2024</p>
+            <p className="text-sm text-gray-600">31-dic-24 / 30-dic-25</p>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-green-700 text-white">
-                  <th className="border border-gray-300 p-3 text-left font-bold">P&L</th>
+                <tr>
+                  <th className="border border-gray-300 p-3 text-left font-bold w-1/2"></th>
                   <th className="border border-gray-300 p-3 text-right font-bold">€</th>
                   <th className="border border-gray-300 p-3 text-right font-bold">%</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="bg-gray-50">
+                <tr className="font-bold">
+                  <td className="border border-gray-300 p-3">P&L</td>
+                  <td className="border border-gray-300 p-3"></td>
+                  <td className="border border-gray-300 p-3"></td>
+                </tr>
+                <tr className="bg-blue-50">
                   <td className="border border-gray-300 p-3 font-semibold">SALES</td>
                   <td className="border border-gray-300 p-1">
                     <Input
@@ -224,7 +233,7 @@ const DCFTable = () => {
                   <td className="border border-gray-300 p-3"></td>
                   <td className="border border-gray-300 p-3"></td>
                 </tr>
-                <tr className="bg-blue-100">
+                <tr className="bg-green-100">
                   <td className="border border-gray-300 p-3 font-semibold">S.O.I.</td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(soi)}</td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((soi / inputs.sales) * 100)}</td>
@@ -241,7 +250,7 @@ const DCFTable = () => {
                   </td>
                   <td className="border border-gray-300 p-3 text-right">{formatPercentage((inputs.loanPayment / inputs.sales) * 100)}</td>
                 </tr>
-                <tr className="bg-green-100">
+                <tr className="bg-blue-100">
                   <td className="border border-gray-300 p-3 font-semibold">CASHFLOW</td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">{formatCurrency(cashflow)}</td>
                   <td className="border border-gray-300 p-3 text-right font-semibold">{formatPercentage((cashflow / inputs.sales) * 100)}</td>
@@ -251,10 +260,10 @@ const DCFTable = () => {
                   <td className="border border-gray-300 p-3 text-right">0</td>
                   <td className="border border-gray-300 p-3 text-right">0,00%</td>
                 </tr>
-                <tr className="bg-green-200">
+                <tr className="bg-blue-200">
                   <td className="border border-gray-300 p-3 font-bold">CASH AFTER REINV</td>
-                  <td className="border border-gray-300 p-3 text-right font-bold">{formatCurrency(cashflow)}</td>
-                  <td className="border border-gray-300 p-3 text-right font-bold">{formatPercentage((cashflow / inputs.sales) * 100)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-bold">{formatCurrency(cashAfterReinv)}</td>
+                  <td className="border border-gray-300 p-3 text-right font-bold">{formatPercentage((cashAfterReinv / inputs.sales) * 100)}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-300 p-3"></td>
