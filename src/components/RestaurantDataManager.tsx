@@ -125,15 +125,15 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
   };
 
   return (
-    <div className="p-8">
+    <div className="p-8 font-manrope">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Panel Central de Restaurantes</h2>
-          <p className="text-gray-600">{allRestaurants.length} restaurantes registrados en total</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 font-manrope">Panel Central de Restaurantes</h2>
+          <p className="text-gray-600 font-manrope">{allRestaurants.length} restaurantes registrados en total</p>
         </div>
         <Button 
           onClick={() => setShowAddForm(!showAddForm)}
-          className="bg-red-600 hover:bg-red-700 text-white font-medium px-6"
+          className="bg-red-600 hover:bg-red-700 text-white font-medium px-6 font-manrope"
         >
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Restaurante
@@ -143,20 +143,20 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
       {showAddForm && (
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="font-manrope">
               {editingRestaurant ? 'Editar Restaurante' : 'Agregar Nuevo Restaurante'}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 font-manrope">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="franchisee">Franquiciado *</Label>
+                  <Label htmlFor="franchisee" className="font-manrope">Franquiciado *</Label>
                   <select
                     id="franchisee"
                     value={formData.franchiseeId}
                     onChange={(e) => setFormData(prev => ({ ...prev, franchiseeId: e.target.value }))}
-                    className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full h-10 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 font-manrope"
                     required
                   >
                     <option value="">Seleccionar franquiciado</option>
@@ -167,62 +167,67 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                 </div>
                 
                 <div>
-                  <Label htmlFor="siteNumber">Número de Site *</Label>
+                  <Label htmlFor="siteNumber" className="font-manrope">Número de Site *</Label>
                   <Input
                     id="siteNumber"
                     value={formData.siteNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, siteNumber: e.target.value }))}
                     placeholder="ej. MCB001"
+                    className="font-manrope"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="restaurantName">Nombre del Restaurante *</Label>
+                  <Label htmlFor="restaurantName" className="font-manrope">Nombre del Restaurante *</Label>
                   <Input
                     id="restaurantName"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="ej. McDonald's Parc Central"
+                    className="font-manrope"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="location">Ubicación *</Label>
+                  <Label htmlFor="location" className="font-manrope">Ubicación *</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                     placeholder="ej. Barcelona, España"
+                    className="font-manrope"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="contractEnd">Fecha Fin de Contrato *</Label>
+                  <Label htmlFor="contractEnd" className="font-manrope">Fecha Fin de Contrato *</Label>
                   <Input
                     id="contractEnd"
                     type="date"
                     value={formData.contractEndDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, contractEndDate: e.target.value }))}
+                    className="font-manrope"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="franchiseEnd">Fecha Fin de Franquicia *</Label>
+                  <Label htmlFor="franchiseEnd" className="font-manrope">Fecha Fin de Franquicia *</Label>
                   <Input
                     id="franchiseEnd"
                     type="date"
                     value={formData.franchiseEndDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, franchiseEndDate: e.target.value }))}
+                    className="font-manrope"
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="isOwnedByMcD" className="flex items-center gap-2">
+                  <Label htmlFor="isOwnedByMcD" className="flex items-center gap-2 font-manrope">
                     <input
                       type="checkbox"
                       id="isOwnedByMcD"
@@ -236,55 +241,59 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
 
                 {!formData.isOwnedByMcD && (
                   <div>
-                    <Label htmlFor="leaseEnd">Fecha Fin de Alquiler</Label>
+                    <Label htmlFor="leaseEnd" className="font-manrope">Fecha Fin de Alquiler</Label>
                     <Input
                       id="leaseEnd"
                       type="date"
                       value={formData.leaseEndDate}
                       onChange={(e) => setFormData(prev => ({ ...prev, leaseEndDate: e.target.value }))}
+                      className="font-manrope"
                     />
                   </div>
                 )}
 
                 <div>
-                  <Label htmlFor="lastYearRevenue">Facturación Último Año (€)</Label>
+                  <Label htmlFor="lastYearRevenue" className="font-manrope">Facturación Último Año (€)</Label>
                   <Input
                     id="lastYearRevenue"
                     type="number"
                     value={formData.lastYearRevenue}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastYearRevenue: Number(e.target.value) }))}
                     placeholder="2454919"
+                    className="font-manrope"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="baseRent">Renta Base (€)</Label>
+                  <Label htmlFor="baseRent" className="font-manrope">Renta Base (€)</Label>
                   <Input
                     id="baseRent"
                     type="number"
                     value={formData.baseRent}
                     onChange={(e) => setFormData(prev => ({ ...prev, baseRent: Number(e.target.value) }))}
                     placeholder="281579"
+                    className="font-manrope"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="rentIndex">Rent Index (€)</Label>
+                  <Label htmlFor="rentIndex" className="font-manrope">Rent Index (€)</Label>
                   <Input
                     id="rentIndex"
                     type="number"
                     value={formData.rentIndex}
                     onChange={(e) => setFormData(prev => ({ ...prev, rentIndex: Number(e.target.value) }))}
                     placeholder="75925"
+                    className="font-manrope"
                   />
                 </div>
               </div>
 
               <div className="flex gap-3 pt-4">
-                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
+                <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-manrope">
                   {editingRestaurant ? 'Actualizar' : 'Guardar'}
                 </Button>
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button type="button" variant="outline" onClick={resetForm} className="font-manrope">
                   Cancelar
                 </Button>
               </div>
@@ -295,127 +304,159 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Site #</TableHead>
-                <TableHead>Restaurante</TableHead>
-                <TableHead>Franquiciado</TableHead>
-                <TableHead>Ubicación</TableHead>
-                <TableHead>Fin Franquicia</TableHead>
-                <TableHead>Fin Alquiler</TableHead>
-                <TableHead>Propiedad</TableHead>
-                <TableHead>Facturación</TableHead>
-                <TableHead>Renta Base</TableHead>
-                <TableHead>Rent Index</TableHead>
-                <TableHead>Valoración</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allRestaurants.map((restaurant) => (
-                <TableRow key={restaurant.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Hash className="w-4 h-4 text-gray-400" />
-                      {restaurant.siteNumber}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold">{restaurant.name}</TableCell>
-                  <TableCell>{restaurant.franchiseeName}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      {restaurant.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      {restaurant.franchiseEndDate ? new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES') : 'N/A'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-orange-600" />
-                      {restaurant.isOwnedByMcD ? 
-                        <span className="text-green-600 font-medium">Propiedad McD</span> : 
-                        (restaurant.leaseEndDate ? new Date(restaurant.leaseEndDate).toLocaleDateString('es-ES') : 'N/A')
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {restaurant.isOwnedByMcD ? (
-                      <div className="flex items-center gap-1">
-                        <Shield className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600 font-medium">McD</span>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1200px] border-collapse font-manrope text-sm">
+              <thead>
+                <tr>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[100px]">
+                    Site #
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[180px]">
+                    Restaurante
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[150px]">
+                    Franquiciado
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[150px]">
+                    Ubicación
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
+                    Fin Franquicia
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
+                    Fin Alquiler
+                  </th>
+                  <th className="border border-gray-300 p-4 text-left bg-gray-800 text-white font-semibold font-manrope min-w-[100px]">
+                    Propiedad
+                  </th>
+                  <th className="border border-gray-300 p-4 text-right bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
+                    Facturación
+                  </th>
+                  <th className="border border-gray-300 p-4 text-right bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
+                    Renta Base
+                  </th>
+                  <th className="border border-gray-300 p-4 text-right bg-gray-800 text-white font-semibold font-manrope min-w-[100px]">
+                    Rent Index
+                  </th>
+                  <th className="border border-gray-300 p-4 text-center bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
+                    Valoración
+                  </th>
+                  <th className="border border-gray-300 p-4 text-center bg-gray-800 text-white font-semibold font-manrope min-w-[100px]">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {allRestaurants.map((restaurant, index) => (
+                  <tr key={restaurant.id} className="hover:bg-blue-50 transition-all duration-200">
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      <div className="flex items-center gap-2">
+                        <Hash className="w-4 h-4 text-gray-400" />
+                        <span className="font-medium">{restaurant.siteNumber}</span>
                       </div>
-                    ) : (
-                      <span className="text-gray-500">Alquiler</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Euro className="w-4 h-4 text-green-600" />
-                      {formatNumber(restaurant.lastYearRevenue)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Building2 className="w-4 h-4 text-blue-600" />
-                      {formatNumber(restaurant.baseRent)}
-                    </div>
-                  </TableCell>
-                  <TableCell>€{formatNumber(restaurant.rentIndex)}</TableCell>
-                  <TableCell>
-                    {restaurant.currentValuation ? (
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-green-800">
-                          €{formatNumber(restaurant.currentValuation.finalValuation)}
-                        </p>
-                        <p className="text-xs text-green-600">
-                          {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
-                        </p>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-semibold font-manrope">
+                      {restaurant.name}
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      {restaurant.franchiseeName}
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        {restaurant.location}
                       </div>
-                    ) : (
-                      <span className="text-gray-500 text-sm">Sin valorar</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(restaurant)}
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleValuationClick(restaurant)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <TrendingUp className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-blue-600" />
+                        {restaurant.franchiseEndDate ? new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES') : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-orange-600" />
+                        {restaurant.isOwnedByMcD ? 
+                          <span className="text-green-600 font-medium">Propiedad McD</span> : 
+                          (restaurant.leaseEndDate ? new Date(restaurant.leaseEndDate).toLocaleDateString('es-ES') : 'N/A')
+                        }
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white font-manrope">
+                      {restaurant.isOwnedByMcD ? (
+                        <div className="flex items-center gap-1">
+                          <Shield className="w-4 h-4 text-green-600" />
+                          <span className="text-green-600 font-medium">McD</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500">Alquiler</span>
+                      )}
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white text-right font-manrope">
+                      <div className="flex items-center justify-end gap-1">
+                        <Euro className="w-4 h-4 text-green-600" />
+                        <span className="font-medium">{formatNumber(restaurant.lastYearRevenue)}</span>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white text-right font-manrope">
+                      <div className="flex items-center justify-end gap-1">
+                        <Building2 className="w-4 h-4 text-blue-600" />
+                        <span className="font-medium">{formatNumber(restaurant.baseRent)}</span>
+                      </div>
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white text-right font-manrope font-medium">
+                      €{formatNumber(restaurant.rentIndex)}
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white text-center font-manrope">
+                      {restaurant.currentValuation ? (
+                        <div>
+                          <p className="text-sm font-semibold text-green-800">
+                            €{formatNumber(restaurant.currentValuation.finalValuation)}
+                          </p>
+                          <p className="text-xs text-green-600">
+                            {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-gray-500 text-sm">Sin valorar</span>
+                      )}
+                    </td>
+                    <td className="border border-gray-300 p-4 bg-white text-center">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(restaurant)}
+                          className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-manrope"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleValuationClick(restaurant)}
+                          className="text-blue-600 hover:text-blue-900 hover:bg-blue-100 font-manrope"
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {allRestaurants.length === 0 && (
-            <div className="text-center py-16">
+            <div className="text-center py-16 font-manrope">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-10 h-10 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay restaurantes registrados</h3>
-              <p className="text-gray-600 mb-6">Comienza agregando el primer restaurante al sistema</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2 font-manrope">No hay restaurantes registrados</h3>
+              <p className="text-gray-600 mb-6 font-manrope">Comienza agregando el primer restaurante al sistema</p>
               <Button 
                 onClick={() => setShowAddForm(true)}
-                className="bg-red-600 hover:bg-red-700 text-white font-medium px-6"
+                className="bg-red-600 hover:bg-red-700 text-white font-medium px-6 font-manrope"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Restaurante
