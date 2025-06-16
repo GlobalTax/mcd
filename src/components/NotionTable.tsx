@@ -12,101 +12,140 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, ChevronDown } from 'lucide-react';
+import { calculateRestaurantValuation } from '@/utils/valuationCalculator';
 
-interface TableData {
+interface ProjectionData {
   id: string;
-  subjectLine: string;
-  sendSize: number;
-  openRate: string;
-  unsubscriptionRate: string;
-  ctaClickThrough: string;
+  year: number;
+  sales: number;
+  pac: number;
+  rent: number;
+  serviceFees: number;
+  soi: number;
+  cashflow: number;
+  freeCashFlow: number;
 }
 
-const initialData: TableData[] = [
-  {
-    id: '1',
-    subjectLine: 'Grow with Acme 🚀',
-    sendSize: 20000,
-    openRate: '34.3%',
-    unsubscriptionRate: '0.31%',
-    ctaClickThrough: '2.1%'
-  },
-  {
-    id: '2',
-    subjectLine: 'Acme tips + tricks',
-    sendSize: 20000,
-    openRate: '29.4%',
-    unsubscriptionRate: '0.26%',
-    ctaClickThrough: '1.9%'
-  },
-  {
-    id: '3',
-    subjectLine: 'Acme 101 📚',
-    sendSize: 20000,
-    openRate: '30.7%',
-    unsubscriptionRate: '0.22%',
-    ctaClickThrough: '2.4%'
-  }
-];
+// Datos base para la proyección
+const baseData = {
+  valuationDate: new Date().toISOString().split('T')[0],
+  initialSales: 2454919,
+  salesGrowthRate: 3,
+  inflationRate: 1.5,
+  discountRate: 21,
+  yearsRemaining: 20,
+  pacPercentage: 32,
+  rentPercentage: 11.47,
+  serviceFeesPercentage: 5,
+  depreciation: 72092,
+  interest: 19997,
+  loanPayment: 31478,
+  rentIndex: 75925,
+  miscellaneous: 85521
+};
+
+// Calcular proyecciones iniciales
+const calculateInitialProjections = (): ProjectionData[] => {
+  const result = calculateRestaurantValuation(baseData);
+  return result.yearlyProjections.slice(0, 10).map((projection, index) => ({
+    id: (index + 1).toString(),
+    year: projection.year,
+    sales: projection.sales,
+    pac: projection.pac,
+    rent: projection.rent,
+    serviceFees: projection.serviceFees,
+    soi: projection.soi,
+    cashflow: projection.cashflow,
+    freeCashFlow: projection.freeCashFlow
+  }));
+};
 
 const definitions = [
   {
-    term: 'Send size',
-    definition: 'The number of registered users who receive an email send — does not account for undelivered %'
+    term: 'Sales',
+    definition: 'Ventas totales proyectadas con crecimiento anual del 3%'
   },
   {
-    term: 'Open rate',
-    definition: 'Percentage of users who open the email'
+    term: 'P.A.C.',
+    definition: 'Costo de comida y papel como porcentaje de ventas (32%)'
   },
   {
-    term: 'Unsubscription rate',
-    definition: 'Percentage of users who opted-out from the mailing list from the body of an email'
+    term: 'Rent',
+    definition: 'Alquiler como porcentaje de ventas (11.47%)'
   },
   {
-    term: 'CTA click-through',
-    definition: 'Percentage of users who clicked on a call-to-action button or link in the email'
+    term: 'Service Fees',
+    definition: 'Tarifas de servicio como porcentaje de ventas (5%)'
+  },
+  {
+    term: 'S.O.I.',
+    definition: 'Store Operating Income - Ingresos operativos después de todos los gastos'
+  },
+  {
+    term: 'Cashflow',
+    definition: 'Flujo de caja operativo incluyendo pagos de préstamo'
+  },
+  {
+    term: 'Free Cash Flow',
+    definition: 'Flujo de caja libre después de reinversiones y depreciación'
   }
 ];
 
 export function NotionTable() {
-  const [data, setData] = useState<TableData[]>(initialData);
+  const [data, setData] = useState<ProjectionData[]>(calculateInitialProjections());
   const [showDefinitions, setShowDefinitions] = useState(false);
   const [newRow, setNewRow] = useState({
-    subjectLine: '',
-    sendSize: '',
-    openRate: '',
-    unsubscriptionRate: '',
-    ctaClickThrough: ''
+    year: '',
+    sales: '',
+    pac: '',
+    rent: '',
+    serviceFees: '',
+    soi: '',
+    cashflow: '',
+    freeCashFlow: ''
   });
   const [isAddingRow, setIsAddingRow] = useState(false);
 
   const handleAddRow = () => {
-    if (newRow.subjectLine && newRow.sendSize) {
-      const newData: TableData = {
+    if (newRow.year && newRow.sales) {
+      const newData: ProjectionData = {
         id: Date.now().toString(),
-        subjectLine: newRow.subjectLine,
-        sendSize: parseInt(newRow.sendSize),
-        openRate: newRow.openRate || '0%',
-        unsubscriptionRate: newRow.unsubscriptionRate || '0%',
-        ctaClickThrough: newRow.ctaClickThrough || '0%'
+        year: parseInt(newRow.year),
+        sales: parseFloat(newRow.sales),
+        pac: parseFloat(newRow.pac) || 0,
+        rent: parseFloat(newRow.rent) || 0,
+        serviceFees: parseFloat(newRow.serviceFees) || 0,
+        soi: parseFloat(newRow.soi) || 0,
+        cashflow: parseFloat(newRow.cashflow) || 0,
+        freeCashFlow: parseFloat(newRow.freeCashFlow) || 0
       };
       
       setData([...data, newData]);
       setNewRow({
-        subjectLine: '',
-        sendSize: '',
-        openRate: '',
-        unsubscriptionRate: '',
-        ctaClickThrough: ''
+        year: '',
+        sales: '',
+        pac: '',
+        rent: '',
+        serviceFees: '',
+        soi: '',
+        cashflow: '',
+        freeCashFlow: ''
       });
       setIsAddingRow(false);
     }
   };
 
-  const handleCellEdit = (id: string, field: keyof TableData, value: string | number) => {
-    setData(data.map(row => 
-      row.id === id ? { ...row, [field]: value } : row
-    ));
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const formatYear = (year: number) => {
+    return year.toString();
   };
 
   return (
@@ -116,7 +155,7 @@ export function NotionTable() {
           <div className="w-6 h-6 bg-orange-100 rounded flex items-center justify-center">
             <span className="text-orange-600 text-sm">📊</span>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">Meeting Notes / Growth team weekly</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Valoración Restaurante / Proyecciones Financieras</h1>
         </div>
       </div>
 
@@ -124,7 +163,7 @@ export function NotionTable() {
         <Card className="border-0 shadow-none bg-transparent">
           <CardHeader className="px-0 pb-4">
             <CardTitle className="text-3xl font-bold text-gray-900">
-              Email send update
+              Proyecciones Financieras 2025-2034
             </CardTitle>
           </CardHeader>
           
@@ -133,11 +172,14 @@ export function NotionTable() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50 border-b border-gray-200">
-                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Subject line</TableHead>
-                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Send size</TableHead>
-                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Open rate</TableHead>
-                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Unsubscription rate</TableHead>
-                    <TableHead className="font-semibold text-gray-700 py-4 px-6">CTA click-through</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Año</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Ventas</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">P.A.C.</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Alquiler</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Service Fees</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">S.O.I.</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Cashflow</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 px-6">Free Cash Flow</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -147,25 +189,30 @@ export function NotionTable() {
                       className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
                       <TableCell className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          {row.subjectLine.includes('🚀') && <span>🚀</span>}
-                          {row.subjectLine.includes('📚') && <span>📚</span>}
-                          <span className="font-medium text-gray-900">
-                            {row.subjectLine.replace(/🚀|📚/g, '').trim()}
-                          </span>
-                        </div>
+                        <span className="font-medium text-gray-900">
+                          {formatYear(row.year)}
+                        </span>
                       </TableCell>
                       <TableCell className="py-4 px-6 text-gray-700">
-                        {row.sendSize.toLocaleString()}
+                        {formatCurrency(row.sales)}
                       </TableCell>
                       <TableCell className="py-4 px-6 text-gray-700">
-                        {row.openRate}
+                        {formatCurrency(row.pac)}
                       </TableCell>
                       <TableCell className="py-4 px-6 text-gray-700">
-                        {row.unsubscriptionRate}
+                        {formatCurrency(row.rent)}
                       </TableCell>
                       <TableCell className="py-4 px-6 text-gray-700">
-                        {row.ctaClickThrough}
+                        {formatCurrency(row.serviceFees)}
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-gray-700">
+                        {formatCurrency(row.soi)}
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-gray-700">
+                        {formatCurrency(row.cashflow)}
+                      </TableCell>
+                      <TableCell className="py-4 px-6 text-gray-700 font-semibold">
+                        {formatCurrency(row.freeCashFlow)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -174,42 +221,73 @@ export function NotionTable() {
                     <TableRow className="border-b border-gray-100">
                       <TableCell className="py-4 px-6">
                         <Input
-                          value={newRow.subjectLine}
-                          onChange={(e) => setNewRow({...newRow, subjectLine: e.target.value})}
-                          placeholder="Subject line"
+                          type="number"
+                          value={newRow.year}
+                          onChange={(e) => setNewRow({...newRow, year: e.target.value})}
+                          placeholder="2035"
                           className="border-0 p-0 h-auto focus-visible:ring-0"
                         />
                       </TableCell>
                       <TableCell className="py-4 px-6">
                         <Input
                           type="number"
-                          value={newRow.sendSize}
-                          onChange={(e) => setNewRow({...newRow, sendSize: e.target.value})}
+                          value={newRow.sales}
+                          onChange={(e) => setNewRow({...newRow, sales: e.target.value})}
                           placeholder="0"
                           className="border-0 p-0 h-auto focus-visible:ring-0"
                         />
                       </TableCell>
                       <TableCell className="py-4 px-6">
                         <Input
-                          value={newRow.openRate}
-                          onChange={(e) => setNewRow({...newRow, openRate: e.target.value})}
-                          placeholder="0%"
+                          type="number"
+                          value={newRow.pac}
+                          onChange={(e) => setNewRow({...newRow, pac: e.target.value})}
+                          placeholder="0"
                           className="border-0 p-0 h-auto focus-visible:ring-0"
                         />
                       </TableCell>
                       <TableCell className="py-4 px-6">
                         <Input
-                          value={newRow.unsubscriptionRate}
-                          onChange={(e) => setNewRow({...newRow, unsubscriptionRate: e.target.value})}
-                          placeholder="0%"
+                          type="number"
+                          value={newRow.rent}
+                          onChange={(e) => setNewRow({...newRow, rent: e.target.value})}
+                          placeholder="0"
                           className="border-0 p-0 h-auto focus-visible:ring-0"
                         />
                       </TableCell>
                       <TableCell className="py-4 px-6">
                         <Input
-                          value={newRow.ctaClickThrough}
-                          onChange={(e) => setNewRow({...newRow, ctaClickThrough: e.target.value})}
-                          placeholder="0%"
+                          type="number"
+                          value={newRow.serviceFees}
+                          onChange={(e) => setNewRow({...newRow, serviceFees: e.target.value})}
+                          placeholder="0"
+                          className="border-0 p-0 h-auto focus-visible:ring-0"
+                        />
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <Input
+                          type="number"
+                          value={newRow.soi}
+                          onChange={(e) => setNewRow({...newRow, soi: e.target.value})}
+                          placeholder="0"
+                          className="border-0 p-0 h-auto focus-visible:ring-0"
+                        />
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <Input
+                          type="number"
+                          value={newRow.cashflow}
+                          onChange={(e) => setNewRow({...newRow, cashflow: e.target.value})}
+                          placeholder="0"
+                          className="border-0 p-0 h-auto focus-visible:ring-0"
+                        />
+                      </TableCell>
+                      <TableCell className="py-4 px-6">
+                        <Input
+                          type="number"
+                          value={newRow.freeCashFlow}
+                          onChange={(e) => setNewRow({...newRow, freeCashFlow: e.target.value})}
+                          placeholder="0"
                           className="border-0 p-0 h-auto focus-visible:ring-0"
                         />
                       </TableCell>
@@ -226,19 +304,19 @@ export function NotionTable() {
                     className="text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Add row
+                    Agregar año
                   </Button>
                 ) : (
                   <div className="flex gap-2">
                     <Button onClick={handleAddRow} size="sm">
-                      Save
+                      Guardar
                     </Button>
                     <Button 
                       variant="ghost" 
                       onClick={() => setIsAddingRow(false)}
                       size="sm"
                     >
-                      Cancel
+                      Cancelar
                     </Button>
                   </div>
                 )}
@@ -253,7 +331,7 @@ export function NotionTable() {
             onClick={() => setShowDefinitions(!showDefinitions)}
           >
             <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${showDefinitions ? 'rotate-0' : '-rotate-90'}`} />
-            <h3 className="text-lg font-semibold text-gray-900">A quick note on data definitions</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Definiciones de métricas financieras</h3>
           </div>
           
           {showDefinitions && (
@@ -261,8 +339,8 @@ export function NotionTable() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-gray-200">
-                    <TableHead className="font-semibold text-gray-700 py-3 w-48">Term</TableHead>
-                    <TableHead className="font-semibold text-gray-700 py-3">Definition</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-3 w-48">Término</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-3">Definición</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
