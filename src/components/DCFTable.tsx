@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
@@ -102,12 +103,26 @@ const DCFTable = () => {
       
       if (timeToNextYear <= 0) break;
       
-      const yearCashAfterReinv = yearData.pac - yearData.rent - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
-      const yearCfLibre = yearCashAfterReinv + yearData.loanPayment;
+      // Cálculo correcto siguiendo el modelo Excel:
+      // Total Non-Controllables = Rent + Service Fees + Depreciation + Interest + Rent Index + Miscell
+      const totalNonControllables = yearData.rent + yearData.serviceFees + yearData.depreciation + yearData.interest + yearData.rentIndex + yearData.miscell;
       
-      let cfValue = yearCfLibre;
+      // S.O.I. = Sales - P.A.C. - Total Non-Controllables
+      const soi = yearData.sales - yearData.pac - totalNonControllables;
+      
+      // CASHFLOW = S.O.I. + LOAN PAYMENT
+      const cashflow = soi + yearData.loanPayment;
+      
+      // CASH AFTER REINV = CASHFLOW (sin reinversión)
+      const cashAfterReinv = cashflow;
+      
+      // CF LIBRE = CASH AFTER REINV + DEPRECIATION (porque la depreciación es gasto no efectivo)
+      const cfLibre = cashAfterReinv + yearData.depreciation;
+      
+      // Para el VNA usamos CF LIBRE (no CASH AFTER REINV como estaba antes)
+      let cfValue = cfLibre;
       if (timeToNextYear < 1) {
-        cfValue = yearCfLibre * timeToNextYear;
+        cfValue = cfLibre * timeToNextYear;
       }
       
       const discountTime = currentTime + timeToNextYear;
@@ -123,6 +138,10 @@ const DCFTable = () => {
       
       currentTime += timeToNextYear;
     }
+    
+    console.log('Proyecciones calculadas:', projections);
+    console.log('CF Libre por año:', projections.map(p => p.cfValue));
+    console.log('Valores presentes:', projections.map(p => p.presentValue));
     
     return projections;
   };

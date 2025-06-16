@@ -12,6 +12,7 @@ interface ProjectionSummaryProps {
 const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) => {
   if (projections.length === 0) return null;
 
+  const totalCfLibre = projections.reduce((sum, p) => sum + p.cfValue, 0);
   const totalPresentValue = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
   return (
@@ -33,7 +34,7 @@ const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) 
               {projections.map((p, index)  => (
                 <tr key={index}>
                   <td className="border border-gray-300 p-2 min-w-[120px]">
-                    Año {p.year}
+                    Año {index + 1}
                     {p.timeToNextYear < 1 && (
                       <span className="text-xs text-gray-600">
                         {" "}({(p.timeToNextYear * 12).toFixed(1)} meses)
@@ -46,7 +47,7 @@ const ProjectionSummary = ({ projections, totalPrice }: ProjectionSummaryProps) 
               ))}
               <tr className="bg-green-100 font-bold">
                 <td className="border border-gray-300 p-2 min-w-[120px]">TOTAL</td>
-                <td className="border border-gray-300 p-2 text-right min-w-[140px]">{formatCurrency(projections.reduce((sum, p) => sum + p.cfValue, 0))}</td>
+                <td className="border border-gray-300 p-2 text-right min-w-[140px]">{formatCurrency(totalCfLibre)}</td>
                 <td className="border border-gray-300 p-2 text-right text-green-600 min-w-[140px]">{formatCurrency(totalPresentValue)}</td>
               </tr>
             </tbody>
