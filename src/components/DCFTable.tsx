@@ -41,26 +41,23 @@ const DCFTable = () => {
     }
   }, [inputs.changeDate, inputs.franchiseEndDate]);
 
-  // Inicializar datos anuales cuando cambian los años restantes
+  // Inicializar datos anuales VACÍOS cuando cambian los años restantes
   useEffect(() => {
     if (inputs.remainingYears > 0) {
       const yearsCount = Math.ceil(inputs.remainingYears);
       const newYearlyData: YearlyData[] = [];
       
       for (let i = 0; i < yearsCount; i++) {
-        const growthFactor = Math.pow(1 + inputs.growthRate / 100, i);
-        const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, i);
-        
         newYearlyData.push({
-          sales: Math.round(inputs.sales * growthFactor * inflationFactor),
-          pac: Math.round(inputs.pac * growthFactor * inflationFactor),
-          rent: Math.round(inputs.rent * inflationFactor),
-          serviceFees: Math.round(inputs.serviceFees * inflationFactor),
-          depreciation: Math.round(inputs.depreciation * inflationFactor),
-          interest: Math.round(inputs.interest * inflationFactor),
-          rentIndex: Math.round(inputs.rentIndex * inflationFactor),
-          miscell: Math.round(inputs.miscell * inflationFactor),
-          loanPayment: inputs.loanPayment
+          sales: 0,
+          pac: 0,
+          rent: 0,
+          serviceFees: 0,
+          depreciation: 0,
+          interest: 0,
+          rentIndex: 0,
+          miscell: 0,
+          loanPayment: 0
         });
       }
       
@@ -68,9 +65,7 @@ const DCFTable = () => {
     } else {
       setYearlyData([]);
     }
-  }, [inputs.remainingYears, inputs.sales, inputs.pac, inputs.rent, inputs.serviceFees, 
-      inputs.depreciation, inputs.interest, inputs.rentIndex, inputs.miscell, 
-      inputs.loanPayment, inputs.growthRate, inputs.inflationRate]);
+  }, [inputs.remainingYears]);
 
   const handleInputChange = (key: keyof ValuationInputs, value: number | string) => {
     setInputs(prev => ({
@@ -102,6 +97,12 @@ const DCFTable = () => {
       const timeToNextYear = Math.min(1, inputs.remainingYears - currentTime);
       
       if (timeToNextYear <= 0) break;
+      
+      // Solo calcular si hay datos introducidos
+      if (yearData.sales === 0 && yearData.pac === 0) {
+        currentTime += timeToNextYear;
+        continue;
+      }
       
       // Cálculo correcto siguiendo el modelo Excel:
       // Total Non-Controllables = Rent + Service Fees + Depreciation + Interest + Rent Index + Miscell
