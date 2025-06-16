@@ -28,7 +28,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
               <tr>
                 <th className="border border-gray-300 p-2 text-left font-bold bg-gray-50">Concepto</th>
                 {Array.from({ length: yearsCount }, (_, i) => (
-                  <React.Fragment key={`year-${i}`}>
+                  <React.Fragment key={i}>
                     <th className="border border-gray-300 p-2 text-center font-bold bg-gray-50">
                       Año {i + 1}
                       {i === yearsCount - 1 && inputs.remainingYears % 1 !== 0 && (
