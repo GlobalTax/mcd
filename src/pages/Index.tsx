@@ -1,8 +1,8 @@
 
-import { NotionTable } from "@/components/NotionTable";
+import { DCFTable } from "@/components/DCFTable";
 
 const Index = () => {
-  return <NotionTable />;
+  return <DCFTable />;
 };
 
 export default Index;
