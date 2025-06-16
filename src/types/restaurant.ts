@@ -14,6 +14,13 @@ export interface Restaurant {
   location: string;
   franchiseeId: string;
   contractEndDate: string;
+  
+  // New fields for central management
+  siteNumber: string;
+  lastYearRevenue: number;
+  baseRent: number;
+  rentIndex: number;
+  
   currentValuation?: RestaurantValuation;
   valuationHistory: RestaurantValuation[];
   createdAt: Date;

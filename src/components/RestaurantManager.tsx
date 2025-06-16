@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Restaurant, Franchisee } from '@/types/restaurant';
-import { Plus, MapPin, Calendar, TrendingUp } from 'lucide-react';
+import { Plus, MapPin, Calendar, TrendingUp, Hash, Euro, Building2 } from 'lucide-react';
 
 interface RestaurantManagerProps {
   franchisee: Franchisee;
@@ -24,17 +24,29 @@ export function RestaurantManager({
   const [newRestaurant, setNewRestaurant] = useState({
     name: '',
     location: '',
-    contractEndDate: ''
+    contractEndDate: '',
+    siteNumber: '',
+    lastYearRevenue: 0,
+    baseRent: 0,
+    rentIndex: 0
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newRestaurant.name && newRestaurant.location && newRestaurant.contractEndDate) {
+    if (newRestaurant.name && newRestaurant.location && newRestaurant.contractEndDate && newRestaurant.siteNumber) {
       onAddRestaurant({
         ...newRestaurant,
         franchiseeId: franchisee.id
       });
-      setNewRestaurant({ name: '', location: '', contractEndDate: '' });
+      setNewRestaurant({ 
+        name: '', 
+        location: '', 
+        contractEndDate: '', 
+        siteNumber: '', 
+        lastYearRevenue: 0, 
+        baseRent: 0, 
+        rentIndex: 0 
+      });
       setShowAddForm(false);
     }
   };
@@ -59,7 +71,18 @@ export function RestaurantManager({
         <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Agregar Nuevo Restaurante</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="siteNumber" className="text-gray-700 font-medium">Número de Site *</Label>
+                <Input
+                  id="siteNumber"
+                  value={newRestaurant.siteNumber}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, siteNumber: e.target.value }))}
+                  placeholder="ej. MCB001"
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  required
+                />
+              </div>
               <div>
                 <Label htmlFor="restaurantName" className="text-gray-700 font-medium">Nombre del Restaurante *</Label>
                 <Input
@@ -82,17 +105,50 @@ export function RestaurantManager({
                   required
                 />
               </div>
-            </div>
-            <div>
-              <Label htmlFor="contractEnd" className="text-gray-700 font-medium">Fecha Fin de Contrato *</Label>
-              <Input
-                id="contractEnd"
-                type="date"
-                value={newRestaurant.contractEndDate}
-                onChange={(e) => setNewRestaurant(prev => ({ ...prev, contractEndDate: e.target.value }))}
-                className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
-                required
-              />
+              <div>
+                <Label htmlFor="contractEnd" className="text-gray-700 font-medium">Fecha Fin de Contrato *</Label>
+                <Input
+                  id="contractEnd"
+                  type="date"
+                  value={newRestaurant.contractEndDate}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, contractEndDate: e.target.value }))}
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastYearRevenue" className="text-gray-700 font-medium">Facturación Último Año (€)</Label>
+                <Input
+                  id="lastYearRevenue"
+                  type="number"
+                  value={newRestaurant.lastYearRevenue}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, lastYearRevenue: Number(e.target.value) }))}
+                  placeholder="2454919"
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
+              <div>
+                <Label htmlFor="baseRent" className="text-gray-700 font-medium">Renta Base (€)</Label>
+                <Input
+                  id="baseRent"
+                  type="number"
+                  value={newRestaurant.baseRent}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, baseRent: Number(e.target.value) }))}
+                  placeholder="281579"
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
+              <div>
+                <Label htmlFor="rentIndex" className="text-gray-700 font-medium">Rent Index (€)</Label>
+                <Input
+                  id="rentIndex"
+                  type="number"
+                  value={newRestaurant.rentIndex}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, rentIndex: Number(e.target.value) }))}
+                  placeholder="75925"
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                />
+              </div>
             </div>
             <div className="flex gap-3 pt-2">
               <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
@@ -117,7 +173,13 @@ export function RestaurantManager({
           >
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <h3 className="font-semibold text-xl text-gray-900">{restaurant.name}</h3>
+                <div>
+                  <h3 className="font-semibold text-xl text-gray-900">{restaurant.name}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                    <Hash className="w-4 h-4" />
+                    <span>Site: {restaurant.siteNumber}</span>
+                  </div>
+                </div>
                 <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <span className="text-yellow-600 font-bold text-lg">M</span>
                 </div>
@@ -127,6 +189,23 @@ export function RestaurantManager({
                 <div className="flex items-center gap-3 text-gray-600">
                   <MapPin className="w-5 h-5" />
                   <span className="font-medium">{restaurant.location}</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Euro className="w-4 h-4 text-green-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Facturación</p>
+                      <p className="font-medium">€{restaurant.lastYearRevenue.toLocaleString('es-ES')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Renta Base</p>
+                      <p className="font-medium">€{restaurant.baseRent.toLocaleString('es-ES')}</p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-3 text-gray-600">
