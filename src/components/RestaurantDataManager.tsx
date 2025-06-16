@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Restaurant, Franchisee } from '@/types/restaurant';
-import { Plus, Edit, MapPin, Euro, Building2, Hash, Calendar, Shield } from 'lucide-react';
+import { Plus, Edit, MapPin, Euro, Building2, Hash, Calendar, Shield, TrendingUp } from 'lucide-react';
 
 interface RestaurantDataManagerProps {
   franchisees: Franchisee[];
   onUpdateFranchisees: (franchisees: Franchisee[]) => void;
+  onSelectRestaurant?: (restaurant: Restaurant) => void;
 }
 
-export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: RestaurantDataManagerProps) {
+export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSelectRestaurant }: RestaurantDataManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingRestaurant, setEditingRestaurant] = useState<Restaurant | null>(null);
   const [formData, setFormData] = useState({
@@ -109,6 +109,12 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
     });
     setEditingRestaurant(restaurant);
     setShowAddForm(true);
+  };
+
+  const handleValuationClick = (restaurant: Restaurant & { franchiseeName: string }) => {
+    if (onSelectRestaurant) {
+      onSelectRestaurant(restaurant);
+    }
   };
 
   const formatNumber = (value: number | undefined | null): string => {
@@ -302,6 +308,7 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                 <TableHead>Facturación</TableHead>
                 <TableHead>Renta Base</TableHead>
                 <TableHead>Rent Index</TableHead>
+                <TableHead>Valoración</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -361,14 +368,38 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                   </TableCell>
                   <TableCell>€{formatNumber(restaurant.rentIndex)}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(restaurant)}
-                      className="text-gray-600 hover:text-gray-900"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                    {restaurant.currentValuation ? (
+                      <div className="text-center">
+                        <p className="text-sm font-semibold text-green-800">
+                          €{formatNumber(restaurant.currentValuation.finalValuation)}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500 text-sm">Sin valorar</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(restaurant)}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleValuationClick(restaurant)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
