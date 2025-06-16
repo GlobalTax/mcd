@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Restaurant, Franchisee } from '@/types/restaurant';
 import { Plus, MapPin, Calendar, TrendingUp, Hash, Euro, Building2 } from 'lucide-react';
 
@@ -28,15 +28,19 @@ export function RestaurantManager({
     siteNumber: '',
     lastYearRevenue: 0,
     baseRent: 0,
-    rentIndex: 0
+    rentIndex: 0,
+    franchiseEndDate: '',
+    leaseEndDate: '',
+    isOwnedByMcD: false
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newRestaurant.name && newRestaurant.location && newRestaurant.contractEndDate && newRestaurant.siteNumber) {
+    if (newRestaurant.name && newRestaurant.location && newRestaurant.contractEndDate && newRestaurant.siteNumber && newRestaurant.franchiseEndDate) {
       onAddRestaurant({
         ...newRestaurant,
-        franchiseeId: franchisee.id
+        franchiseeId: franchisee.id,
+        leaseEndDate: newRestaurant.isOwnedByMcD ? undefined : newRestaurant.leaseEndDate
       });
       setNewRestaurant({ 
         name: '', 
@@ -45,7 +49,10 @@ export function RestaurantManager({
         siteNumber: '', 
         lastYearRevenue: 0, 
         baseRent: 0, 
-        rentIndex: 0 
+        rentIndex: 0,
+        franchiseEndDate: '',
+        leaseEndDate: '',
+        isOwnedByMcD: false
       });
       setShowAddForm(false);
     }
@@ -117,6 +124,17 @@ export function RestaurantManager({
                 />
               </div>
               <div>
+                <Label htmlFor="franchiseEnd" className="text-gray-700 font-medium">Fecha Fin de Franquicia *</Label>
+                <Input
+                  id="franchiseEnd"
+                  type="date"
+                  value={newRestaurant.franchiseEndDate}
+                  onChange={(e) => setNewRestaurant(prev => ({ ...prev, franchiseEndDate: e.target.value }))}
+                  className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  required
+                />
+              </div>
+              <div>
                 <Label htmlFor="lastYearRevenue" className="text-gray-700 font-medium">Facturación Último Año (€)</Label>
                 <Input
                   id="lastYearRevenue"
@@ -150,6 +168,37 @@ export function RestaurantManager({
                 />
               </div>
             </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isOwnedByMcD"
+                  checked={newRestaurant.isOwnedByMcD}
+                  onCheckedChange={(checked) => setNewRestaurant(prev => ({ 
+                    ...prev, 
+                    isOwnedByMcD: checked as boolean,
+                    leaseEndDate: checked ? '' : prev.leaseEndDate
+                  }))}
+                />
+                <Label htmlFor="isOwnedByMcD" className="text-gray-700 font-medium">
+                  Propiedad de McDonald's (sin fecha de alquiler)
+                </Label>
+              </div>
+              
+              {!newRestaurant.isOwnedByMcD && (
+                <div>
+                  <Label htmlFor="leaseEnd" className="text-gray-700 font-medium">Fecha Fin de Alquiler</Label>
+                  <Input
+                    id="leaseEnd"
+                    type="date"
+                    value={newRestaurant.leaseEndDate}
+                    onChange={(e) => setNewRestaurant(prev => ({ ...prev, leaseEndDate: e.target.value }))}
+                    className="mt-1 border-gray-300 focus:border-red-500 focus:ring-red-500"
+                  />
+                </div>
+              )}
+            </div>
+            
             <div className="flex gap-3 pt-2">
               <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
                 Guardar
@@ -212,6 +261,22 @@ export function RestaurantManager({
                   <Calendar className="w-5 h-5" />
                   <span>Contrato hasta: <span className="font-medium">{new Date(restaurant.contractEndDate).toLocaleDateString('es-ES')}</span></span>
                 </div>
+                
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Calendar className="w-5 h-5" />
+                  <span>Franquicia hasta: <span className="font-medium">{new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES')}</span></span>
+                </div>
+                
+                {restaurant.isOwnedByMcD ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                    <span className="text-yellow-800 text-sm font-medium">Propiedad de McDonald's</span>
+                  </div>
+                ) : restaurant.leaseEndDate && (
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <Calendar className="w-5 h-5" />
+                    <span>Alquiler hasta: <span className="font-medium">{new Date(restaurant.leaseEndDate).toLocaleDateString('es-ES')}</span></span>
+                  </div>
+                )}
               </div>
               
               {restaurant.currentValuation && (
