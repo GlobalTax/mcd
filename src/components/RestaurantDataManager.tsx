@@ -1,11 +1,23 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Restaurant, Franchisee } from '@/types/restaurant';
-import { Plus, Edit, MapPin, Euro, Building2, Hash, Calendar, Shield, TrendingUp } from 'lucide-react';
+import { Plus, Edit, MapPin, Euro, Building2, Hash, Calendar, Shield, TrendingUp, Trash2 } from 'lucide-react';
 
 interface RestaurantDataManagerProps {
   franchisees: Franchisee[];
@@ -124,6 +136,15 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
 
   const handleNavigateToDemo = () => {
     window.open('/demo', '_blank');
+  };
+
+  const handleDeleteRestaurant = (restaurant: Restaurant & { franchiseeName: string }) => {
+    const updatedFranchisees = franchisees.map(f => ({
+      ...f,
+      restaurants: f.restaurants.filter(r => r.id !== restaurant.id)
+    }));
+    
+    onUpdateFranchisees(updatedFranchisees);
   };
 
   const formatNumber = (value: number | undefined | null): string => {
@@ -350,7 +371,7 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                   <th className="border border-gray-300 p-4 text-center bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
                     Valoración
                   </th>
-                  <th className="border border-gray-300 p-4 text-center bg-gray-800 text-white font-semibold font-manrope min-w-[100px]">
+                  <th className="border border-gray-300 p-4 text-center bg-gray-800 text-white font-semibold font-manrope min-w-[120px]">
                     Acciones
                   </th>
                 </tr>
@@ -449,6 +470,35 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees, onSele
                         >
                           <TrendingUp className="w-4 h-4" />
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-900 hover:bg-red-100 font-manrope"
+                              title="Eliminar Restaurante"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="font-manrope">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el restaurante "{restaurant.name}" y todos sus datos asociados.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="font-manrope">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteRestaurant(restaurant)}
+                                className="bg-red-600 hover:bg-red-700 font-manrope"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </td>
                   </tr>
