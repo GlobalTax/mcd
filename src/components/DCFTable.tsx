@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
@@ -8,6 +7,7 @@ import ProjectionTable from './valuation/ProjectionTable';
 import ValuationParameters from './valuation/ValuationParameters';
 import ValuationResult from './valuation/ValuationResult';
 import ProjectionSummary from './valuation/ProjectionSummary';
+import { TableStyleEditor, defaultStyles, TableStyles } from './valuation/TableStyleEditor';
 
 const DCFTable = () => {
   const [inputs, setInputs] = useState<ValuationInputs>({
@@ -29,6 +29,7 @@ const DCFTable = () => {
   });
 
   const [yearlyData, setYearlyData] = useState<YearlyData[]>([]);
+  const [tableStyles, setTableStyles] = useState<TableStyles>(defaultStyles);
 
   // Calcular años restantes con máxima precisión
   useEffect(() => {
@@ -168,7 +169,7 @@ const DCFTable = () => {
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
   return (
-    <div className="font-manrope bg-white min-h-screen">
+    <div className="bg-white min-h-screen" style={{ fontFamily: tableStyles.fontFamily }}>
       <div className="space-y-6 p-6 max-w-full mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -178,6 +179,11 @@ const DCFTable = () => {
             Modelo de valoración por flujo de caja descontado (Entrada manual por años)
           </p>
         </div>
+
+        <TableStyleEditor 
+          styles={tableStyles}
+          onStylesChange={setTableStyles}
+        />
 
         <FranchiseInfo 
           inputs={inputs} 
@@ -193,6 +199,7 @@ const DCFTable = () => {
           inputs={inputs}
           yearlyData={yearlyData}
           onYearlyDataChange={handleYearlyDataChange}
+          tableStyles={tableStyles}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

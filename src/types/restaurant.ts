@@ -21,6 +21,11 @@ export interface Restaurant {
   baseRent: number;
   rentIndex: number;
   
+  // New fields for franchise and lease management
+  franchiseEndDate: string;
+  leaseEndDate?: string; // Optional because it might be owned by McD
+  isOwnedByMcD: boolean; // Indicates if the site is owned by McDonald's
+  
   currentValuation?: RestaurantValuation;
   valuationHistory: RestaurantValuation[];
   createdAt: Date;

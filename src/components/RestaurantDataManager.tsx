@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Restaurant, Franchisee } from '@/types/restaurant';
-import { Plus, Edit, MapPin, Euro, Building2, Hash } from 'lucide-react';
+import { Plus, Edit, MapPin, Euro, Building2, Hash, Calendar, Shield } from 'lucide-react';
 
 interface RestaurantDataManagerProps {
   franchisees: Franchisee[];
@@ -24,7 +24,10 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
     lastYearRevenue: 0,
     baseRent: 0,
     rentIndex: 0,
-    franchiseeId: ''
+    franchiseeId: '',
+    franchiseEndDate: '',
+    leaseEndDate: '',
+    isOwnedByMcD: false
   });
 
   // Get all restaurants from all franchisees
@@ -35,14 +38,16 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.location || !formData.franchiseeId) return;
+    if (!formData.name || !formData.location || !formData.franchiseeId || !formData.franchiseEndDate) return;
 
     const restaurantData = {
       ...formData,
       id: editingRestaurant?.id || Date.now().toString(),
       valuationHistory: editingRestaurant?.valuationHistory || [],
       currentValuation: editingRestaurant?.currentValuation,
-      createdAt: editingRestaurant?.createdAt || new Date()
+      createdAt: editingRestaurant?.createdAt || new Date(),
+      // Don't include leaseEndDate if it's owned by McD
+      leaseEndDate: formData.isOwnedByMcD ? undefined : formData.leaseEndDate
     };
 
     const updatedFranchisees = franchisees.map(f => {
@@ -79,7 +84,10 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
       lastYearRevenue: 0,
       baseRent: 0,
       rentIndex: 0,
-      franchiseeId: ''
+      franchiseeId: '',
+      franchiseEndDate: '',
+      leaseEndDate: '',
+      isOwnedByMcD: false
     });
     setShowAddForm(false);
     setEditingRestaurant(null);
@@ -94,7 +102,10 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
       lastYearRevenue: restaurant.lastYearRevenue || 0,
       baseRent: restaurant.baseRent || 0,
       rentIndex: restaurant.rentIndex || 0,
-      franchiseeId: restaurant.franchiseeId
+      franchiseeId: restaurant.franchiseeId,
+      franchiseEndDate: restaurant.franchiseEndDate || '',
+      leaseEndDate: restaurant.leaseEndDate || '',
+      isOwnedByMcD: restaurant.isOwnedByMcD || false
     });
     setEditingRestaurant(restaurant);
     setShowAddForm(true);
@@ -194,6 +205,42 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                 </div>
 
                 <div>
+                  <Label htmlFor="franchiseEnd">Fecha Fin de Franquicia *</Label>
+                  <Input
+                    id="franchiseEnd"
+                    type="date"
+                    value={formData.franchiseEndDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, franchiseEndDate: e.target.value }))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="isOwnedByMcD" className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isOwnedByMcD"
+                      checked={formData.isOwnedByMcD}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isOwnedByMcD: e.target.checked }))}
+                      className="rounded"
+                    />
+                    Propiedad de McDonald's
+                  </Label>
+                </div>
+
+                {!formData.isOwnedByMcD && (
+                  <div>
+                    <Label htmlFor="leaseEnd">Fecha Fin de Alquiler</Label>
+                    <Input
+                      id="leaseEnd"
+                      type="date"
+                      value={formData.leaseEndDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, leaseEndDate: e.target.value }))}
+                    />
+                  </div>
+                )}
+
+                <div>
                   <Label htmlFor="lastYearRevenue">Facturación Último Año (€)</Label>
                   <Input
                     id="lastYearRevenue"
@@ -249,10 +296,12 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                 <TableHead>Restaurante</TableHead>
                 <TableHead>Franquiciado</TableHead>
                 <TableHead>Ubicación</TableHead>
+                <TableHead>Fin Franquicia</TableHead>
+                <TableHead>Fin Alquiler</TableHead>
+                <TableHead>Propiedad</TableHead>
                 <TableHead>Facturación</TableHead>
                 <TableHead>Renta Base</TableHead>
                 <TableHead>Rent Index</TableHead>
-                <TableHead>Contrato</TableHead>
                 <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -274,6 +323,31 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      {restaurant.franchiseEndDate ? new Date(restaurant.franchiseEndDate).toLocaleDateString('es-ES') : 'N/A'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-orange-600" />
+                      {restaurant.isOwnedByMcD ? 
+                        <span className="text-green-600 font-medium">Propiedad McD</span> : 
+                        (restaurant.leaseEndDate ? new Date(restaurant.leaseEndDate).toLocaleDateString('es-ES') : 'N/A')
+                      }
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {restaurant.isOwnedByMcD ? (
+                      <div className="flex items-center gap-1">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600 font-medium">McD</span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">Alquiler</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-1">
                       <Euro className="w-4 h-4 text-green-600" />
                       {formatNumber(restaurant.lastYearRevenue)}
@@ -286,7 +360,6 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                     </div>
                   </TableCell>
                   <TableCell>€{formatNumber(restaurant.rentIndex)}</TableCell>
-                  <TableCell>{new Date(restaurant.contractEndDate).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
