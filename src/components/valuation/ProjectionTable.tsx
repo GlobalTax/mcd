@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -97,7 +96,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                 ))}
               </tr>
               
-              {/* P.A.C. row - Manual percentage */}
+              {/* P.A.C. row - Manual percentage, calculated amount */}
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 font-semibold bg-gray-800 text-white font-manrope">P.A.C. (%)</td>
                 {yearlyData.map((yearData, i) => {
@@ -121,7 +120,7 @@ const ProjectionTable = ({ inputs, yearlyData, onYearlyDataChange }: ProjectionT
                 })}
               </tr>
               
-              {/* RENT row - Manual percentage */}
+              {/* RENT row - Manual percentage, calculated amount */}
               <tr className="bg-white">
                 <td className="border border-gray-300 p-2 bg-gray-800 text-white font-semibold font-manrope">RENT (%)</td>
                 {yearlyData.map((yearData, i) => {
