@@ -15,6 +15,9 @@ interface ValuationInputs {
   inflationRate: number;
   discountRate: number;
   growthRate: number;
+  changeDate: string;
+  franchiseEndDate: string;
+  remainingYears: number;
 }
 
 const DCFTable = () => {
@@ -30,7 +33,10 @@ const DCFTable = () => {
     loanPayment: 31478,
     inflationRate: 1.5,
     discountRate: 21.0,
-    growthRate: 3.0
+    growthRate: 3.0,
+    changeDate: '',
+    franchiseEndDate: '',
+    remainingYears: 0
   });
 
   const formatCurrency = (value: number) => {
@@ -74,7 +80,7 @@ const DCFTable = () => {
 
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
-  const handleInputChange = (key: keyof ValuationInputs, value: number) => {
+  const handleInputChange = (key: keyof ValuationInputs, value: number | string) => {
     setInputs(prev => ({
       ...prev,
       [key]: value
@@ -91,6 +97,45 @@ const DCFTable = () => {
           Modelo de valoración por flujo de caja descontado
         </p>
       </div>
+
+      {/* Información de Fechas de Franquicia */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Información del Contrato de Franquicia</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Fecha de cambio</label>
+              <Input
+                type="date"
+                value={inputs.changeDate}
+                onChange={(e) => handleInputChange('changeDate', e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Fecha finalización contrato de franquicia</label>
+              <Input
+                type="date"
+                value={inputs.franchiseEndDate}
+                onChange={(e) => handleInputChange('franchiseEndDate', e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Años restantes contratos de franquicia</label>
+              <Input
+                type="number"
+                step="0.1"
+                value={inputs.remainingYears}
+                onChange={(e) => handleInputChange('remainingYears', Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tabla Principal P&L */}
       <Card>
