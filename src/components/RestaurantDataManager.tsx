@@ -91,13 +91,20 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
       location: restaurant.location,
       contractEndDate: restaurant.contractEndDate,
       siteNumber: restaurant.siteNumber,
-      lastYearRevenue: restaurant.lastYearRevenue,
-      baseRent: restaurant.baseRent,
-      rentIndex: restaurant.rentIndex,
+      lastYearRevenue: restaurant.lastYearRevenue || 0,
+      baseRent: restaurant.baseRent || 0,
+      rentIndex: restaurant.rentIndex || 0,
       franchiseeId: restaurant.franchiseeId
     });
     setEditingRestaurant(restaurant);
     setShowAddForm(true);
+  };
+
+  const formatNumber = (value: number | undefined | null): string => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0';
+    }
+    return value.toLocaleString('es-ES');
   };
 
   return (
@@ -269,16 +276,16 @@ export function RestaurantDataManager({ franchisees, onUpdateFranchisees }: Rest
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Euro className="w-4 h-4 text-green-600" />
-                      {restaurant.lastYearRevenue.toLocaleString('es-ES')}
+                      {formatNumber(restaurant.lastYearRevenue)}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Building2 className="w-4 h-4 text-blue-600" />
-                      {restaurant.baseRent.toLocaleString('es-ES')}
+                      {formatNumber(restaurant.baseRent)}
                     </div>
                   </TableCell>
-                  <TableCell>€{restaurant.rentIndex.toLocaleString('es-ES')}</TableCell>
+                  <TableCell>€{formatNumber(restaurant.rentIndex)}</TableCell>
                   <TableCell>{new Date(restaurant.contractEndDate).toLocaleDateString('es-ES')}</TableCell>
                   <TableCell>
                     <Button
