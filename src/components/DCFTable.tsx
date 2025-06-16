@@ -20,6 +20,18 @@ interface ValuationInputs {
   remainingYears: number;
 }
 
+interface YearlyData {
+  sales: number;
+  pac: number;
+  rent: number;
+  serviceFees: number;
+  depreciation: number;
+  interest: number;
+  rentIndex: number;
+  miscell: number;
+  loanPayment: number;
+}
+
 const DCFTable = () => {
   const [inputs, setInputs] = useState<ValuationInputs>({
     sales: 2454919,
@@ -39,6 +51,8 @@ const DCFTable = () => {
     remainingYears: 0
   });
 
+  const [yearlyData, setYearlyData] = useState<YearlyData[]>([]);
+
   // Calcular años restantes con máxima precisión
   useEffect(() => {
     if (inputs.changeDate && inputs.franchiseEndDate) {
@@ -47,17 +61,48 @@ const DCFTable = () => {
       
       if (endDate > changeDate) {
         const diffTime = endDate.getTime() - changeDate.getTime();
-        // Usar días exactos para máxima precisión
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
-        const diffYears = diffDays / 365.25; // Considerar años bisiestos con precisión
+        const diffYears = diffDays / 365.25;
         
         setInputs(prev => ({
           ...prev,
-          remainingYears: Math.round(diffYears * 10000) / 10000 // Precisión a 4 decimales
+          remainingYears: Math.round(diffYears * 10000) / 10000
         }));
       }
     }
   }, [inputs.changeDate, inputs.franchiseEndDate]);
+
+  // Inicializar datos anuales cuando cambian los años restantes
+  useEffect(() => {
+    if (inputs.remainingYears > 0) {
+      const yearsCount = Math.ceil(inputs.remainingYears);
+      const newYearlyData: YearlyData[] = [];
+      
+      for (let i = 0; i < yearsCount; i++) {
+        // Usar datos base del primer año como referencia
+        const growthFactor = Math.pow(1 + inputs.growthRate / 100, i);
+        const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, i);
+        
+        newYearlyData.push({
+          sales: Math.round(inputs.sales * growthFactor * inflationFactor),
+          pac: Math.round(inputs.pac * growthFactor * inflationFactor),
+          rent: Math.round(inputs.rent * inflationFactor),
+          serviceFees: Math.round(inputs.serviceFees * inflationFactor),
+          depreciation: Math.round(inputs.depreciation * inflationFactor),
+          interest: Math.round(inputs.interest * inflationFactor),
+          rentIndex: Math.round(inputs.rentIndex * inflationFactor),
+          miscell: Math.round(inputs.miscell * inflationFactor),
+          loanPayment: inputs.loanPayment
+        });
+      }
+      
+      setYearlyData(newYearlyData);
+    } else {
+      setYearlyData([]);
+    }
+  }, [inputs.remainingYears, inputs.sales, inputs.pac, inputs.rent, inputs.serviceFees, 
+      inputs.depreciation, inputs.interest, inputs.rentIndex, inputs.miscell, 
+      inputs.loanPayment, inputs.growthRate, inputs.inflationRate]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -71,58 +116,6 @@ const DCFTable = () => {
     return `${value.toFixed(decimals)}%`;
   };
 
-  // Cálculos principales
-  const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
-  const soi = inputs.pac - totalNonControllables; // S.O.I. = P.A.C. - TOTAL NON-CONTROLLABLES
-  const cashflow = inputs.pac - inputs.rent - inputs.serviceFees - inputs.rentIndex - inputs.miscell - inputs.loanPayment; // CASHFLOW corregido
-  const cashAfterReinv = cashflow; // Sin reinversión por ahora
-  const cfLibre = cashAfterReinv + inputs.loanPayment;
-
-  // Proyección con máxima precisión temporal
-  const projections = [];
-  const yearsToProject = inputs.remainingYears > 0 ? inputs.remainingYears : 20;
-  
-  // Dividir en períodos de tiempo exactos
-  let currentTime = 0;
-  let yearCounter = 1;
-  
-  while (currentTime < yearsToProject) {
-    const timeToNextYear = Math.min(1, yearsToProject - currentTime);
-    const effectiveYear = currentTime + (timeToNextYear / 2); // Punto medio del período para mejor aproximación
-    
-    let cfValue;
-    if (yearCounter === 1 && timeToNextYear === 1) {
-      // Primer año completo
-      cfValue = cfLibre;
-    } else {
-      // Calcular factores basados en el tiempo efectivo transcurrido
-      const growthFactor = Math.pow(1 + inputs.growthRate / 100, effectiveYear);
-      const inflationFactor = Math.pow(1 + inputs.inflationRate / 100, effectiveYear);
-      cfValue = cfLibre * growthFactor * inflationFactor;
-      
-      // Si es una fracción de año, ajustar proporcionalmente
-      if (timeToNextYear < 1) {
-        cfValue = cfValue * timeToNextYear;
-      }
-    }
-    
-    // Descuento usando el tiempo exacto desde el inicio
-    const discountTime = currentTime + timeToNextYear;
-    const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
-    
-    projections.push({
-      year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
-      cfValue,
-      presentValue,
-      timeToNextYear
-    });
-    
-    currentTime += timeToNextYear;
-    yearCounter++;
-  }
-
-  const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
-
   const handleInputChange = (key: keyof ValuationInputs, value: number | string) => {
     setInputs(prev => ({
       ...prev,
@@ -130,14 +123,75 @@ const DCFTable = () => {
     }));
   };
 
+  const handleYearlyDataChange = (yearIndex: number, field: keyof YearlyData, value: number) => {
+    setYearlyData(prev => {
+      const newData = [...prev];
+      newData[yearIndex] = {
+        ...newData[yearIndex],
+        [field]: value
+      };
+      return newData;
+    });
+  };
+
+  // Cálculos principales para año base
+  const totalNonControllables = inputs.rent + inputs.serviceFees + inputs.depreciation + inputs.interest + inputs.rentIndex + inputs.miscell;
+  const soi = inputs.pac - totalNonControllables;
+  const cashflow = inputs.pac - inputs.rent - inputs.serviceFees - inputs.rentIndex - inputs.miscell - inputs.loanPayment;
+  const cashAfterReinv = cashflow;
+  const cfLibre = cashAfterReinv + inputs.loanPayment;
+
+  // Calcular proyecciones con datos manuales
+  const calculateProjections = () => {
+    if (yearlyData.length === 0) return [];
+    
+    const projections = [];
+    let currentTime = 0;
+    
+    for (let i = 0; i < yearlyData.length; i++) {
+      const yearData = yearlyData[i];
+      const timeToNextYear = Math.min(1, inputs.remainingYears - currentTime);
+      
+      if (timeToNextYear <= 0) break;
+      
+      // Calcular CF con datos específicos del año
+      const yearCashAfterReinv = yearData.pac - yearData.rent - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
+      const yearCfLibre = yearCashAfterReinv + yearData.loanPayment;
+      
+      let cfValue = yearCfLibre;
+      if (timeToNextYear < 1) {
+        cfValue = yearCfLibre * timeToNextYear;
+      }
+      
+      const discountTime = currentTime + timeToNextYear;
+      const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
+      
+      projections.push({
+        year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
+        cfValue,
+        presentValue,
+        timeToNextYear,
+        yearData
+      });
+      
+      currentTime += timeToNextYear;
+    }
+    
+    return projections;
+  };
+
+  const projections = calculateProjections();
+  const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
+  const yearsCount = Math.ceil(inputs.remainingYears);
+
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-6 p-6 max-w-full mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Valoración Rte. PARC CENTRAL
         </h1>
         <p className="text-gray-600">
-          Modelo de valoración por flujo de caja descontado (Precisión máxima)
+          Modelo de valoración por flujo de caja descontado (Entrada manual por años)
         </p>
       </div>
 
@@ -181,13 +235,13 @@ const DCFTable = () => {
         </CardContent>
       </Card>
 
-      {/* Tabla Principal P&L */}
+      {/* Tabla Principal P&L - Año Base */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL</CardTitle>
+          <CardTitle className="text-xl font-bold text-center">Rte. PARC CENTRAL - Año Base</CardTitle>
           <div className="text-center">
             <p className="text-lg font-semibold">2024</p>
-            <p className="text-sm text-gray-600">31-dic-24 / 30-dic-25</p>
+            <p className="text-sm text-gray-600">Datos de referencia</p>
           </div>
         </CardHeader>
         <CardContent>
@@ -370,8 +424,170 @@ const DCFTable = () => {
         </CardContent>
       </Card>
 
-      {/* Parámetros y Proyección */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Tabla de Proyección Anual Manual */}
+      {yearsCount > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Proyección Manual por Años ({inputs.remainingYears.toFixed(4)} años exactos)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 text-left font-bold bg-gray-50">Concepto</th>
+                    {Array.from({ length: yearsCount }, (_, i) => (
+                      <th key={i} className="border border-gray-300 p-2 text-center font-bold bg-gray-50">
+                        Año {i + 1}
+                        {i === yearsCount - 1 && inputs.remainingYears % 1 !== 0 && (
+                          <div className="text-xs text-gray-600">
+                            ({((inputs.remainingYears % 1) * 12).toFixed(1)} meses)
+                          </div>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-blue-50">
+                    <td className="border border-gray-300 p-2 font-semibold">SALES</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.sales}
+                          onChange={(e) => handleYearlyDataChange(i, 'sales', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="bg-yellow-50">
+                    <td className="border border-gray-300 p-2 font-semibold">P.A.C.</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.pac}
+                          onChange={(e) => handleYearlyDataChange(i, 'pac', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">RENT</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.rent}
+                          onChange={(e) => handleYearlyDataChange(i, 'rent', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">SERVICE FEES</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.serviceFees}
+                          onChange={(e) => handleYearlyDataChange(i, 'serviceFees', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">DEPRECIATION</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.depreciation}
+                          onChange={(e) => handleYearlyDataChange(i, 'depreciation', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">INTEREST</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.interest}
+                          onChange={(e) => handleYearlyDataChange(i, 'interest', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">RENT INDEX</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.rentIndex}
+                          onChange={(e) => handleYearlyDataChange(i, 'rentIndex', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">MISCELL</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.miscell}
+                          onChange={(e) => handleYearlyDataChange(i, 'miscell', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 p-2">LOAN PAYMENT</td>
+                    {yearlyData.map((yearData, i) => (
+                      <td key={i} className="border border-gray-300 p-1">
+                        <Input
+                          type="number"
+                          value={yearData.loanPayment}
+                          onChange={(e) => handleYearlyDataChange(i, 'loanPayment', Number(e.target.value))}
+                          className="w-full text-right text-sm border-0 bg-transparent p-1"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Fila de CF LIBRE calculado */}
+                  <tr className="bg-green-200 font-bold">
+                    <td className="border border-gray-300 p-2">CF LIBRE</td>
+                    {yearlyData.map((yearData, i) => {
+                      const yearCashAfterReinv = yearData.pac - yearData.rent - yearData.serviceFees - yearData.rentIndex - yearData.miscell - yearData.loanPayment;
+                      const yearCfLibre = yearCashAfterReinv + yearData.loanPayment;
+                      return (
+                        <td key={i} className="border border-gray-300 p-2 text-right font-bold">
+                          {formatCurrency(yearCfLibre)}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parámetros y Resultado Final */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Parámetros del Modelo</CardTitle>
@@ -423,52 +639,55 @@ const DCFTable = () => {
               </p>
               <p className="text-sm text-gray-600 mt-2">Valor Presente Total</p>
               <p className="text-xs text-gray-500 mt-1">
-                ({yearsToProject.toFixed(4)} años exactos)
+                ({inputs.remainingYears.toFixed(4)} años exactos)
               </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Desglose CF (Primeros períodos)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {projections.slice(0, 5).map((p, index) => (
-                <div key={index} className="flex justify-between text-sm">
-                  <span>Período {p.year}</span>
-                  <span>{formatCurrency(p.cfValue)}</span>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Proyección completa */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Desglose CF Completo ({yearsToProject.toFixed(4)} años exactos)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-96 overflow-y-auto">
-            <div className="grid grid-cols-1 gap-y-1 text-sm">
-              {projections.map((p, index) => (
-                <div key={index} className="flex justify-between border-b border-gray-100 py-1">
-                  <span className="flex-1">Período {p.year} ({(p.timeToNextYear * 12).toFixed(1)} meses)</span>
-                  <span className="flex-1 text-center">{formatCurrency(p.cfValue)}</span>
-                  <span className="flex-1 text-right text-gray-600">{formatCurrency(p.presentValue)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between font-bold border-t-2 border-gray-300 pt-2 mt-2">
-                <span>TOTAL VALOR PRESENTE:</span>
-                <span className="text-green-600">{formatCurrency(totalPrice)}</span>
-              </div>
+      {/* Resumen de Proyecciones */}
+      {projections.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Resumen de Proyecciones</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2 text-left">Período</th>
+                    <th className="border border-gray-300 p-2 text-right">CF Libre</th>
+                    <th className="border border-gray-300 p-2 text-right">Valor Presente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projections.map((p, index) => (
+                    <tr key={index}>
+                      <td className="border border-gray-300 p-2">
+                        Año {p.year}
+                        {p.timeToNextYear < 1 && (
+                          <span className="text-xs text-gray-600">
+                            {" "}({(p.timeToNextYear * 12).toFixed(1)} meses)
+                          </span>
+                        )}
+                      </td>
+                      <td className="border border-gray-300 p-2 text-right">{formatCurrency(p.cfValue)}</td>
+                      <td className="border border-gray-300 p-2 text-right text-gray-600">{formatCurrency(p.presentValue)}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-green-100 font-bold">
+                    <td className="border border-gray-300 p-2">TOTAL</td>
+                    <td className="border border-gray-300 p-2 text-right">{formatCurrency(projections.reduce((sum, p) => sum + p.cfValue, 0))}</td>
+                    <td className="border border-gray-300 p-2 text-right text-green-600">{formatCurrency(totalPrice)}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
