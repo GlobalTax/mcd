@@ -1,14 +1,17 @@
 
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building, Calculator, TrendingUp, Users, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield } from 'lucide-react';
+import { Franchisee } from '@/types/restaurant';
 
 const DashboardPage = () => {
   const { user, franchisee, restaurants, signOut } = useAuth();
   const navigate = useNavigate();
+  const [localFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -22,6 +25,15 @@ const DashboardPage = () => {
     }
     return value.toLocaleString('es-ES');
   };
+
+  // Get all restaurants from localStorage (from valuation tool)
+  const allLocalRestaurants = localFranchisees.flatMap(f => 
+    f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
+  );
+
+  // Use local restaurants if available, otherwise fall back to Supabase restaurants
+  const displayRestaurants = allLocalRestaurants.length > 0 ? allLocalRestaurants : restaurants;
+  const totalRestaurants = displayRestaurants?.length || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-yellow-50">
@@ -69,7 +81,7 @@ const DashboardPage = () => {
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{restaurants?.length || 0}</div>
+              <div className="text-2xl font-bold">{totalRestaurants}</div>
               <p className="text-xs text-muted-foreground">
                 Total de establecimientos
               </p>
@@ -78,13 +90,16 @@ const DashboardPage = () => {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Franquiciado</CardTitle>
+              <CardTitle className="text-sm font-medium">Franquiciados</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{franchisee ? '1' : '0'}</div>
+              <div className="text-2xl font-bold">{localFranchisees.length || (franchisee ? 1 : 0)}</div>
               <p className="text-xs text-muted-foreground">
-                {franchisee?.franchisee_name || 'No configurado'}
+                {localFranchisees.length > 0 ? 
+                  `${localFranchisees.length} franquiciados configurados` :
+                  (franchisee?.franchisee_name || 'No configurado')
+                }
               </p>
             </CardContent>
           </Card>
@@ -131,12 +146,18 @@ const DashboardPage = () => {
               <p className="text-gray-600">
                 Analiza el rendimiento financiero de tus restaurantes
               </p>
-              {restaurants && restaurants.length > 0 && (
+              {displayRestaurants && displayRestaurants.length > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
                   className="mt-2"
-                  onClick={() => navigate(`/restaurant/${restaurants[0].site_number}/profitloss`)}
+                  onClick={() => {
+                    const firstRestaurant = displayRestaurants[0];
+                    const siteNumber = firstRestaurant.siteNumber || firstRestaurant.site_number;
+                    if (siteNumber) {
+                      navigate(`/restaurant/${siteNumber}/profitloss`);
+                    }
+                  }}
                 >
                   Ir a P&L
                 </Button>
@@ -146,33 +167,40 @@ const DashboardPage = () => {
         </div>
 
         {/* Restaurants Section */}
-        {restaurants && restaurants.length > 0 ? (
+        {displayRestaurants && displayRestaurants.length > 0 ? (
           <div className="mb-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Mis Restaurantes</h2>
-              <p className="text-gray-600">{restaurants.length} restaurantes disponibles</p>
+              <p className="text-gray-600">{displayRestaurants.length} restaurantes disponibles</p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {restaurants.map((restaurant) => (
+              {displayRestaurants.map((restaurant) => (
                 <Card
                   key={restaurant.id}
                   className="cursor-pointer transition-all hover:shadow-lg hover:border-red-200 group"
-                  onClick={() => navigate(`/restaurant/${restaurant.site_number}`)}
+                  onClick={() => {
+                    const siteNumber = restaurant.siteNumber || restaurant.site_number;
+                    if (siteNumber) {
+                      navigate(`/restaurant/${siteNumber}`);
+                    }
+                  }}
                 >
                   <CardContent className="p-6">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
                         <div>
                           <h3 className="font-semibold text-xl text-gray-900 group-hover:text-red-600 transition-colors">
-                            {restaurant.restaurant_name}
+                            {restaurant.name || restaurant.restaurant_name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                             <Hash className="w-4 h-4" />
-                            <span>Site: {restaurant.site_number}</span>
+                            <span>Site: {restaurant.siteNumber || restaurant.site_number}</span>
                           </div>
-                          {franchisee && (
-                            <p className="text-sm text-gray-600 mt-1">{franchisee.franchisee_name}</p>
+                          {(restaurant.franchiseeName || franchisee) && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              {restaurant.franchiseeName || franchisee?.franchisee_name}
+                            </p>
                           )}
                         </div>
                         <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -183,29 +211,87 @@ const DashboardPage = () => {
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 text-gray-600">
                           <MapPin className="w-5 h-5" />
-                          <span className="font-medium">{restaurant.city}, {restaurant.address}</span>
+                          <span className="font-medium">
+                            {restaurant.location || `${restaurant.city}, ${restaurant.address}`}
+                          </span>
                         </div>
                         
                         <div className="flex items-center gap-3 text-gray-600">
                           <Building2 className="w-5 h-5" />
-                          <span className="capitalize">{restaurant.restaurant_type.replace('_', ' ')}</span>
+                          <span className="capitalize">
+                            {restaurant.restaurant_type ? 
+                              restaurant.restaurant_type.replace('_', ' ') : 
+                              'Restaurante'
+                            }
+                          </span>
                         </div>
 
-                        {restaurant.opening_date && (
+                        {/* Show financial data if available (from local storage) */}
+                        {restaurant.lastYearRevenue && (
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Euro className="w-4 h-4 text-green-600" />
+                              <div>
+                                <p className="text-xs text-gray-500">Facturación</p>
+                                <p className="font-medium">€{formatNumber(restaurant.lastYearRevenue)}</p>
+                              </div>
+                            </div>
+                            {restaurant.baseRent && (
+                              <div className="flex items-center gap-2 text-gray-600">
+                                <Building2 className="w-4 h-4 text-blue-600" />
+                                <div>
+                                  <p className="text-xs text-gray-500">Renta Base</p>
+                                  <p className="font-medium">€{formatNumber(restaurant.baseRent)}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {(restaurant.opening_date || restaurant.contractEndDate) && (
                           <div className="flex items-center gap-3 text-gray-600">
                             <Calendar className="w-5 h-5" />
-                            <span>Apertura: {new Date(restaurant.opening_date).toLocaleDateString('es-ES')}</span>
+                            <span>
+                              {restaurant.opening_date ? 
+                                `Apertura: ${new Date(restaurant.opening_date).toLocaleDateString('es-ES')}` :
+                                `Contrato hasta: ${new Date(restaurant.contractEndDate).toLocaleDateString('es-ES')}`
+                              }
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Show ownership status for local restaurants */}
+                        {restaurant.isOwnedByMcD && (
+                          <div className="flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-green-600" />
+                            <span className="text-green-600 text-sm font-medium">Propiedad McDonald's</span>
+                          </div>
+                        )}
+
+                        {/* Show current valuation if available */}
+                        {restaurant.currentValuation && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className="w-4 h-4 text-green-600" />
+                              <span className="text-green-800 font-medium text-sm">Valoración Actual</span>
+                            </div>
+                            <p className="text-lg font-bold text-green-800">
+                              €{formatNumber(restaurant.currentValuation.finalValuation)}
+                            </p>
+                            <p className="text-xs text-green-600">
+                              {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
+                            </p>
                           </div>
                         )}
 
                         <div className="flex items-center justify-between">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            restaurant.status === 'active' ? 'bg-green-100 text-green-800' :
+                            (restaurant.status === 'active' || !restaurant.status) ? 'bg-green-100 text-green-800' :
                             restaurant.status === 'inactive' ? 'bg-red-100 text-red-800' :
                             restaurant.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {restaurant.status === 'active' ? 'Activo' :
+                            {restaurant.status === 'active' || !restaurant.status ? 'Activo' :
                              restaurant.status === 'inactive' ? 'Inactivo' :
                              restaurant.status === 'pending' ? 'Pendiente' :
                              restaurant.status === 'closed' ? 'Cerrado' :
@@ -216,7 +302,10 @@ const DashboardPage = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/restaurant/${restaurant.site_number}/profitloss`);
+                              const siteNumber = restaurant.siteNumber || restaurant.site_number;
+                              if (siteNumber) {
+                                navigate(`/restaurant/${siteNumber}/profitloss`);
+                              }
                             }}
                           >
                             Ver P&L
