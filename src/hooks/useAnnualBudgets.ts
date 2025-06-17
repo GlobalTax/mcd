@@ -34,11 +34,16 @@ export const useAnnualBudgets = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBudgets = async (restaurantId: string, year: number) => {
-    if (!user || !restaurantId) return;
+    if (!user || !restaurantId) {
+      console.log('useAnnualBudgets - Missing user or restaurantId:', { user: !!user, restaurantId });
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
+      
+      console.log('useAnnualBudgets - Fetching budgets for:', { restaurantId, year });
 
       const { data, error: budgetError } = await supabase
         .from('annual_budgets')
@@ -49,17 +54,18 @@ export const useAnnualBudgets = () => {
         .order('subcategory', { ascending: true });
 
       if (budgetError) {
-        console.error('Error fetching annual budgets:', budgetError);
+        console.error('useAnnualBudgets - Error fetching annual budgets:', budgetError);
         setError(`Error al cargar los presupuestos: ${budgetError.message}`);
         toast.error('Error al cargar los presupuestos: ' + budgetError.message);
         return;
       }
 
+      console.log('useAnnualBudgets - Fetched data:', data);
       setBudgets(data || []);
-      console.log(`Loaded ${data?.length || 0} budget entries for restaurant ${restaurantId}, year ${year}`);
+      console.log(`useAnnualBudgets - Loaded ${data?.length || 0} budget entries for restaurant ${restaurantId}, year ${year}`);
       
     } catch (err) {
-      console.error('Error in fetchBudgets:', err);
+      console.error('useAnnualBudgets - Error in fetchBudgets:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido al cargar los presupuestos';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -69,10 +75,14 @@ export const useAnnualBudgets = () => {
   };
 
   const saveBudgets = async (restaurantId: string, year: number, budgetData: any[]): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      console.log('useAnnualBudgets - No user for saving budgets');
+      return false;
+    }
 
     try {
       setLoading(true);
+      console.log('useAnnualBudgets - Saving budgets:', { restaurantId, year, budgetData });
 
       // Convertir los datos del grid al formato de la base de datos
       const budgetEntries = budgetData
@@ -97,6 +107,8 @@ export const useAnnualBudgets = () => {
           created_by: user.id
         }));
 
+      console.log('useAnnualBudgets - Budget entries to save:', budgetEntries);
+
       // Primero eliminar los registros existentes para este restaurante y año
       const { error: deleteError } = await supabase
         .from('annual_budgets')
@@ -105,7 +117,7 @@ export const useAnnualBudgets = () => {
         .eq('year', year);
 
       if (deleteError) {
-        console.error('Error deleting existing budgets:', deleteError);
+        console.error('useAnnualBudgets - Error deleting existing budgets:', deleteError);
         toast.error('Error al actualizar el presupuesto: ' + deleteError.message);
         return false;
       }
@@ -116,7 +128,7 @@ export const useAnnualBudgets = () => {
         .insert(budgetEntries);
 
       if (insertError) {
-        console.error('Error inserting budgets:', insertError);
+        console.error('useAnnualBudgets - Error inserting budgets:', insertError);
         toast.error('Error al guardar el presupuesto: ' + insertError.message);
         return false;
       }
@@ -126,7 +138,7 @@ export const useAnnualBudgets = () => {
       return true;
 
     } catch (err) {
-      console.error('Error saving budgets:', err);
+      console.error('useAnnualBudgets - Error saving budgets:', err);
       toast.error('Error al guardar el presupuesto');
       return false;
     } finally {
