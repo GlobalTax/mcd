@@ -8,6 +8,7 @@ import { Building, Calculator, TrendingUp, Settings, LogOut, MapPin, Calendar, H
 import { Franchisee } from '@/types/restaurant';
 import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
+import { InvitationPanel } from '@/components/InvitationPanel';
 
 // Tipo extendido para manejar ambos formatos de restaurant
 type DisplayRestaurant = {
@@ -121,6 +122,9 @@ const DashboardPage = () => {
             </Button>
           </div>
         </div>
+
+        {/* Panel de invitaciones - siempre visible para franquiciados */}
+        <InvitationPanel />
 
         {/* Main Content */}
         {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (

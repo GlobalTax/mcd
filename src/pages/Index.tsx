@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, BarChart3, Shield, Store, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { InvitationPanel } from "@/components/InvitationPanel";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -76,9 +75,6 @@ const Index = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        {/* Panel de invitaciones - solo se muestra si el usuario está autenticado */}
-        {user && <InvitationPanel />}
-
         {/* Hero Section */}
         <section className="py-16">
           <div className="text-center mb-16">

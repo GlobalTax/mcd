@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Mail, Shield, Eye, Trash2 } from 'lucide-react';
+import { UserPlus, Mail, Shield, Eye, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 interface Invitation {
   id: string;
   email: string;
-  role: 'franchisee' | 'manager' | 'viewer';
+  role: 'advisor' | 'manager' | 'viewer';
   status: 'pending' | 'accepted' | 'expired';
   created_at: string;
   invited_by: string;
@@ -23,7 +23,7 @@ interface Invitation {
 export const InvitationPanel = () => {
   const { user } = useAuth();
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState<'franchisee' | 'manager' | 'viewer'>('viewer');
+  const [role, setRole] = useState<'advisor' | 'manager' | 'viewer'>('viewer');
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(false);
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -75,7 +75,9 @@ export const InvitationPanel = () => {
       setInvitations(prev => [...prev, newInvitation]);
 
       // Simular envío de email (en un caso real usarías una edge function con Resend)
-      toast.success(`Invitación enviada a ${email}`);
+      const roleText = role === 'advisor' ? 'asesor' : 
+                      role === 'manager' ? 'gestor' : 'visualizador';
+      toast.success(`Invitación enviada a ${email} como ${roleText}`);
       
       // Limpiar formulario
       setEmail('');
@@ -97,10 +99,10 @@ export const InvitationPanel = () => {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'franchisee':
-        return <Shield className="w-4 h-4 text-red-500" />;
+      case 'advisor':
+        return <Shield className="w-4 h-4 text-blue-500" />;
       case 'manager':
-        return <UserPlus className="w-4 h-4 text-blue-500" />;
+        return <UserPlus className="w-4 h-4 text-green-500" />;
       case 'viewer':
         return <Eye className="w-4 h-4 text-gray-500" />;
       default:
@@ -110,10 +112,10 @@ export const InvitationPanel = () => {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'franchisee':
-        return 'Acceso Completo';
+      case 'advisor':
+        return 'Asesor';
       case 'manager':
-        return 'Gestión';
+        return 'Gestor';
       case 'viewer':
         return 'Solo Visualización';
       default:
@@ -123,10 +125,10 @@ export const InvitationPanel = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'franchisee':
-        return 'bg-red-100 text-red-800';
-      case 'manager':
+      case 'advisor':
         return 'bg-blue-100 text-blue-800';
+      case 'manager':
+        return 'bg-green-100 text-green-800';
       case 'viewer':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -134,8 +136,8 @@ export const InvitationPanel = () => {
     }
   };
 
-  // Solo mostrar para admin o franquiciados
-  if (user?.role !== 'admin' && user?.role !== 'franchisee') {
+  // Solo mostrar para franquiciados
+  if (user?.role !== 'franchisee') {
     return null;
   }
 
@@ -144,8 +146,8 @@ export const InvitationPanel = () => {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-red-600" />
-            Invitar Usuarios
+            <Users className="w-5 h-5 text-red-600" />
+            Invitar Asesores y Colaboradores
           </CardTitle>
           <Button
             onClick={() => setShowInviteForm(!showInviteForm)}
@@ -168,14 +170,14 @@ export const InvitationPanel = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="usuario@ejemplo.com"
+                  placeholder="asesor@ejemplo.com"
                   required
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="role">Nivel de Acceso</Label>
-                <Select value={role} onValueChange={(value: 'franchisee' | 'manager' | 'viewer') => setRole(value)}>
+                <Label htmlFor="role">Tipo de Acceso</Label>
+                <Select value={role} onValueChange={(value: 'advisor' | 'manager' | 'viewer') => setRole(value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -188,18 +190,16 @@ export const InvitationPanel = () => {
                     </SelectItem>
                     <SelectItem value="manager">
                       <div className="flex items-center gap-2">
-                        <UserPlus className="w-4 h-4 text-blue-500" />
-                        Gestión y Modificación
+                        <UserPlus className="w-4 h-4 text-green-500" />
+                        Gestor (puede modificar)
                       </div>
                     </SelectItem>
-                    {user?.role === 'admin' && (
-                      <SelectItem value="franchisee">
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-4 h-4 text-red-500" />
-                          Acceso Completo
-                        </div>
-                      </SelectItem>
-                    )}
+                    <SelectItem value="advisor">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-blue-500" />
+                        Asesor (acceso completo)
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -270,9 +270,9 @@ export const InvitationPanel = () => {
 
         {invitations.length === 0 && !showInviteForm && (
           <div className="text-center py-8 text-gray-500">
-            <UserPlus className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p>No hay invitaciones enviadas</p>
-            <p className="text-sm">Haz clic en "Nueva Invitación" para comenzar</p>
+            <p className="text-sm">Invita a asesores y colaboradores para que te ayuden a gestionar tus restaurantes</p>
           </div>
         )}
       </CardContent>
