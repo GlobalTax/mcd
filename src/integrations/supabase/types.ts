@@ -574,6 +574,95 @@ export type Database = {
           },
         ]
       }
+      valuation_budgets: {
+        Row: {
+          budget_name: string
+          budget_year: number
+          created_at: string
+          created_by: string | null
+          depreciation: number | null
+          discount_rate: number
+          final_valuation: number | null
+          franchisee_restaurant_id: string | null
+          id: string
+          inflation_rate: number | null
+          initial_sales: number
+          interest: number | null
+          loan_payment: number | null
+          miscellaneous: number | null
+          notes: string | null
+          pac_percentage: number | null
+          projected_cash_flows: Json | null
+          rent_index: number | null
+          rent_percentage: number | null
+          sales_growth_rate: number | null
+          service_fees_percentage: number | null
+          status: string | null
+          updated_at: string
+          years_projection: number | null
+        }
+        Insert: {
+          budget_name: string
+          budget_year: number
+          created_at?: string
+          created_by?: string | null
+          depreciation?: number | null
+          discount_rate: number
+          final_valuation?: number | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          inflation_rate?: number | null
+          initial_sales: number
+          interest?: number | null
+          loan_payment?: number | null
+          miscellaneous?: number | null
+          notes?: string | null
+          pac_percentage?: number | null
+          projected_cash_flows?: Json | null
+          rent_index?: number | null
+          rent_percentage?: number | null
+          sales_growth_rate?: number | null
+          service_fees_percentage?: number | null
+          status?: string | null
+          updated_at?: string
+          years_projection?: number | null
+        }
+        Update: {
+          budget_name?: string
+          budget_year?: number
+          created_at?: string
+          created_by?: string | null
+          depreciation?: number | null
+          discount_rate?: number
+          final_valuation?: number | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          inflation_rate?: number | null
+          initial_sales?: number
+          interest?: number | null
+          loan_payment?: number | null
+          miscellaneous?: number | null
+          notes?: string | null
+          pac_percentage?: number | null
+          projected_cash_flows?: Json | null
+          rent_index?: number | null
+          rent_percentage?: number | null
+          sales_growth_rate?: number | null
+          service_fees_percentage?: number | null
+          status?: string | null
+          updated_at?: string
+          years_projection?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_budgets_franchisee_restaurant_id_fkey"
+            columns: ["franchisee_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "franchisee_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
