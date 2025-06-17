@@ -25,7 +25,7 @@ interface FranchiseeRestaurantsTableProps {
   restaurants: FranchiseeRestaurant[];
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 40;
 
 export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProps> = ({
   restaurants

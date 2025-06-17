@@ -23,7 +23,7 @@ import { FranchiseeCard } from './FranchiseeCard';
 import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
 import { useNavigate } from 'react-router-dom';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 40;
 
 export const FranchiseesManagement: React.FC = () => {
   const { franchisees, loading, error, refetch: onRefresh } = useFranchisees();
