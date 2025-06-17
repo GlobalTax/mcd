@@ -34,8 +34,15 @@ export const useAnnualBudgets = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBudgets = async (restaurantId: string, year: number) => {
-    if (!user || !restaurantId) {
-      console.log('useAnnualBudgets - Missing user or restaurantId:', { user: !!user, restaurantId });
+    console.log('useAnnualBudgets - fetchBudgets called with:', { restaurantId, year, userExists: !!user });
+    
+    if (!user) {
+      console.log('useAnnualBudgets - No user found, cannot fetch budgets');
+      return;
+    }
+
+    if (!restaurantId) {
+      console.log('useAnnualBudgets - No restaurantId provided');
       return;
     }
 
@@ -43,7 +50,29 @@ export const useAnnualBudgets = () => {
       setLoading(true);
       setError(null);
       
-      console.log('useAnnualBudgets - Fetching budgets for:', { restaurantId, year });
+      console.log('useAnnualBudgets - Starting fetch for:', { restaurantId, year });
+
+      // Primero verificar si el usuario tiene acceso a este restaurante
+      const { data: restaurantCheck, error: restaurantError } = await supabase
+        .from('franchisee_restaurants')
+        .select(`
+          id,
+          franchisee_id,
+          franchisees!inner(
+            user_id
+          )
+        `)
+        .eq('id', restaurantId)
+        .eq('franchisees.user_id', user.id)
+        .single();
+
+      if (restaurantError) {
+        console.error('useAnnualBudgets - Error checking restaurant access:', restaurantError);
+        setError('No tienes acceso a este restaurante');
+        return;
+      }
+
+      console.log('useAnnualBudgets - Restaurant access verified:', restaurantCheck);
 
       const { data, error: budgetError } = await supabase
         .from('annual_budgets')
@@ -60,12 +89,12 @@ export const useAnnualBudgets = () => {
         return;
       }
 
-      console.log('useAnnualBudgets - Fetched data:', data);
+      console.log('useAnnualBudgets - Raw data from DB:', data);
       setBudgets(data || []);
-      console.log(`useAnnualBudgets - Loaded ${data?.length || 0} budget entries for restaurant ${restaurantId}, year ${year}`);
+      console.log(`useAnnualBudgets - Successfully loaded ${data?.length || 0} budget entries`);
       
     } catch (err) {
-      console.error('useAnnualBudgets - Error in fetchBudgets:', err);
+      console.error('useAnnualBudgets - Unexpected error in fetchBudgets:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido al cargar los presupuestos';
       setError(errorMessage);
       toast.error(errorMessage);

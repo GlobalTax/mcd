@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
@@ -43,16 +42,21 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 }) => {
   const [rowData, setRowData] = useState<BudgetData[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-  const { budgets, loading, fetchBudgets, saveBudgets } = useAnnualBudgets();
+  const [dataInitialized, setDataInitialized] = useState(false);
+  const { budgets, loading, error, fetchBudgets, saveBudgets } = useAnnualBudgets();
 
-  console.log('AnnualBudgetGrid - Props:', { restaurantId, year });
-  console.log('AnnualBudgetGrid - Budgets from hook:', budgets);
-  console.log('AnnualBudgetGrid - Loading:', loading);
+  console.log('AnnualBudgetGrid - Render with props:', { restaurantId, year });
+  console.log('AnnualBudgetGrid - Hook state:', { 
+    budgetsLength: budgets.length, 
+    loading, 
+    error,
+    dataInitialized 
+  });
 
-  // Datos de ejemplo para la estructura del presupuesto
+  // Datos de ejemplo para cuando no hay datos en la BD
   const defaultBudgetStructure: BudgetData[] = [
     {
-      id: 'ingresos',
+      id: 'ingresos-category',
       category: 'INGRESOS',
       isCategory: true,
       jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
@@ -78,7 +82,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       total: 24000
     },
     {
-      id: 'costos',
+      id: 'costos-category',
       category: 'COSTOS OPERATIVOS',
       isCategory: true,
       jan: 0, feb: 0, mar: 0, apr: 0, may: 0, jun: 0,
@@ -114,15 +118,20 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     }
   ];
 
+  // Cargar datos cuando cambien las props
   useEffect(() => {
-    console.log('AnnualBudgetGrid - useEffect triggered with:', { restaurantId, year });
+    console.log('AnnualBudgetGrid - useEffect for data loading triggered');
     if (restaurantId && year) {
-      loadBudgetData();
+      console.log('AnnualBudgetGrid - Calling fetchBudgets');
+      setDataInitialized(false);
+      fetchBudgets(restaurantId, year);
     }
-  }, [restaurantId, year]);
+  }, [restaurantId, year, fetchBudgets]);
 
+  // Procesar datos cuando cambien los budgets del hook
   useEffect(() => {
-    console.log('AnnualBudgetGrid - Budgets changed:', budgets);
+    console.log('AnnualBudgetGrid - Processing budgets data:', budgets);
+    
     if (budgets.length > 0) {
       // Convertir datos de la BD al formato del grid
       const gridData = budgets.map(budget => ({
@@ -147,22 +156,14 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       }));
       console.log('AnnualBudgetGrid - Setting grid data from DB:', gridData);
       setRowData(gridData);
-    } else if (!loading) {
-      // Solo usar datos por defecto si no hay datos en la BD y no está cargando
+      setDataInitialized(true);
+    } else if (!loading && !dataInitialized) {
+      // Solo usar datos por defecto si no hay datos en la BD, no está cargando, y no hemos inicializado aún
       console.log('AnnualBudgetGrid - No data from DB, using default structure');
       setRowData(defaultBudgetStructure);
+      setDataInitialized(true);
     }
-  }, [budgets, loading]);
-
-  const loadBudgetData = async () => {
-    if (!restaurantId) {
-      console.log('AnnualBudgetGrid - No restaurantId provided');
-      return;
-    }
-    
-    console.log('AnnualBudgetGrid - Loading budget data for:', { restaurantId, year });
-    await fetchBudgets(restaurantId, year);
-  };
+  }, [budgets, loading, dataInitialized]);
 
   const columnDefs: ColDef[] = useMemo(() => [
     {
@@ -358,6 +359,25 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     );
   }
 
+  if (error) {
+    return (
+      <Card className="w-full">
+        <CardContent className="p-8 text-center">
+          <div className="text-red-500 mb-4">
+            <p className="font-semibold">Error al cargar los datos</p>
+            <p className="text-sm">{error}</p>
+          </div>
+          <Button 
+            onClick={() => fetchBudgets(restaurantId, year)}
+            variant="outline"
+          >
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -397,11 +417,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
         )}
       </CardHeader>
       <CardContent>
-        {rowData.length === 0 ? (
+        {rowData.length === 0 && !loading ? (
           <div className="text-center p-8">
             <p className="text-gray-500">No hay datos de presupuesto disponibles.</p>
             <p className="text-sm text-gray-400 mt-2">
-              Los datos por defecto se cargarán automáticamente...
+              Cargando datos por defecto...
             </p>
           </div>
         ) : (
