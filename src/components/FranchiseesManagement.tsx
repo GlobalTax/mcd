@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2 } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,12 +15,8 @@ import { toast } from 'sonner';
 import { FranchiseeCard } from './FranchiseeCard';
 import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
 
-interface FranchiseesManagementProps {
-  franchisees: Franchisee[];
-  onRefresh: () => void;
-}
-
-export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ franchisees, onRefresh }) => {
+export const FranchiseesManagement: React.FC = () => {
+  const { franchisees, loading, error, refetch: onRefresh } = useFranchisees();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -40,6 +37,8 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
     phone: '',
     password: ''
   });
+
+  console.log('FranchiseesManagement render - loading:', loading, 'error:', error, 'franchisees:', franchisees);
 
   const filteredFranchisees = franchisees.filter(franchisee =>
     franchisee.franchisee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -211,6 +210,26 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
     setIsAssignModalOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+        <span className="ml-2 text-lg">Cargando franquiciados...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center py-12">
+        <div className="text-red-600 text-lg mb-4">Error: {error}</div>
+        <Button onClick={onRefresh} variant="outline">
+          Intentar de nuevo
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -355,15 +374,18 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
         ))}
       </div>
 
-      {filteredFranchisees.length === 0 && (
+      {filteredFranchisees.length === 0 && !loading && (
         <div className="text-center py-12">
           <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {searchTerm ? 'No se encontraron franquiciados' : 'No hay franquiciados'}
           </h3>
           <p className="text-gray-500">
-            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Comienza creando tu primer franquiciado'}
+            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Los franquiciados se cargarán automáticamente desde tu base de datos'}
           </p>
+          <Button onClick={onRefresh} variant="outline" className="mt-4">
+            Recargar datos
+          </Button>
         </div>
       )}
 

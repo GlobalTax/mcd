@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +12,16 @@ export const useFranchisees = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchFranchisees = async () => {
-    if (!user || user.role !== 'advisor') {
+    console.log('fetchFranchisees - Starting fetch, user:', user);
+    
+    if (!user) {
+      console.log('fetchFranchisees - No user found');
+      setLoading(false);
+      return;
+    }
+
+    if (user.role !== 'advisor' && user.role !== 'admin' && user.role !== 'superadmin') {
+      console.log('fetchFranchisees - User role is not advisor/admin/superadmin:', user.role);
       setLoading(false);
       return;
     }
@@ -20,6 +30,8 @@ export const useFranchisees = () => {
       setLoading(true);
       setError(null);
 
+      console.log('fetchFranchisees - Making Supabase query');
+      
       const { data, error } = await supabase
         .from('franchisees')
         .select(`
@@ -28,16 +40,28 @@ export const useFranchisees = () => {
         `)
         .order('created_at', { ascending: false });
 
+      console.log('fetchFranchisees - Supabase response:', { data, error });
+
       if (error) {
         console.error('Error fetching franchisees:', error);
         setError(error.message);
+        toast.error('Error al cargar los franquiciados: ' + error.message);
         return;
       }
 
+      console.log('fetchFranchisees - Setting franchisees data:', data);
       setFranchisees(data || []);
+      
+      if (!data || data.length === 0) {
+        console.log('fetchFranchisees - No franchisees found');
+        toast.info('No se encontraron franquiciados en el sistema');
+      } else {
+        console.log(`fetchFranchisees - Found ${data.length} franchisees`);
+      }
     } catch (err) {
       console.error('Error in fetchFranchisees:', err);
       setError('Error al cargar los franquiciados');
+      toast.error('Error al cargar los franquiciados');
     } finally {
       setLoading(false);
     }
@@ -72,8 +96,9 @@ export const useFranchisees = () => {
   };
 
   useEffect(() => {
+    console.log('useFranchisees useEffect triggered, user:', user);
     fetchFranchisees();
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   return {
     franchisees,
