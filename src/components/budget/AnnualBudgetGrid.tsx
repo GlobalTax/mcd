@@ -40,6 +40,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 }) => {
   const [rowData, setRowData] = useState<BudgetData[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { budgets, loading, error, fetchBudgets, saveBudgets } = useAnnualBudgets();
 
   // Datos de ejemplo para cuando no hay datos en la BD
@@ -107,21 +108,19 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     }
   ], []);
 
-  // Función memoizada para cargar datos
-  const loadBudgetData = useCallback(async () => {
-    if (restaurantId && year) {
-      await fetchBudgets(restaurantId, year);
-    }
-  }, [restaurantId, year, fetchBudgets]);
-
-  // Cargar datos cuando cambien las props
+  // Cargar datos solo una vez cuando cambien las props
   useEffect(() => {
-    loadBudgetData();
-  }, [loadBudgetData]);
+    if (restaurantId && year && !isInitialized) {
+      console.log('AnnualBudgetGrid - Loading data for:', { restaurantId, year });
+      fetchBudgets(restaurantId, year);
+      setIsInitialized(true);
+    }
+  }, [restaurantId, year, fetchBudgets, isInitialized]);
 
   // Procesar datos cuando cambien los budgets del hook
   useEffect(() => {
     if (budgets.length > 0) {
+      console.log('AnnualBudgetGrid - Processing budgets from DB:', budgets.length);
       // Convertir datos de la BD al formato del grid
       const gridData = budgets.map(budget => ({
         id: budget.id,
@@ -144,58 +143,68 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
                budget.jul + budget.aug + budget.sep + budget.oct + budget.nov + budget.dec
       }));
       setRowData(gridData);
-    } else {
+    } else if (isInitialized && !loading) {
+      console.log('AnnualBudgetGrid - No budgets found, using default structure');
       setRowData(defaultBudgetStructure);
     }
-  }, [budgets, defaultBudgetStructure]);
+  }, [budgets, defaultBudgetStructure, isInitialized, loading]);
 
-  const handleCellChange = (id: string, field: string, value: number) => {
-    console.log('Celda modificada:', { id, field, value });
+  // Función optimizada para manejar cambios en las celdas
+  const handleCellChange = useCallback((id: string, field: string, value: number) => {
+    console.log('AnnualBudgetGrid - Cell changed:', { id, field, value });
     
     // Lista de campos numéricos editables
     const numericFields = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     
     if (!numericFields.includes(field)) {
-      console.warn('Campo no editable:', field);
+      console.warn('AnnualBudgetGrid - Field not editable:', field);
       return;
     }
     
-    // Actualizar el total de la fila
-    const updatedData = [...rowData];
-    const rowIndex = updatedData.findIndex(item => item.id === id);
-    
-    if (rowIndex !== -1) {
-      // Asignación segura solo para campos numéricos
-      (updatedData[rowIndex] as any)[field] = value;
+    setRowData(prevData => {
+      const updatedData = prevData.map(row => {
+        if (row.id === id) {
+          const updatedRow = { ...row, [field]: value };
+          // Recalcular el total
+          updatedRow.total = numericFields.reduce((sum, month) => 
+            sum + (updatedRow[month as keyof BudgetData] as number || 0), 0
+          );
+          return updatedRow;
+        }
+        return row;
+      });
       
-      // Recalcular el total
-      updatedData[rowIndex].total = numericFields.reduce((sum, month) => 
-        sum + (updatedData[rowIndex][month as keyof BudgetData] as number || 0), 0
-      );
-      
-      setRowData(updatedData);
       setHasChanges(true);
-    }
+      return updatedData;
+    });
     
     toast.success('Valor actualizado correctamente');
-  };
+  }, []);
 
   const handleSave = async () => {
     if (!hasChanges) return;
     
     try {
+      console.log('AnnualBudgetGrid - Saving data:', rowData.length, 'rows');
       const success = await saveBudgets(restaurantId, year, rowData);
       if (success) {
         setHasChanges(false);
+        console.log('AnnualBudgetGrid - Save successful');
       }
     } catch (error) {
-      console.error('Error saving budget:', error);
+      console.error('AnnualBudgetGrid - Error saving budget:', error);
       toast.error('Error al guardar el presupuesto');
     }
   };
 
   const handleExport = () => {
     toast.info('Funcionalidad de exportación próximamente');
+  };
+
+  const reloadData = () => {
+    setIsInitialized(false);
+    setRowData([]);
+    setHasChanges(false);
   };
 
   if (loading) {
@@ -218,7 +227,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
             <p className="text-sm">{error}</p>
           </div>
           <Button 
-            onClick={loadBudgetData}
+            onClick={reloadData}
             variant="outline"
           >
             Reintentar

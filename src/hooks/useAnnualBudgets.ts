@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -33,7 +33,7 @@ export const useAnnualBudgets = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBudgets = async (restaurantId: string, year: number) => {
+  const fetchBudgets = useCallback(async (restaurantId: string, year: number) => {
     console.log('useAnnualBudgets - fetchBudgets called with:', { restaurantId, year, userExists: !!user });
     
     if (!user) {
@@ -43,6 +43,12 @@ export const useAnnualBudgets = () => {
 
     if (!restaurantId) {
       console.log('useAnnualBudgets - No restaurantId provided');
+      return;
+    }
+
+    // Evitar llamadas duplicadas si ya estamos cargando
+    if (loading) {
+      console.log('useAnnualBudgets - Already loading, skipping duplicate call');
       return;
     }
 
@@ -101,9 +107,9 @@ export const useAnnualBudgets = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, loading]);
 
-  const saveBudgets = async (restaurantId: string, year: number, budgetData: any[]): Promise<boolean> => {
+  const saveBudgets = useCallback(async (restaurantId: string, year: number, budgetData: any[]): Promise<boolean> => {
     if (!user) {
       console.log('useAnnualBudgets - No user for saving budgets');
       return false;
@@ -163,7 +169,8 @@ export const useAnnualBudgets = () => {
       }
 
       toast.success('Presupuesto guardado correctamente');
-      await fetchBudgets(restaurantId, year); // Recargar datos
+      // Actualizar el estado local con los nuevos datos
+      await fetchBudgets(restaurantId, year);
       return true;
 
     } catch (err) {
@@ -173,7 +180,7 @@ export const useAnnualBudgets = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, fetchBudgets]);
 
   return {
     budgets,
