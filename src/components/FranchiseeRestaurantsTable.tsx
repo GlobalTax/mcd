@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -34,11 +35,15 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('es-ES');
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES');
+    } catch (error) {
+      return '-';
+    }
   };
 
   const formatCurrency = (amount?: number) => {
-    if (!amount) return '-';
+    if (!amount || isNaN(amount)) return '-';
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'EUR'
@@ -116,6 +121,7 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
               <TableRow>
                 <TableHead>Restaurante</TableHead>
                 <TableHead>Ubicación</TableHead>
+                <TableHead>Tipo</TableHead>
                 <TableHead>Fechas Franquicia</TableHead>
                 <TableHead>Renta Mensual</TableHead>
                 <TableHead>Facturación</TableHead>
@@ -165,6 +171,17 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
                           <div className="text-gray-500">
                             {baseRestaurant?.address || 'Sin dirección'}
                           </div>
+                          <div className="text-gray-500">
+                            {baseRestaurant?.state || baseRestaurant?.autonomous_community || ''}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>{baseRestaurant?.restaurant_type || '-'}</div>
+                        <div className="text-gray-500">
+                          {baseRestaurant?.property_type || '-'}
                         </div>
                       </div>
                     </TableCell>
@@ -188,7 +205,7 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>Año pasado: {formatCurrency(restaurant.last_year_revenue)}</div>
+                        <div>Año: {formatCurrency(restaurant.last_year_revenue)}</div>
                         <div className="text-gray-500">
                           Mensual: {formatCurrency(restaurant.average_monthly_sales)}
                         </div>
