@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, Mail, Phone, MapPin, Edit, Trash2, Plus } from 'lucide-react';
+import { Building, Mail, Phone, MapPin, Edit, Trash2, Plus, Eye } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface FranchiseeCardProps {
   franchisee: Franchisee;
@@ -19,8 +20,14 @@ export const FranchiseeCard: React.FC<FranchiseeCardProps> = ({
   onDelete,
   onAssignRestaurant
 }) => {
+  const navigate = useNavigate();
+
+  const handleViewDetails = () => {
+    navigate(`/advisor/franchisee/${franchisee.id}`);
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={handleViewDetails}>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="text-lg">{franchisee.franchisee_name}</span>
@@ -55,18 +62,45 @@ export const FranchiseeCard: React.FC<FranchiseeCardProps> = ({
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={() => onAssignRestaurant(franchisee)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAssignRestaurant(franchisee);
+            }}
             className="text-xs"
           >
             <Plus className="w-3 h-3 mr-1" />
-            Asignar Restaurante
+            Asignar
           </Button>
           
           <div className="flex space-x-2">
-            <Button size="sm" variant="outline" onClick={() => onEdit(franchisee)}>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewDetails();
+              }}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(franchisee);
+              }}
+            >
               <Edit className="w-4 h-4" />
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDelete(franchisee)}>
+            <Button 
+              size="sm" 
+              variant="destructive" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(franchisee);
+              }}
+            >
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>

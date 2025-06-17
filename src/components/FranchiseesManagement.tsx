@@ -6,16 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List, Eye } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FranchiseeCard } from './FranchiseeCard';
 import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
+import { useNavigate } from 'react-router-dom';
 
 export const FranchiseesManagement: React.FC = () => {
   const { franchisees, loading, error, refetch: onRefresh } = useFranchisees();
+  const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -208,6 +210,10 @@ export const FranchiseesManagement: React.FC = () => {
   const openAssignModal = (franchisee: Franchisee) => {
     setSelectedFranchisee(franchisee);
     setIsAssignModalOpen(true);
+  };
+
+  const handleViewDetails = (franchisee: Franchisee) => {
+    navigate(`/advisor/franchisee/${franchisee.id}`);
   };
 
   if (loading) {
@@ -409,7 +415,11 @@ export const FranchiseesManagement: React.FC = () => {
             </TableHeader>
             <TableBody>
               {filteredFranchisees.map((franchisee) => (
-                <TableRow key={franchisee.id}>
+                <TableRow 
+                  key={franchisee.id} 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleViewDetails(franchisee)}
+                >
                   <TableCell className="font-medium">{franchisee.franchisee_name}</TableCell>
                   <TableCell>{franchisee.company_name || '-'}</TableCell>
                   <TableCell>{franchisee.tax_id || '-'}</TableCell>
@@ -421,14 +431,45 @@ export const FranchiseesManagement: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" onClick={() => openAssignModal(franchisee)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openAssignModal(franchisee);
+                        }}
+                      >
                         <Plus className="w-3 h-3 mr-1" />
                         Asignar
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => openEditModal(franchisee)}>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(franchisee);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(franchisee);
+                        }}
+                      >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => handleDelete(franchisee)}>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(franchisee);
+                        }}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
