@@ -15,6 +15,7 @@ import AdvisorPage from "./pages/AdvisorPage";
 import FranchiseeDetailPage from "./pages/FranchiseeDetailPage";
 import ValuationApp from "./pages/ValuationApp";
 import SettingsPage from "./pages/SettingsPage";
+import AnnualBudgetPage from "./pages/AnnualBudgetPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['franchisee']}>
                     <ProfitLossPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/annual-budget"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <AnnualBudgetPage />
                   </ProtectedRoute>
                 }
               />

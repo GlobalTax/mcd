@@ -126,7 +126,7 @@ const DashboardPage = () => {
         {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
           <div className="space-y-8">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
                     onClick={() => navigate('/valuation')}>
                 <CardHeader>
@@ -138,6 +138,21 @@ const DashboardPage = () => {
                 <CardContent>
                   <p className="text-gray-600">
                     Accede a la herramienta profesional de valoración de restaurantes McDonald's
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
+                    onClick={() => navigate('/annual-budget')}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-red-600" />
+                    Presupuestos Anuales
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Gestiona los presupuestos anuales mensuales de tus restaurantes
                   </p>
                 </CardContent>
               </Card>
