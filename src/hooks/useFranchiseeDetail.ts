@@ -55,7 +55,7 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
       console.log('fetchFranchiseeDetail - Franchisee data:', franchiseeData);
       setFranchisee(franchiseeData);
 
-      // Obtener restaurantes del franquiciado - consulta mejorada
+      // Obtener restaurantes del franquiciado - consulta corregida con todos los campos necesarios
       console.log('fetchFranchiseeDetail - Fetching restaurants for franchisee:', franchiseeId);
       
       const { data: restaurantsData, error: restaurantsError } = await supabase
@@ -72,7 +72,17 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
             postal_code,
             country,
             restaurant_type,
-            opening_date
+            property_type,
+            autonomous_community,
+            franchisee_name,
+            franchisee_email,
+            company_tax_id,
+            square_meters,
+            seating_capacity,
+            opening_date,
+            created_at,
+            updated_at,
+            created_by
           )
         `)
         .eq('franchisee_id', franchiseeId)
@@ -107,4 +117,3 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
     refetch: fetchFranchiseeDetail
   };
 };
-
