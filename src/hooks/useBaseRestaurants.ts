@@ -23,6 +23,11 @@ export const useBaseRestaurants = () => {
       setError(null);
       console.log('Fetching base restaurants for user:', user.id, 'with role:', user.role);
 
+      // Agregar más logs para depuración
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('Current session user:', sessionData.session?.user?.id);
+      console.log('User role in hook:', user.role);
+
       const { data, error } = await supabase
         .from('base_restaurants')
         .select('*')
@@ -30,11 +35,13 @@ export const useBaseRestaurants = () => {
 
       if (error) {
         console.error('Error fetching base restaurants:', error);
+        console.error('Error details:', error.details, error.hint, error.code);
         setError(error.message);
         return;
       }
 
       console.log('Fetched restaurants:', data?.length || 0, 'restaurants');
+      console.log('Restaurant data sample:', data?.slice(0, 2));
       setRestaurants(data || []);
     } catch (err) {
       console.error('Error in fetchRestaurants:', err);
