@@ -17,7 +17,7 @@ interface NewUser {
   email: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'franchisee' | 'manager' | 'asesor';
+  role: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
 }
 
 const UserManagement = () => {
@@ -54,7 +54,7 @@ const UserManagement = () => {
       // Cast the role to the correct type
       const typedUsers = (data || []).map(userData => ({
         ...userData,
-        role: userData.role as 'admin' | 'franchisee' | 'manager' | 'asesor'
+        role: userData.role as 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente'
       }));
 
       setUsers(typedUsers);
@@ -153,6 +153,8 @@ const UserManagement = () => {
         return 'bg-green-100 text-green-800';
       case 'asesor':
         return 'bg-purple-100 text-purple-800';
+      case 'asistente':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -168,6 +170,8 @@ const UserManagement = () => {
         return 'Franquiciado';
       case 'asesor':
         return 'Asesor';
+      case 'asistente':
+        return 'Asistente';
       default:
         return role;
     }
@@ -255,7 +259,7 @@ const UserManagement = () => {
                       <Label htmlFor="role">Rol</Label>
                       <Select
                         value={newUser.role}
-                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor') => 
+                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -267,6 +271,7 @@ const UserManagement = () => {
                           <SelectItem value="manager">Gerente</SelectItem>
                           <SelectItem value="franchisee">Franquiciado</SelectItem>
                           <SelectItem value="asesor">Asesor</SelectItem>
+                          <SelectItem value="asistente">Asistente</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

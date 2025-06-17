@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,11 +104,13 @@ const SettingsPage = () => {
                             user?.role === 'admin' ? 'bg-red-100 text-red-800' :
                             user?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
                             user?.role === 'asesor' ? 'bg-purple-100 text-purple-800' :
+                            user?.role === 'asistente' ? 'bg-orange-100 text-orange-800' :
                             'bg-green-100 text-green-800'
                           }`}>
                             {user?.role === 'admin' ? 'Administrador' :
                              user?.role === 'manager' ? 'Gerente' :
                              user?.role === 'asesor' ? 'Asesor' :
+                             user?.role === 'asistente' ? 'Asistente' :
                              'Franquiciado'}
                           </span>
                         </p>
