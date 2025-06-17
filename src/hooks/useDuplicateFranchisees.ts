@@ -30,6 +30,8 @@ export const useDuplicateFranchisees = () => {
         return;
       }
 
+      console.log('Total franchisees found:', franchisees?.length || 0);
+
       const duplicateGroups: DuplicateGroup[] = [];
 
       // Agrupar por nombre exacto
@@ -103,6 +105,7 @@ export const useDuplicateFranchisees = () => {
         }
       });
 
+      console.log('Duplicate groups found:', duplicateGroups.length);
       setDuplicates(duplicateGroups);
     } catch (error) {
       console.error('Error finding duplicates:', error);
@@ -115,10 +118,49 @@ export const useDuplicateFranchisees = () => {
     try {
       console.log('Starting merge process...', { keepId, removeIds });
 
+      // Validación de seguridad
+      if (!keepId || !removeIds || removeIds.length === 0) {
+        console.error('Invalid parameters for merge');
+        return false;
+      }
+      
+      if (removeIds.includes(keepId)) {
+        console.error('Cannot remove the franchisee that we want to keep');
+        return false;
+      }
+
+      // Verificar que los franquiciados existen antes de hacer nada
+      const { data: franchiseesToCheck, error: checkError } = await supabase
+        .from('franchisees')
+        .select('id, franchisee_name')
+        .in('id', [keepId, ...removeIds]);
+
+      if (checkError) {
+        console.error('Error checking franchisees:', checkError);
+        return false;
+      }
+
+      console.log('Franchisees to process:', franchiseesToCheck);
+
+      const keepFranchisee = franchiseesToCheck?.find(f => f.id === keepId);
+      const removeFranchisees = franchiseesToCheck?.filter(f => removeIds.includes(f.id));
+
+      if (!keepFranchisee) {
+        console.error('Franchisee to keep not found');
+        return false;
+      }
+
+      if (!removeFranchisees || removeFranchisees.length === 0) {
+        console.error('No franchisees to remove found');
+        return false;
+      }
+
+      console.log(`Keeping: ${keepFranchisee.franchisee_name}, Removing: ${removeFranchisees.map(f => f.franchisee_name).join(', ')}`);
+
       // Paso 1: Obtener todos los restaurantes que están asignados a los franquiciados que se van a eliminar
       const { data: restaurantsToMove, error: fetchError } = await supabase
         .from('franchisee_restaurants')
-        .select('base_restaurant_id')
+        .select('base_restaurant_id, franchisee_id')
         .in('franchisee_id', removeIds);
 
       if (fetchError) {
@@ -159,7 +201,7 @@ export const useDuplicateFranchisees = () => {
             .from('franchisee_restaurants')
             .update({ franchisee_id: keepId })
             .eq('base_restaurant_id', restaurant.base_restaurant_id)
-            .in('franchisee_id', removeIds);
+            .eq('franchisee_id', restaurant.franchisee_id); // Más específico
 
           if (updateError) {
             console.error('Error updating franchisee_restaurants:', updateError);
@@ -179,7 +221,7 @@ export const useDuplicateFranchisees = () => {
         return false;
       }
 
-      // Paso 6: Eliminar los franquiciados duplicados
+      // Paso 6: Eliminar SOLO los franquiciados especificados
       const { error: deleteError } = await supabase
         .from('franchisees')
         .delete()
@@ -191,6 +233,8 @@ export const useDuplicateFranchisees = () => {
       }
 
       console.log('Merge completed successfully');
+      console.log(`Kept franchisee: ${keepFranchisee.franchisee_name}`);
+      console.log(`Removed franchisees: ${removeFranchisees.map(f => f.franchisee_name).join(', ')}`);
 
       // Refrescar la lista de duplicados
       await findDuplicates();
