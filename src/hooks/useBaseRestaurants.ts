@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,62 +20,20 @@ export const useBaseRestaurants = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('=== DEBUGGING RESTAURANTS FETCH ===');
       console.log('Fetching base restaurants for user:', user.id, 'with role:', user.role);
 
-      // Verificar la sesión actual
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('Current session user:', sessionData.session?.user?.id);
-      console.log('Session user email:', sessionData.session?.user?.email);
-      console.log('User role in hook:', user.role);
-
-      // Verificar el perfil del usuario directamente
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      console.log('Profile data:', profileData);
-      console.log('Profile error:', profileError);
-
-      // Intentar obtener todos los restaurantes sin filtros primero
-      console.log('Attempting to fetch restaurants...');
-      const { data, error, count } = await supabase
+      const { data, error } = await supabase
         .from('base_restaurants')
-        .select('*', { count: 'exact' })
+        .select('*')
         .order('created_at', { ascending: false });
-
-      console.log('Raw query result:');
-      console.log('- Data:', data);
-      console.log('- Count:', count);
-      console.log('- Error:', error);
 
       if (error) {
         console.error('Error fetching base restaurants:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
         setError(error.message);
         return;
       }
 
       console.log('Successfully fetched restaurants:', data?.length || 0, 'restaurants');
-      if (data && data.length > 0) {
-        console.log('Sample restaurant data:', data.slice(0, 2));
-      } else {
-        console.log('No restaurants found in database');
-        
-        // Verificar si hay datos en la tabla sin RLS
-        const { count: totalCount } = await supabase
-          .from('base_restaurants')
-          .select('*', { count: 'exact', head: true });
-        console.log('Total restaurants in table (ignoring RLS):', totalCount);
-      }
-      
       setRestaurants(data || []);
     } catch (err) {
       console.error('Error in fetchRestaurants:', err);
