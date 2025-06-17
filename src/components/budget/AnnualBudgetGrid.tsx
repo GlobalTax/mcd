@@ -44,11 +44,12 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   const selectedRestaurant = restaurants.find(r => r.id === restaurantId);
   const restaurantName = selectedRestaurant?.base_restaurant?.restaurant_name;
 
+  // Cargar datos reales automáticamente
   useEffect(() => {
-    if (showComparison && restaurantId && year) {
+    if (restaurantId && year) {
       fetchActualData(restaurantId, year);
     }
-  }, [showComparison, restaurantId, year, fetchActualData]);
+  }, [restaurantId, year, fetchActualData]);
 
   const handleShowComparison = () => {
     setShowComparison(!showComparison);
@@ -124,6 +125,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       <CardContent>
         <BudgetTable 
           data={rowData} 
+          actualData={actualData}
           onCellChange={handleCellChange}
         />
       </CardContent>
