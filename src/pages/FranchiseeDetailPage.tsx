@@ -101,7 +101,7 @@ const FranchiseeDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Información del Franquiciado */}
           <div className="lg:col-span-1">
-            <Card>
+            <Card key={`franchisee-card-${franchiseeId}-${restaurants.length}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building className="w-5 h-5" />
@@ -153,7 +153,7 @@ const FranchiseeDetailPage = () => {
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">Restaurantes:</span>
-                    <Badge key={restaurants.length} className="bg-green-100 text-green-800">
+                    <Badge className="bg-green-100 text-green-800">
                       {restaurants.length}
                     </Badge>
                   </div>
