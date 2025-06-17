@@ -35,7 +35,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setUser(profile as User);
+      // Map database role "asesor" to TypeScript type "advisor"
+      const mappedRole = profile.role === 'asesor' ? 'advisor' : profile.role;
+      
+      setUser({
+        ...profile,
+        role: mappedRole
+      } as User);
 
       // Only fetch franchisee data if user is a franchisee
       if (profile.role === 'franchisee') {

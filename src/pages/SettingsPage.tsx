@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,13 +102,13 @@ const SettingsPage = () => {
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             user?.role === 'admin' ? 'bg-red-100 text-red-800' :
                             user?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-                            user?.role === 'asesor' ? 'bg-purple-100 text-purple-800' :
+                            user?.role === 'advisor' ? 'bg-purple-100 text-purple-800' :
                             user?.role === 'asistente' ? 'bg-orange-100 text-orange-800' :
                             'bg-green-100 text-green-800'
                           }`}>
                             {user?.role === 'admin' ? 'Administrador' :
                              user?.role === 'manager' ? 'Gerente' :
-                             user?.role === 'asesor' ? 'Asesor' :
+                             user?.role === 'advisor' ? 'Asesor' :
                              user?.role === 'asistente' ? 'Asistente' :
                              'Franquiciado'}
                           </span>

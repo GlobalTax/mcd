@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,10 +50,10 @@ const UserManagement = () => {
         return;
       }
 
-      // Cast the role to the correct type
+      // Map database roles to TypeScript types
       const typedUsers = (data || []).map(userData => ({
         ...userData,
-        role: userData.role as 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente'
+        role: userData.role === 'asesor' ? 'advisor' : userData.role as 'admin' | 'franchisee' | 'manager' | 'advisor' | 'asistente'
       }));
 
       setUsers(typedUsers);
@@ -77,13 +76,16 @@ const UserManagement = () => {
     setCreating(true);
 
     try {
+      // Map TypeScript role back to database role
+      const dbRole = newUser.role === 'advisor' ? 'asesor' : newUser.role;
+      
       // Crear el usuario en Supabase Auth
       const { data, error } = await supabase.auth.admin.createUser({
         email: newUser.email,
         password: newUser.password,
         user_metadata: {
           full_name: newUser.fullName,
-          role: newUser.role
+          role: dbRole
         }
       });
 
@@ -98,7 +100,7 @@ const UserManagement = () => {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
-            role: newUser.role,
+            role: dbRole,
             full_name: newUser.fullName 
           })
           .eq('id', data.user.id);
@@ -151,7 +153,7 @@ const UserManagement = () => {
         return 'bg-blue-100 text-blue-800';
       case 'franchisee':
         return 'bg-green-100 text-green-800';
-      case 'asesor':
+      case 'advisor':
         return 'bg-purple-100 text-purple-800';
       case 'asistente':
         return 'bg-orange-100 text-orange-800';
@@ -168,7 +170,7 @@ const UserManagement = () => {
         return 'Gerente';
       case 'franchisee':
         return 'Franquiciado';
-      case 'asesor':
+      case 'advisor':
         return 'Asesor';
       case 'asistente':
         return 'Asistente';
@@ -259,7 +261,7 @@ const UserManagement = () => {
                       <Label htmlFor="role">Rol</Label>
                       <Select
                         value={newUser.role}
-                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente') => 
+                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'advisor' | 'asistente') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -270,7 +272,7 @@ const UserManagement = () => {
                           <SelectItem value="admin">Administrador</SelectItem>
                           <SelectItem value="manager">Gerente</SelectItem>
                           <SelectItem value="franchisee">Franquiciado</SelectItem>
-                          <SelectItem value="asesor">Asesor</SelectItem>
+                          <SelectItem value="advisor">Asesor</SelectItem>
                           <SelectItem value="asistente">Asistente</SelectItem>
                         </SelectContent>
                       </Select>
