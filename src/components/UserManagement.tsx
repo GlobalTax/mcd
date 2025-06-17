@@ -326,14 +326,13 @@ const UserManagement = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-              </users.map>
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  </div>
-);
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 export default UserManagement;
