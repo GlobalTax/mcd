@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
@@ -15,6 +15,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
@@ -247,19 +248,36 @@ export const FranchiseesManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
-        <span className="ml-2 text-lg">Cargando franquiciados...</span>
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+          <span className="text-lg">Cargando franquiciados...</span>
+          <p className="text-sm text-gray-500">Verificando conexión con la base de datos</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center py-12">
-        <div className="text-red-600 text-lg mb-4">Error: {error}</div>
-        <Button onClick={onRefresh} variant="outline">
-          Intentar de nuevo
-        </Button>
+      <div className="flex flex-col items-center py-12 space-y-4">
+        <Alert className="max-w-2xl">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Error al cargar franquiciados:</strong> {error}
+          </AlertDescription>
+        </Alert>
+        <div className="flex space-x-2">
+          <Button onClick={onRefresh} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Intentar de nuevo
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+          >
+            Recargar página
+          </Button>
+        </div>
       </div>
     );
   }
@@ -267,7 +285,12 @@ export const FranchiseesManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestión de Franquiciados</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Gestión de Franquiciados</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Total encontrados: {franchisees.length} franquiciados
+          </p>
+        </div>
         <div className="flex items-center space-x-4">
           <div className="flex border rounded-lg">
             <Button
@@ -601,12 +624,24 @@ export const FranchiseesManagement: React.FC = () => {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {searchTerm ? 'No se encontraron franquiciados' : 'No hay franquiciados'}
           </h3>
-          <p className="text-gray-500">
-            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Los franquiciados se cargarán automáticamente desde tu base de datos'}
+          <p className="text-gray-500 mb-4">
+            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Parece que no hay franquiciados en la base de datos'}
           </p>
-          <Button onClick={onRefresh} variant="outline" className="mt-4">
-            Recargar datos
-          </Button>
+          <div className="flex justify-center space-x-2">
+            <Button onClick={onRefresh} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Recargar datos
+            </Button>
+            {!searchTerm && (
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Crear primer franquiciado
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

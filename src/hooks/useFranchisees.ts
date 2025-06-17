@@ -20,8 +20,12 @@ export const useFranchisees = () => {
       return;
     }
 
+    console.log('fetchFranchisees - User role:', user.role);
+
     if (user.role !== 'advisor' && user.role !== 'admin' && user.role !== 'superadmin') {
       console.log('fetchFranchisees - User role is not advisor/admin/superadmin:', user.role);
+      setError('No tienes permisos para ver los franquiciados');
+      toast.error('No tienes permisos para ver los franquiciados');
       setLoading(false);
       return;
     }
@@ -32,6 +36,23 @@ export const useFranchisees = () => {
 
       console.log('fetchFranchisees - Making Supabase query');
       
+      // Primero verificamos si la tabla existe y podemos hacer la consulta básica
+      const { data: testData, error: testError } = await supabase
+        .from('franchisees')
+        .select('id, franchisee_name')
+        .limit(1);
+
+      console.log('fetchFranchisees - Test query result:', { testData, testError });
+
+      if (testError) {
+        console.error('fetchFranchisees - Test query failed:', testError);
+        setError(`Error de acceso a la base de datos: ${testError.message}`);
+        toast.error(`Error de acceso a la base de datos: ${testError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      // Ahora hacemos la consulta completa
       const { data, error } = await supabase
         .from('franchisees')
         .select(`
@@ -40,7 +61,7 @@ export const useFranchisees = () => {
         `)
         .order('created_at', { ascending: false });
 
-      console.log('fetchFranchisees - Supabase response:', { data, error });
+      console.log('fetchFranchisees - Full query result:', { data, error });
 
       if (error) {
         console.error('Error fetching franchisees:', error);
@@ -53,15 +74,17 @@ export const useFranchisees = () => {
       setFranchisees(data || []);
       
       if (!data || data.length === 0) {
-        console.log('fetchFranchisees - No franchisees found');
+        console.log('fetchFranchisees - No franchisees found in database');
         toast.info('No se encontraron franquiciados en el sistema');
       } else {
         console.log(`fetchFranchisees - Found ${data.length} franchisees`);
+        toast.success(`Se cargaron ${data.length} franquiciados`);
       }
     } catch (err) {
       console.error('Error in fetchFranchisees:', err);
-      setError('Error al cargar los franquiciados');
-      toast.error('Error al cargar los franquiciados');
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al cargar los franquiciados';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
