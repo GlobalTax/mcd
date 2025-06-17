@@ -12,7 +12,6 @@ import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
 import { RestaurantsSection } from '@/components/dashboard/RestaurantsSection';
 import { Franchisee } from '@/types/restaurant';
 
-// Tipo extendido para manejar ambos formatos de restaurant
 type DisplayRestaurant = {
   id: string;
   name?: string;
@@ -44,12 +43,10 @@ const DashboardPage = () => {
     navigate('/auth');
   };
 
-  // Get all restaurants from localStorage (from valuation tool)
   const allLocalRestaurants = localFranchisees.flatMap(f => 
     f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
   );
 
-  // Use franchisee restaurants from Supabase if available, otherwise fall back to local storage
   const hasSupabaseRestaurants = franchiseeRestaurants.length > 0;
   const displayRestaurants: DisplayRestaurant[] = hasSupabaseRestaurants ? 
     franchiseeRestaurants.map(fr => ({
@@ -75,18 +72,16 @@ const DashboardPage = () => {
   const totalRestaurants = displayRestaurants?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
         userName={user?.full_name || user?.email}
         onNavigateToSettings={() => navigate('/settings')}
         onSignOut={handleSignOut}
       />
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-        {/* Panel de invitaciones */}
+      <div className="max-w-7xl mx-auto px-8 py-8">
         <InvitationPanel />
 
-        {/* Main Content */}
         {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
           <div className="space-y-8">
             <DashboardMetrics totalRestaurants={totalRestaurants} />
