@@ -55,7 +55,67 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
       console.log('fetchFranchiseeDetail - Franchisee data:', franchiseeData);
       setFranchisee(franchiseeData);
 
-      // Intentar obtener restaurantes directamente de la tabla restaurants con el franchisee_id
+      // Buscar restaurantes usando el nombre del franquiciado en base_restaurants
+      console.log('fetchFranchiseeDetail - Searching restaurants by franchisee_name:', franchiseeData.franchisee_name);
+      
+      const { data: baseRestaurantsData, error: baseRestaurantsError } = await supabase
+        .from('base_restaurants')
+        .select('*')
+        .eq('franchisee_name', franchiseeData.franchisee_name);
+
+      if (baseRestaurantsError) {
+        console.error('Error fetching base restaurants by name:', baseRestaurantsError);
+      } else {
+        console.log('fetchFranchiseeDetail - Found base restaurants by name:', baseRestaurantsData);
+        
+        if (baseRestaurantsData && baseRestaurantsData.length > 0) {
+          // Convertir base_restaurants a formato FranchiseeRestaurant
+          const convertedRestaurants = baseRestaurantsData.map(restaurant => ({
+            id: restaurant.id,
+            franchisee_id: franchiseeId,
+            base_restaurant_id: restaurant.id,
+            franchise_start_date: restaurant.opening_date,
+            franchise_end_date: undefined,
+            lease_start_date: undefined,
+            lease_end_date: undefined,
+            monthly_rent: undefined,
+            franchise_fee_percentage: undefined,
+            advertising_fee_percentage: undefined,
+            last_year_revenue: undefined,
+            average_monthly_sales: undefined,
+            status: 'active',
+            notes: undefined,
+            assigned_at: restaurant.created_at,
+            updated_at: restaurant.updated_at,
+            base_restaurant: {
+              id: restaurant.id,
+              site_number: restaurant.site_number,
+              restaurant_name: restaurant.restaurant_name,
+              address: restaurant.address,
+              city: restaurant.city,
+              state: restaurant.state,
+              postal_code: restaurant.postal_code,
+              country: restaurant.country,
+              restaurant_type: restaurant.restaurant_type,
+              property_type: restaurant.property_type,
+              autonomous_community: restaurant.autonomous_community || restaurant.state,
+              franchisee_name: restaurant.franchisee_name,
+              franchisee_email: restaurant.franchisee_email,
+              company_tax_id: restaurant.company_tax_id,
+              square_meters: restaurant.square_meters,
+              seating_capacity: restaurant.seating_capacity,
+              opening_date: restaurant.opening_date,
+              created_at: restaurant.created_at,
+              updated_at: restaurant.updated_at,
+              created_by: restaurant.created_by
+            }
+          }));
+          setRestaurants(convertedRestaurants);
+          return;
+        }
+      }
+
+      // Si no encontramos por nombre, intentar obtener restaurantes directamente de la tabla restaurants con el franchisee_id
       console.log('fetchFranchiseeDetail - Fetching restaurants from restaurants table for franchisee:', franchiseeId);
       
       const { data: directRestaurantsData, error: directRestaurantsError } = await supabase
