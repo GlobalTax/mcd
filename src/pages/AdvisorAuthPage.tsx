@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, Store } from 'lucide-react';
+import { Loader2, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const AuthPage = () => {
+const AdvisorAuthPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -20,7 +20,7 @@ const AuthPage = () => {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
   
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +28,8 @@ const AuthPage = () => {
       if (user.role === 'advisor') {
         navigate('/advisor');
       } else {
-        navigate('/dashboard');
+        toast.error('No tienes permisos de asesor');
+        navigate('/auth');
       }
     }
   }, [user, loading, navigate]);
@@ -37,7 +38,11 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    await signIn(email, password);
+    const { error } = await signIn(email, password);
+    
+    if (!error && user && user.role !== 'advisor') {
+      toast.error('Esta cuenta no tiene permisos de asesor');
+    }
     
     setIsLoading(false);
   };
@@ -46,7 +51,25 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    await signUp(email, password, fullName);
+    const redirectUrl = `${window.location.origin}/advisor-auth`;
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          role: 'asesor'
+        },
+      },
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Solicitud de cuenta de asesor enviada. Contacta con el administrador para activar tu cuenta.');
+    }
     
     setIsLoading(false);
   };
@@ -56,7 +79,7 @@ const AuthPage = () => {
     setIsResettingPassword(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth`,
+      redirectTo: `${window.location.origin}/advisor-auth`,
     });
 
     if (error) {
@@ -78,39 +101,39 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-yellow-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <Store className="text-white w-8 h-8" />
+          <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+            <Shield className="text-white w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Portal de Franquiciados</h1>
-          <p className="text-gray-600 mt-2">Gestiona tu restaurante McDonald's</p>
+          <h1 className="text-3xl font-bold text-gray-900">Portal de Asesores</h1>
+          <p className="text-gray-600 mt-2">Acceso exclusivo para asesores McDonald's</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Acceso para Franquiciados</CardTitle>
+            <CardTitle className="text-center">Acceso de Asesores</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
-                <TabsTrigger value="signup">Registrarse</TabsTrigger>
+                <TabsTrigger value="signup">Solicitar Acceso</TabsTrigger>
                 <TabsTrigger value="reset">Recuperar</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">Email Corporativo</Label>
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="tu.email@ejemplo.com"
+                      placeholder="asesor@mcdonalds.com"
                     />
                   </div>
                   
@@ -128,7 +151,7 @@ const AuthPage = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-red-600 hover:bg-red-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -137,7 +160,7 @@ const AuthPage = () => {
                         Iniciando sesión...
                       </>
                     ) : (
-                      'Iniciar Sesión'
+                      'Acceder al Panel de Asesor'
                     )}
                   </Button>
                   
@@ -145,7 +168,7 @@ const AuthPage = () => {
                     <button
                       type="button"
                       onClick={() => setActiveTab('reset')}
-                      className="text-sm text-red-600 hover:text-red-700 underline"
+                      className="text-sm text-blue-600 hover:text-blue-700 underline"
                     >
                       ¿Has olvidado tu contraseña?
                     </button>
@@ -155,6 +178,12 @@ const AuthPage = () => {
               
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4">
+                    <p className="text-sm text-amber-800">
+                      <strong>Nota:</strong> Las cuentas de asesor requieren aprobación del administrador.
+                    </p>
+                  </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Nombre Completo</Label>
                     <Input
@@ -168,14 +197,14 @@ const AuthPage = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signupEmail">Email</Label>
+                    <Label htmlFor="signupEmail">Email Corporativo</Label>
                     <Input
                       id="signupEmail"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      placeholder="tu.email@ejemplo.com"
+                      placeholder="asesor@mcdonalds.com"
                     />
                   </div>
                   
@@ -194,16 +223,16 @@ const AuthPage = () => {
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-red-600 hover:bg-red-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creando cuenta...
+                        Enviando solicitud...
                       </>
                     ) : (
-                      'Crear Cuenta de Franquiciado'
+                      'Solicitar Acceso de Asesor'
                     )}
                   </Button>
                 </form>
@@ -219,13 +248,13 @@ const AuthPage = () => {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       required
-                      placeholder="tu.email@ejemplo.com"
+                      placeholder="asesor@mcdonalds.com"
                     />
                   </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full bg-red-600 hover:bg-red-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     disabled={isResettingPassword}
                   >
                     {isResettingPassword ? (
@@ -253,10 +282,10 @@ const AuthPage = () => {
 
             <div className="mt-6 pt-4 border-t text-center">
               <p className="text-sm text-gray-600">
-                ¿Eres asesor de McDonald's?{' '}
+                ¿Eres franquiciado?{' '}
                 <button
-                  onClick={() => navigate('/advisor-auth')}
-                  className="text-blue-600 hover:text-blue-700 underline font-medium"
+                  onClick={() => navigate('/auth')}
+                  className="text-red-600 hover:text-red-700 underline font-medium"
                 >
                   Accede aquí
                 </button>
@@ -269,4 +298,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+export default AdvisorAuthPage;

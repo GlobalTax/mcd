@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
+import AdvisorAuthPage from "./pages/AdvisorAuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdvisorPage from "./pages/AdvisorPage";
 import RestaurantPage from "./pages/RestaurantPage";
@@ -27,6 +28,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="/advisor-auth" element={<AdvisorAuthPage />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
               <Route path="/advisor" element={<ProtectedRoute requiredRole="advisor"><AdvisorPage /></ProtectedRoute>} />
               <Route path="/restaurant" element={<ProtectedRoute><RestaurantPage /></ProtectedRoute>} />
