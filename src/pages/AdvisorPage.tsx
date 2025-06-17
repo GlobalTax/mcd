@@ -1,12 +1,12 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Users, BarChart3, Settings, UserCheck, MapPin } from 'lucide-react';
+import { Building, Users, BarChart3, Settings, UserCheck, MapPin, Shield } from 'lucide-react';
 import { BaseRestaurantsTable } from '@/components/BaseRestaurantsTable';
 import { FranchiseesManagement } from '@/components/FranchiseesManagement';
 import { RestaurantAssignments } from '@/components/RestaurantAssignments';
 import { AdvisorReports } from '@/components/AdvisorReports';
+import AdvisorManagement from '@/components/AdvisorManagement';
 import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +30,8 @@ const AdvisorPage = () => {
       </div>
     );
   }
+
+  const canManageAdvisors = user.role === 'superadmin' || user.role === 'admin';
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -128,7 +130,7 @@ const AdvisorPage = () => {
       </div>
 
       <Tabs defaultValue="restaurants" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className={`grid w-full ${canManageAdvisors ? 'grid-cols-5' : 'grid-cols-4'} mb-6`}>
           <TabsTrigger value="restaurants" className="flex items-center gap-2">
             <Building className="w-4 h-4" />
             Restaurantes
@@ -145,6 +147,12 @@ const AdvisorPage = () => {
             <BarChart3 className="w-4 h-4" />
             Reportes
           </TabsTrigger>
+          {canManageAdvisors && (
+            <TabsTrigger value="advisors" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Asesores
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="restaurants" className="space-y-4">
@@ -230,6 +238,26 @@ const AdvisorPage = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {canManageAdvisors && (
+          <TabsContent value="advisors" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-blue-600" />
+                  Gestión de Asesores
+                </CardTitle>
+                <CardDescription>
+                  Crea y gestiona asesores del sistema. Los Super Admins pueden crear Admins y Asesores.
+                  Los Admins pueden crear solo Asesores.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AdvisorManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
