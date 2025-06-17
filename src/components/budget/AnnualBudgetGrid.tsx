@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -42,19 +43,17 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 }) => {
   const [rowData, setRowData] = useState<BudgetData[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
-  const [dataInitialized, setDataInitialized] = useState(false);
   const { budgets, loading, error, fetchBudgets, saveBudgets } = useAnnualBudgets();
 
   console.log('AnnualBudgetGrid - Render with props:', { restaurantId, year });
   console.log('AnnualBudgetGrid - Hook state:', { 
     budgetsLength: budgets.length, 
     loading, 
-    error,
-    dataInitialized 
+    error 
   });
 
   // Datos de ejemplo para cuando no hay datos en la BD
-  const defaultBudgetStructure: BudgetData[] = [
+  const defaultBudgetStructure: BudgetData[] = useMemo(() => [
     {
       id: 'ingresos-category',
       category: 'INGRESOS',
@@ -116,17 +115,20 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       jul: -8000, aug: -8000, sep: -8000, oct: -8000, nov: -8000, dec: -8000,
       total: -96000
     }
-  ];
+  ], []);
 
-  // Cargar datos cuando cambien las props
-  useEffect(() => {
-    console.log('AnnualBudgetGrid - useEffect for data loading triggered');
+  // Función memoizada para cargar datos
+  const loadBudgetData = useCallback(() => {
     if (restaurantId && year) {
-      console.log('AnnualBudgetGrid - Calling fetchBudgets');
-      setDataInitialized(false);
+      console.log('AnnualBudgetGrid - Loading budget data for:', { restaurantId, year });
       fetchBudgets(restaurantId, year);
     }
   }, [restaurantId, year, fetchBudgets]);
+
+  // Cargar datos cuando cambien las props
+  useEffect(() => {
+    loadBudgetData();
+  }, [loadBudgetData]);
 
   // Procesar datos cuando cambien los budgets del hook
   useEffect(() => {
@@ -156,14 +158,12 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       }));
       console.log('AnnualBudgetGrid - Setting grid data from DB:', gridData);
       setRowData(gridData);
-      setDataInitialized(true);
-    } else if (!loading && !dataInitialized) {
-      // Solo usar datos por defecto si no hay datos en la BD, no está cargando, y no hemos inicializado aún
+    } else if (!loading) {
+      // Solo usar datos por defecto si no está cargando y no hay datos
       console.log('AnnualBudgetGrid - No data from DB, using default structure');
       setRowData(defaultBudgetStructure);
-      setDataInitialized(true);
     }
-  }, [budgets, loading, dataInitialized]);
+  }, [budgets, loading, defaultBudgetStructure]);
 
   const columnDefs: ColDef[] = useMemo(() => [
     {
@@ -346,7 +346,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     toast.info('Funcionalidad de exportación próximamente');
   };
 
-  console.log('AnnualBudgetGrid - Rendering with rowData:', rowData);
+  console.log('AnnualBudgetGrid - Rendering with rowData length:', rowData.length);
 
   if (loading) {
     return (
@@ -368,7 +368,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
             <p className="text-sm">{error}</p>
           </div>
           <Button 
-            onClick={() => fetchBudgets(restaurantId, year)}
+            onClick={loadBudgetData}
             variant="outline"
           >
             Reintentar
@@ -417,37 +417,28 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
         )}
       </CardHeader>
       <CardContent>
-        {rowData.length === 0 && !loading ? (
-          <div className="text-center p-8">
-            <p className="text-gray-500">No hay datos de presupuesto disponibles.</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Cargando datos por defecto...
-            </p>
-          </div>
-        ) : (
-          <div 
-            className="ag-theme-alpine" 
-            style={{ height: 600, width: '100%' }}
-          >
-            <AgGridReact
-              columnDefs={columnDefs}
-              rowData={rowData}
-              onCellValueChanged={handleCellValueChanged}
-              defaultColDef={{
-                sortable: true,
-                filter: true,
-                resizable: true
-              }}
-              suppressRowClickSelection={true}
-              rowSelection="multiple"
-              animateRows={true}
-              enableCellTextSelection={true}
-              undoRedoCellEditing={true}
-              undoRedoCellEditingLimit={20}
-              stopEditingWhenCellsLoseFocus={true}
-            />
-          </div>
-        )}
+        <div 
+          className="ag-theme-alpine" 
+          style={{ height: 600, width: '100%' }}
+        >
+          <AgGridReact
+            columnDefs={columnDefs}
+            rowData={rowData}
+            onCellValueChanged={handleCellValueChanged}
+            defaultColDef={{
+              sortable: true,
+              filter: true,
+              resizable: true
+            }}
+            suppressRowClickSelection={true}
+            rowSelection="multiple"
+            animateRows={true}
+            enableCellTextSelection={true}
+            undoRedoCellEditing={true}
+            undoRedoCellEditingLimit={20}
+            stopEditingWhenCellsLoseFocus={true}
+          />
+        </div>
       </CardContent>
     </Card>
   );
