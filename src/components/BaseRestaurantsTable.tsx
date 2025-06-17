@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Table, 
   TableBody, 
@@ -21,7 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Building, Edit, Trash2, Plus, Search, MapPin, Hash, ExternalLink } from 'lucide-react';
+import { Building, Edit, Trash2, Plus, Search, MapPin, Hash, ExternalLink, Settings2, Calendar, User, FileText } from 'lucide-react';
 import { BaseRestaurant } from '@/types/franchiseeRestaurant';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -33,6 +34,13 @@ interface BaseRestaurantsTableProps {
 
 const ITEMS_PER_PAGE = 40;
 
+interface ColumnSettings {
+  franchiseeInfo: boolean;
+  propertyDetails: boolean;
+  dates: boolean;
+  location: boolean;
+}
+
 export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
   restaurants,
   onRefresh
@@ -41,9 +49,17 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<BaseRestaurant | null>(null);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
+
+  const [columnSettings, setColumnSettings] = useState<ColumnSettings>({
+    franchiseeInfo: false,
+    propertyDetails: false,
+    dates: false,
+    location: true
+  });
 
   const [formData, setFormData] = useState({
     site_number: '',
@@ -93,6 +109,11 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
     const fullAddress = [address, city].filter(Boolean).join(', ');
     const encodedAddress = encodeURIComponent(fullAddress);
     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('es-ES');
   };
 
   const resetForm = () => {
@@ -245,146 +266,216 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Restaurantes Base ({filteredRestaurants.length})</h3>
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-red-600 hover:bg-red-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Restaurante
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="site_number">Número de Sitio</Label>
-                  <Input
-                    id="site_number"
-                    value={formData.site_number}
-                    onChange={(e) => setFormData({...formData, site_number: e.target.value})}
-                    required
+        <div className="flex gap-2">
+          <Dialog open={isColumnSettingsOpen} onOpenChange={setIsColumnSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings2 className="w-4 h-4 mr-2" />
+                Columnas
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Configurar Columnas</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="franchiseeInfo"
+                    checked={columnSettings.franchiseeInfo}
+                    onCheckedChange={(checked) => 
+                      setColumnSettings(prev => ({ ...prev, franchiseeInfo: checked as boolean }))
+                    }
                   />
+                  <Label htmlFor="franchiseeInfo" className="flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Información de Franquiciado
+                  </Label>
                 </div>
-                <div>
-                  <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
-                  <Input
-                    id="restaurant_name"
-                    value={formData.restaurant_name}
-                    onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
-                    required
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="propertyDetails"
+                    checked={columnSettings.propertyDetails}
+                    onCheckedChange={(checked) => 
+                      setColumnSettings(prev => ({ ...prev, propertyDetails: checked as boolean }))
+                    }
                   />
+                  <Label htmlFor="propertyDetails" className="flex items-center gap-2">
+                    <Building className="w-4 h-4" />
+                    Detalles de Propiedad
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="dates"
+                    checked={columnSettings.dates}
+                    onCheckedChange={(checked) => 
+                      setColumnSettings(prev => ({ ...prev, dates: checked as boolean }))
+                    }
+                  />
+                  <Label htmlFor="dates" className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Fechas
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="location"
+                    checked={columnSettings.location}
+                    onCheckedChange={(checked) => 
+                      setColumnSettings(prev => ({ ...prev, location: checked as boolean }))
+                    }
+                  />
+                  <Label htmlFor="location" className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Ubicación Detallada
+                  </Label>
                 </div>
               </div>
+            </DialogContent>
+          </Dialog>
 
-              <div className="space-y-2">
-                <Label>Dirección</Label>
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-red-600 hover:bg-red-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Restaurante
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreate} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                  <div>
+                    <Label htmlFor="site_number">Número de Sitio</Label>
                     <Input
-                      placeholder="Dirección"
-                      value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      id="site_number"
+                      value={formData.site_number}
+                      onChange={(e) => setFormData({...formData, site_number: e.target.value})}
+                      required
                     />
                   </div>
                   <div>
+                    <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
                     <Input
-                      placeholder="Ciudad"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="Provincia"
-                      value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="Código Postal"
-                      value={formData.postal_code}
-                      onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                      id="restaurant_name"
+                      value={formData.restaurant_name}
+                      onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
+                      required
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="country">País</Label>
-                  <Input
-                    id="country"
-                    value={formData.country}
-                    onChange={(e) => setFormData({...formData, country: e.target.value})}
-                  />
+                <div className="space-y-2">
+                  <Label>Dirección</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <Input
+                        placeholder="Dirección"
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Ciudad"
+                        value={formData.city}
+                        onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Provincia"
+                        value={formData.state}
+                        onChange={(e) => setFormData({...formData, state: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Código Postal"
+                        value={formData.postal_code}
+                        onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
-                  <Input
-                    id="restaurant_type"
-                    value={formData.restaurant_type}
-                    onChange={(e) => setFormData({...formData, restaurant_type: e.target.value})}
-                  />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="country">País</Label>
+                    <Input
+                      id="country"
+                      value={formData.country}
+                      onChange={(e) => setFormData({...formData, country: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
+                    <Input
+                      id="restaurant_type"
+                      value={formData.restaurant_type}
+                      onChange={(e) => setFormData({...formData, restaurant_type: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="property_type">Tipo de Propiedad</Label>
+                    <Input
+                      id="property_type"
+                      value={formData.property_type}
+                      onChange={(e) => setFormData({...formData, property_type: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="autonomous_community">Comunidad Autónoma</Label>
+                    <Input
+                      id="autonomous_community"
+                      value={formData.autonomous_community}
+                      onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="square_meters">Metros Cuadrados</Label>
+                    <Input
+                      id="square_meters"
+                      type="number"
+                      value={formData.square_meters}
+                      onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
+                    <Input
+                      id="seating_capacity"
+                      type="number"
+                      value={formData.seating_capacity}
+                      onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="opening_date">Fecha de Apertura</Label>
+                    <Input
+                      id="opening_date"
+                      type="date"
+                      value={formData.opening_date}
+                      onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="property_type">Tipo de Propiedad</Label>
-                  <Input
-                    id="property_type"
-                    value={formData.property_type}
-                    onChange={(e) => setFormData({...formData, property_type: e.target.value})}
-                  />
+                
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={creating} className="bg-red-600 hover:bg-red-700">
+                    {creating ? 'Creando...' : 'Crear Restaurante'}
+                  </Button>
                 </div>
-                <div>
-                  <Label htmlFor="autonomous_community">Comunidad Autónoma</Label>
-                  <Input
-                    id="autonomous_community"
-                    value={formData.autonomous_community}
-                    onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="square_meters">Metros Cuadrados</Label>
-                  <Input
-                    id="square_meters"
-                    type="number"
-                    value={formData.square_meters}
-                    onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
-                  <Input
-                    id="seating_capacity"
-                    type="number"
-                    value={formData.seating_capacity}
-                    onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="opening_date">Fecha de Apertura</Label>
-                  <Input
-                    id="opening_date"
-                    type="date"
-                    value={formData.opening_date}
-                    onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={creating} className="bg-red-600 hover:bg-red-700">
-                  {creating ? 'Creando...' : 'Crear Restaurante'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -439,12 +530,16 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
         </div>
       )}
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Restaurante</TableHead>
               <TableHead>Ubicación</TableHead>
+              {columnSettings.franchiseeInfo && <TableHead>Franquiciado</TableHead>}
+              {columnSettings.propertyDetails && <TableHead>Propiedad</TableHead>}
+              {columnSettings.dates && <TableHead>Fecha Apertura</TableHead>}
+              {columnSettings.location && <TableHead>Ubicación Detallada</TableHead>}
               <TableHead>Tipo</TableHead>
               <TableHead>Capacidad</TableHead>
               <TableHead>Acciones</TableHead>
@@ -487,6 +582,56 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
                       </div>
                     </div>
                   </TableCell>
+                  {columnSettings.franchiseeInfo && (
+                    <TableCell>
+                      <div className="text-sm">
+                        {restaurant.franchisee_name && (
+                          <div className="font-medium">{restaurant.franchisee_name}</div>
+                        )}
+                        {restaurant.franchisee_email && (
+                          <div className="text-gray-500">{restaurant.franchisee_email}</div>
+                        )}
+                        {restaurant.company_tax_id && (
+                          <div className="text-xs text-gray-400">{restaurant.company_tax_id}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {columnSettings.propertyDetails && (
+                    <TableCell>
+                      <div className="text-sm">
+                        {restaurant.property_type && (
+                          <div>{restaurant.property_type}</div>
+                        )}
+                        {restaurant.autonomous_community && (
+                          <div className="text-gray-500">{restaurant.autonomous_community}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
+                  {columnSettings.dates && (
+                    <TableCell>
+                      <div className="text-sm flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-gray-400" />
+                        {formatDate(restaurant.opening_date)}
+                      </div>
+                    </TableCell>
+                  )}
+                  {columnSettings.location && (
+                    <TableCell>
+                      <div className="text-sm">
+                        {restaurant.state && (
+                          <div>{restaurant.state}</div>
+                        )}
+                        {restaurant.postal_code && (
+                          <div className="text-gray-500">{restaurant.postal_code}</div>
+                        )}
+                        {restaurant.country && (
+                          <div className="text-xs text-gray-400">{restaurant.country}</div>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Badge variant="outline">
                       {restaurant.restaurant_type === 'traditional' ? 'Tradicional' : restaurant.restaurant_type}
