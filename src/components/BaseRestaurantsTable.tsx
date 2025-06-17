@@ -35,6 +35,11 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     postal_code: '',
     country: 'España',
     restaurant_type: 'traditional',
+    property_type: '',
+    autonomous_community: '',
+    franchisee_name: '',
+    franchisee_email: '',
+    company_tax_id: '',
     square_meters: '',
     seating_capacity: ''
   });
@@ -49,6 +54,11 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       postal_code: '',
       country: 'España',
       restaurant_type: 'traditional',
+      property_type: '',
+      autonomous_community: '',
+      franchisee_name: '',
+      franchisee_email: '',
+      company_tax_id: '',
       square_meters: '',
       seating_capacity: ''
     });
@@ -119,6 +129,11 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       postal_code: restaurant.postal_code || '',
       country: restaurant.country,
       restaurant_type: restaurant.restaurant_type,
+      property_type: restaurant.property_type || '',
+      autonomous_community: restaurant.autonomous_community || '',
+      franchisee_name: restaurant.franchisee_name || '',
+      franchisee_email: restaurant.franchisee_email || '',
+      company_tax_id: restaurant.company_tax_id || '',
       square_meters: restaurant.square_meters?.toString() || '',
       seating_capacity: restaurant.seating_capacity?.toString() || ''
     });
@@ -143,7 +158,7 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 Añadir Restaurante
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
               </DialogHeader>
@@ -202,6 +217,14 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                     />
                   </div>
                   <div>
+                    <Label htmlFor="autonomous_community">Comunidad Autónoma</Label>
+                    <Input
+                      id="autonomous_community"
+                      value={formData.autonomous_community}
+                      onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
                     <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
                       <SelectTrigger>
@@ -216,21 +239,36 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="square_meters">Metros Cuadrados</Label>
+                    <Label htmlFor="property_type">Tipo de Inmueble</Label>
                     <Input
-                      id="square_meters"
-                      type="number"
-                      value={formData.square_meters}
-                      onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
+                      id="property_type"
+                      value={formData.property_type}
+                      onChange={(e) => setFormData({...formData, property_type: e.target.value})}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
+                    <Label htmlFor="franchisee_name">Franquiciado</Label>
                     <Input
-                      id="seating_capacity"
-                      type="number"
-                      value={formData.seating_capacity}
-                      onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
+                      id="franchisee_name"
+                      value={formData.franchisee_name}
+                      onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="franchisee_email">Email del Franquiciado</Label>
+                    <Input
+                      id="franchisee_email"
+                      type="email"
+                      value={formData.franchisee_email}
+                      onChange={(e) => setFormData({...formData, franchisee_email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="company_tax_id">CIF de la Sociedad</Label>
+                    <Input
+                      id="company_tax_id"
+                      value={formData.company_tax_id}
+                      onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
                     />
                   </div>
                 </div>
@@ -256,8 +294,13 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
               <TableHead>Ciudad</TableHead>
               <TableHead>Provincia</TableHead>
               <TableHead>C.P.</TableHead>
+              <TableHead>Com. Autónoma</TableHead>
               <TableHead>País</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Tipo Inmueble</TableHead>
+              <TableHead>Franquiciado</TableHead>
+              <TableHead>Email Franquiciado</TableHead>
+              <TableHead>CIF Sociedad</TableHead>
               <TableHead>Creado</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
@@ -273,12 +316,17 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 <TableCell>{restaurant.city}</TableCell>
                 <TableCell>{restaurant.state || '-'}</TableCell>
                 <TableCell>{restaurant.postal_code || '-'}</TableCell>
+                <TableCell>{restaurant.autonomous_community || '-'}</TableCell>
                 <TableCell>{restaurant.country}</TableCell>
                 <TableCell>
                   <span className="capitalize">
                     {restaurant.restaurant_type.replace('_', ' ')}
                   </span>
                 </TableCell>
+                <TableCell>{restaurant.property_type || '-'}</TableCell>
+                <TableCell>{restaurant.franchisee_name || '-'}</TableCell>
+                <TableCell>{restaurant.franchisee_email || '-'}</TableCell>
+                <TableCell>{restaurant.company_tax_id || '-'}</TableCell>
                 <TableCell>
                   {new Date(restaurant.created_at).toLocaleDateString('es-ES')}
                 </TableCell>
@@ -303,7 +351,7 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
 
       {/* Modal de Edición */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Restaurante</DialogTitle>
           </DialogHeader>
@@ -362,6 +410,14 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 />
               </div>
               <div>
+                <Label htmlFor="edit_autonomous_community">Comunidad Autónoma</Label>
+                <Input
+                  id="edit_autonomous_community"
+                  value={formData.autonomous_community}
+                  onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
+                />
+              </div>
+              <div>
                 <Label htmlFor="edit_restaurant_type">Tipo de Restaurante</Label>
                 <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
                   <SelectTrigger>
@@ -376,21 +432,36 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 </Select>
               </div>
               <div>
-                <Label htmlFor="edit_square_meters">Metros Cuadrados</Label>
+                <Label htmlFor="edit_property_type">Tipo de Inmueble</Label>
                 <Input
-                  id="edit_square_meters"
-                  type="number"
-                  value={formData.square_meters}
-                  onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
+                  id="edit_property_type"
+                  value={formData.property_type}
+                  onChange={(e) => setFormData({...formData, property_type: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="edit_seating_capacity">Capacidad de Asientos</Label>
+                <Label htmlFor="edit_franchisee_name">Franquiciado</Label>
                 <Input
-                  id="edit_seating_capacity"
-                  type="number"
-                  value={formData.seating_capacity}
-                  onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
+                  id="edit_franchisee_name"
+                  value={formData.franchisee_name}
+                  onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_franchisee_email">Email del Franquiciado</Label>
+                <Input
+                  id="edit_franchisee_email"
+                  type="email"
+                  value={formData.franchisee_email}
+                  onChange={(e) => setFormData({...formData, franchisee_email: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_company_tax_id">CIF de la Sociedad</Label>
+                <Input
+                  id="edit_company_tax_id"
+                  value={formData.company_tax_id}
+                  onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
                 />
               </div>
             </div>

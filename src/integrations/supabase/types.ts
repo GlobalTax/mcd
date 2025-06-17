@@ -12,12 +12,17 @@ export type Database = {
       base_restaurants: {
         Row: {
           address: string
+          autonomous_community: string | null
           city: string
+          company_tax_id: string | null
           country: string | null
           created_at: string
           created_by: string | null
+          franchisee_email: string | null
+          franchisee_name: string | null
           id: string
           postal_code: string | null
+          property_type: string | null
           restaurant_name: string
           restaurant_type: string | null
           seating_capacity: number | null
@@ -28,12 +33,17 @@ export type Database = {
         }
         Insert: {
           address: string
+          autonomous_community?: string | null
           city: string
+          company_tax_id?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          franchisee_email?: string | null
+          franchisee_name?: string | null
           id?: string
           postal_code?: string | null
+          property_type?: string | null
           restaurant_name: string
           restaurant_type?: string | null
           seating_capacity?: number | null
@@ -44,12 +54,17 @@ export type Database = {
         }
         Update: {
           address?: string
+          autonomous_community?: string | null
           city?: string
+          company_tax_id?: string | null
           country?: string | null
           created_at?: string
           created_by?: string | null
+          franchisee_email?: string | null
+          franchisee_name?: string | null
           id?: string
           postal_code?: string | null
+          property_type?: string | null
           restaurant_name?: string
           restaurant_type?: string | null
           seating_capacity?: number | null

@@ -40,9 +40,7 @@ export const useDataImport = () => {
       let processed = 0;
 
       for (const restaurant of data) {
-        // Crear restaurante base directamente sin asociar a franquiciado específico por ahora
         await createBaseRestaurant(restaurant);
-
         processed++;
         setProgress((processed / total) * 100);
       }
@@ -80,7 +78,7 @@ export const useDataImport = () => {
         'Free-Standing': 'drive_thru'
       };
 
-      // Crear restaurante base
+      // Crear restaurante base con todos los campos nuevos
       const { error: restaurantError } = await supabase
         .from('base_restaurants')
         .insert({
@@ -91,6 +89,11 @@ export const useDataImport = () => {
           state: restaurant.provincia,
           country: 'España',
           restaurant_type: restaurantTypeMap[restaurant.tipoInmueble] || 'traditional',
+          property_type: restaurant.tipoInmueble,
+          autonomous_community: restaurant.comAutonoma,
+          franchisee_name: restaurant.franquiciado,
+          franchisee_email: restaurant.mailFranquiciado,
+          company_tax_id: restaurant.nifSociedad,
           created_by: user.id
         });
 
