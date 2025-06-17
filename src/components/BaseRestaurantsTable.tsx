@@ -1,31 +1,49 @@
-
-import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Edit, Trash2, Users } from 'lucide-react';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Building, Edit, Trash2, Plus, Search, MapPin, Hash, ExternalLink } from 'lucide-react';
 import { BaseRestaurant } from '@/types/franchiseeRestaurant';
-import { Franchisee } from '@/types/auth';
-import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
-import { useFranchisees } from '@/hooks/useFranchisees';
-import { DataImportDialog } from './DataImportDialog';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface BaseRestaurantsTableProps {
   restaurants: BaseRestaurant[];
   onRefresh: () => void;
 }
 
-export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ restaurants, onRefresh }) => {
-  const { createRestaurant, updateRestaurant, deleteRestaurant } = useBaseRestaurants();
-  const { franchisees, assignRestaurant } = useFranchisees();
+const ITEMS_PER_PAGE = 40;
+
+export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
+  restaurants,
+  onRefresh
+}) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<BaseRestaurant | null>(null);
-  const [selectedFranchiseeId, setSelectedFranchiseeId] = useState<string>('');
+  const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const [formData, setFormData] = useState({
     site_number: '',
@@ -38,13 +56,44 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     restaurant_type: 'traditional',
     property_type: '',
     autonomous_community: '',
-    franchisee_name: '',
-    franchisee_email: '',
-    company_tax_id: '',
     square_meters: '',
     seating_capacity: '',
     opening_date: ''
   });
+
+  const filteredRestaurants = useMemo(() => {
+    return restaurants.filter(restaurant =>
+      restaurant.restaurant_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      restaurant.site_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (restaurant.city && restaurant.city.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (restaurant.address && restaurant.address.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [restaurants, searchTerm]);
+
+  // Cálculos de paginación
+  const totalPages = Math.ceil(filteredRestaurants.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentRestaurants = filteredRestaurants.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll suave hacia arriba
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset page cuando cambia el término de búsqueda
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  const createGoogleMapsLink = (address?: string, city?: string) => {
+    if (!address && !city) return null;
+    
+    const fullAddress = [address, city].filter(Boolean).join(', ');
+    const encodedAddress = encodeURIComponent(fullAddress);
+    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  };
 
   const resetForm = () => {
     setFormData({
@@ -58,9 +107,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       restaurant_type: 'traditional',
       property_type: '',
       autonomous_community: '',
-      franchisee_name: '',
-      franchisee_email: '',
-      company_tax_id: '',
       square_meters: '',
       seating_capacity: '',
       opening_date: ''
@@ -69,16 +115,41 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await createRestaurant({
-      ...formData,
-      square_meters: formData.square_meters ? parseInt(formData.square_meters) : undefined,
-      seating_capacity: formData.seating_capacity ? parseInt(formData.seating_capacity) : undefined
-    });
-    
-    if (success) {
+    setCreating(true);
+
+    try {
+      const { error } = await supabase
+        .from('base_restaurants')
+        .insert({
+          site_number: formData.site_number,
+          restaurant_name: formData.restaurant_name,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state || null,
+          postal_code: formData.postal_code || null,
+          country: formData.country,
+          restaurant_type: formData.restaurant_type,
+          property_type: formData.property_type || null,
+          autonomous_community: formData.autonomous_community || null,
+          square_meters: formData.square_meters ? parseInt(formData.square_meters) : null,
+          seating_capacity: formData.seating_capacity ? parseInt(formData.seating_capacity) : null,
+          opening_date: formData.opening_date || null
+        });
+
+      if (error) {
+        toast.error('Error al crear el restaurante');
+        return;
+      }
+
+      toast.success('Restaurante creado exitosamente');
       setIsCreateModalOpen(false);
       resetForm();
       onRefresh();
+    } catch (error) {
+      console.error('Error in handleCreate:', error);
+      toast.error('Error al crear el restaurante');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -86,38 +157,67 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     e.preventDefault();
     if (!selectedRestaurant) return;
 
-    const success = await updateRestaurant(selectedRestaurant.id, {
-      ...formData,
-      square_meters: formData.square_meters ? parseInt(formData.square_meters) : undefined,
-      seating_capacity: formData.seating_capacity ? parseInt(formData.seating_capacity) : undefined
-    });
-    
-    if (success) {
+    setUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from('base_restaurants')
+        .update({
+          site_number: formData.site_number,
+          restaurant_name: formData.restaurant_name,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state || null,
+          postal_code: formData.postal_code || null,
+          country: formData.country,
+          restaurant_type: formData.restaurant_type,
+          property_type: formData.property_type || null,
+          autonomous_community: formData.autonomous_community || null,
+          square_meters: formData.square_meters ? parseInt(formData.square_meters) : null,
+          seating_capacity: formData.seating_capacity ? parseInt(formData.seating_capacity) : null,
+          opening_date: formData.opening_date || null
+        })
+        .eq('id', selectedRestaurant.id);
+
+      if (error) {
+        toast.error('Error al actualizar el restaurante');
+        return;
+      }
+
+      toast.success('Restaurante actualizado exitosamente');
       setIsEditModalOpen(false);
       setSelectedRestaurant(null);
       resetForm();
       onRefresh();
+    } catch (error) {
+      console.error('Error in handleEdit:', error);
+      toast.error('Error al actualizar el restaurante');
+    } finally {
+      setUpdating(false);
     }
   };
 
   const handleDelete = async (restaurant: BaseRestaurant) => {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar el restaurante ${restaurant.restaurant_name}?`)) {
-      const success = await deleteRestaurant(restaurant.id);
-      if (success) {
-        onRefresh();
-      }
+    if (!confirm(`¿Estás seguro de que quieres eliminar el restaurante ${restaurant.restaurant_name}?`)) {
+      return;
     }
-  };
 
-  const handleAssign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedRestaurant || !selectedFranchiseeId) return;
+    try {
+      const { error } = await supabase
+        .from('base_restaurants')
+        .delete()
+        .eq('id', restaurant.id);
 
-    const success = await assignRestaurant(selectedFranchiseeId, selectedRestaurant.id);
-    if (success) {
-      setIsAssignModalOpen(false);
-      setSelectedRestaurant(null);
-      setSelectedFranchiseeId('');
+      if (error) {
+        toast.error('Error al eliminar el restaurante');
+        return;
+      }
+
+      toast.success('Restaurante eliminado exitosamente');
+      onRefresh();
+    } catch (error) {
+      console.error('Error in handleDelete:', error);
+      toast.error('Error al eliminar el restaurante');
     }
   };
 
@@ -134,9 +234,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       restaurant_type: restaurant.restaurant_type,
       property_type: restaurant.property_type || '',
       autonomous_community: restaurant.autonomous_community || '',
-      franchisee_name: restaurant.franchisee_name || '',
-      franchisee_email: restaurant.franchisee_email || '',
-      company_tax_id: restaurant.company_tax_id || '',
       square_meters: restaurant.square_meters?.toString() || '',
       seating_capacity: restaurant.seating_capacity?.toString() || '',
       opening_date: restaurant.opening_date || ''
@@ -144,238 +241,349 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     setIsEditModalOpen(true);
   };
 
-  const openAssignModal = (restaurant: BaseRestaurant) => {
-    setSelectedRestaurant(restaurant);
-    setIsAssignModalOpen(true);
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Restaurantes Base</h2>
-        <div className="flex space-x-2">
-          <DataImportDialog onImportComplete={onRefresh} />
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Añadir Restaurante
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreate} className="space-y-4">
+        <h3 className="text-lg font-semibold">Restaurantes Base ({filteredRestaurants.length})</h3>
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-red-600 hover:bg-red-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Crear Restaurante
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="site_number">Número de Sitio</Label>
+                  <Input
+                    id="site_number"
+                    value={formData.site_number}
+                    onChange={(e) => setFormData({...formData, site_number: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
+                  <Input
+                    id="restaurant_name"
+                    value={formData.restaurant_name}
+                    onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dirección</Label>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="site_number">Número de Local</Label>
-                    <Input
-                      id="site_number"
-                      value={formData.site_number}
-                      onChange={(e) => setFormData({...formData, site_number: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
-                    <Input
-                      id="restaurant_name"
-                      value={formData.restaurant_name}
-                      onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
-                      required
-                    />
-                  </div>
                   <div className="col-span-2">
-                    <Label htmlFor="address">Dirección</Label>
                     <Input
-                      id="address"
+                      placeholder="Dirección"
                       value={formData.address}
                       onChange={(e) => setFormData({...formData, address: e.target.value})}
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city">Ciudad</Label>
                     <Input
-                      id="city"
+                      placeholder="Ciudad"
                       value={formData.city}
                       onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="state">Provincia</Label>
                     <Input
-                      id="state"
+                      placeholder="Provincia"
                       value={formData.state}
                       onChange={(e) => setFormData({...formData, state: e.target.value})}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="postal_code">Código Postal</Label>
                     <Input
-                      id="postal_code"
+                      placeholder="Código Postal"
                       value={formData.postal_code}
                       onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="autonomous_community">Comunidad Autónoma</Label>
-                    <Input
-                      id="autonomous_community"
-                      value={formData.autonomous_community}
-                      onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
-                    <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="traditional">Tradicional</SelectItem>
-                        <SelectItem value="mall">Mall</SelectItem>
-                        <SelectItem value="drive_thru">Drive Thru</SelectItem>
-                        <SelectItem value="express">Express</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="property_type">Tipo de Inmueble</Label>
-                    <Input
-                      id="property_type"
-                      value={formData.property_type}
-                      onChange={(e) => setFormData({...formData, property_type: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="franchisee_name">Franquiciado</Label>
-                    <Input
-                      id="franchisee_name"
-                      value={formData.franchisee_name}
-                      onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="franchisee_email">Email del Franquiciado</Label>
-                    <Input
-                      id="franchisee_email"
-                      type="email"
-                      value={formData.franchisee_email}
-                      onChange={(e) => setFormData({...formData, franchisee_email: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="company_tax_id">CIF de la Sociedad</Label>
-                    <Input
-                      id="company_tax_id"
-                      value={formData.company_tax_id}
-                      onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="opening_date">Fecha de Apertura</Label>
-                    <Input
-                      id="opening_date"
-                      type="date"
-                      value={formData.opening_date}
-                      onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
-                    />
-                  </div>
                 </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Crear Restaurante</Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="country">País</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => setFormData({...formData, country: e.target.value})}
+                  />
                 </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                <div>
+                  <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
+                  <Input
+                    id="restaurant_type"
+                    value={formData.restaurant_type}
+                    onChange={(e) => setFormData({...formData, restaurant_type: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="property_type">Tipo de Propiedad</Label>
+                  <Input
+                    id="property_type"
+                    value={formData.property_type}
+                    onChange={(e) => setFormData({...formData, property_type: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="autonomous_community">Comunidad Autónoma</Label>
+                  <Input
+                    id="autonomous_community"
+                    value={formData.autonomous_community}
+                    onChange={(e) => setFormData({...formData, autonomous_community: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="square_meters">Metros Cuadrados</Label>
+                  <Input
+                    id="square_meters"
+                    type="number"
+                    value={formData.square_meters}
+                    onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
+                  <Input
+                    id="seating_capacity"
+                    type="number"
+                    value={formData.seating_capacity}
+                    onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="opening_date">Fecha de Apertura</Label>
+                  <Input
+                    id="opening_date"
+                    type="date"
+                    value={formData.opening_date}
+                    onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={creating} className="bg-red-600 hover:bg-red-700">
+                  {creating ? 'Creando...' : 'Crear Restaurante'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar restaurantes por nombre, número de sitio, ciudad o dirección..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Contador de resultados */}
+      {filteredRestaurants.length > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            Mostrando {startIndex + 1}-{Math.min(endIndex, filteredRestaurants.length)} de {filteredRestaurants.length} restaurantes
+          </div>
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
+
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Site</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Dirección</TableHead>
-              <TableHead>Ciudad</TableHead>
-              <TableHead>Provincia</TableHead>
-              <TableHead>C.P.</TableHead>
-              <TableHead>Com. Autónoma</TableHead>
-              <TableHead>País</TableHead>
+              <TableHead>Restaurante</TableHead>
+              <TableHead>Ubicación</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Tipo Inmueble</TableHead>
-              <TableHead>Franquiciado</TableHead>
-              <TableHead>Email Franquiciado</TableHead>
-              <TableHead>CIF Sociedad</TableHead>
-              <TableHead>Fecha Apertura</TableHead>
-              <TableHead>Creado</TableHead>
+              <TableHead>Capacidad</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {restaurants.map((restaurant) => (
-              <TableRow key={restaurant.id}>
-                <TableCell className="font-medium">{restaurant.site_number}</TableCell>
-                <TableCell>{restaurant.restaurant_name}</TableCell>
-                <TableCell className="max-w-xs truncate" title={restaurant.address}>
-                  {restaurant.address}
-                </TableCell>
-                <TableCell>{restaurant.city}</TableCell>
-                <TableCell>{restaurant.state || '-'}</TableCell>
-                <TableCell>{restaurant.postal_code || '-'}</TableCell>
-                <TableCell>{restaurant.autonomous_community || '-'}</TableCell>
-                <TableCell>{restaurant.country}</TableCell>
-                <TableCell>
-                  <span className="capitalize">
-                    {restaurant.restaurant_type.replace('_', ' ')}
-                  </span>
-                </TableCell>
-                <TableCell>{restaurant.property_type || '-'}</TableCell>
-                <TableCell>{restaurant.franchisee_name || '-'}</TableCell>
-                <TableCell>{restaurant.franchisee_email || '-'}</TableCell>
-                <TableCell>{restaurant.company_tax_id || '-'}</TableCell>
-                <TableCell>
-                  {restaurant.opening_date ? new Date(restaurant.opening_date).toLocaleDateString('es-ES') : '-'}
-                </TableCell>
-                <TableCell>
-                  {new Date(restaurant.created_at).toLocaleDateString('es-ES')}
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" onClick={() => openEditModal(restaurant)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => openAssignModal(restaurant)}>
-                      <Users className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDelete(restaurant)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {currentRestaurants.map((restaurant) => {
+              const googleMapsLink = createGoogleMapsLink(restaurant.address, restaurant.city);
+              
+              return (
+                <TableRow key={restaurant.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{restaurant.restaurant_name}</div>
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <Hash className="w-3 h-3" />
+                        {restaurant.site_number}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-start gap-1">
+                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                      <div className="text-sm">
+                        <div className="flex items-center gap-2">
+                          <span>{restaurant.city}</span>
+                          {googleMapsLink && (
+                            <a
+                              href={googleMapsLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 transition-colors"
+                              title="Ver en Google Maps"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                        <div className="text-gray-500">{restaurant.address}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {restaurant.restaurant_type === 'traditional' ? 'Tradicional' : restaurant.restaurant_type}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      {restaurant.seating_capacity && (
+                        <div>{restaurant.seating_capacity} asientos</div>
+                      )}
+                      {restaurant.square_meters && (
+                        <div className="text-gray-500">{restaurant.square_meters} m²</div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => openEditModal(restaurant)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={() => handleDelete(restaurant)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
 
+      {/* Paginación inferior */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
+      {filteredRestaurants.length === 0 && (
+        <div className="text-center py-12">
+          <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {searchTerm ? 'No se encontraron restaurantes' : 'No hay restaurantes'}
+          </h3>
+          <p className="text-gray-500">
+            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Crea el primer restaurante para comenzar'}
+          </p>
+        </div>
+      )}
+
       {/* Modal de Edición */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Editar Restaurante</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit_site_number">Número de Local</Label>
+                <Label htmlFor="edit_site_number">Número de Sitio</Label>
                 <Input
                   id="edit_site_number"
                   value={formData.site_number}
@@ -392,38 +600,65 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                   required
                 />
               </div>
-              <div className="col-span-2">
-                <Label htmlFor="edit_address">Dirección</Label>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Dirección</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Input
+                    placeholder="Dirección"
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Ciudad"
+                    value={formData.city}
+                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Provincia"
+                    value={formData.state}
+                    onChange={(e) => setFormData({...formData, state: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Input
+                    placeholder="Código Postal"
+                    value={formData.postal_code}
+                    onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit_country">País</Label>
                 <Input
-                  id="edit_address"
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  required
+                  id="edit_country"
+                  value={formData.country}
+                  onChange={(e) => setFormData({...formData, country: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="edit_city">Ciudad</Label>
+                <Label htmlFor="edit_restaurant_type">Tipo de Restaurante</Label>
                 <Input
-                  id="edit_city"
-                  value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
-                  required
+                  id="edit_restaurant_type"
+                  value={formData.restaurant_type}
+                  onChange={(e) => setFormData({...formData, restaurant_type: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="edit_state">Provincia</Label>
+                <Label htmlFor="edit_property_type">Tipo de Propiedad</Label>
                 <Input
-                  id="edit_state"
-                  value={formData.state}
-                  onChange={(e) => setFormData({...formData, state: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_postal_code">Código Postal</Label>
-                <Input
-                  id="edit_postal_code"
-                  value={formData.postal_code}
-                  onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                  id="edit_property_type"
+                  value={formData.property_type}
+                  onChange={(e) => setFormData({...formData, property_type: e.target.value})}
                 />
               </div>
               <div>
@@ -435,50 +670,21 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 />
               </div>
               <div>
-                <Label htmlFor="edit_restaurant_type">Tipo de Restaurante</Label>
-                <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="traditional">Tradicional</SelectItem>
-                    <SelectItem value="mall">Mall</SelectItem>
-                    <SelectItem value="drive_thru">Drive Thru</SelectItem>
-                    <SelectItem value="express">Express</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="edit_property_type">Tipo de Inmueble</Label>
+                <Label htmlFor="edit_square_meters">Metros Cuadrados</Label>
                 <Input
-                  id="edit_property_type"
-                  value={formData.property_type}
-                  onChange={(e) => setFormData({...formData, property_type: e.target.value})}
+                  id="edit_square_meters"
+                  type="number"
+                  value={formData.square_meters}
+                  onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="edit_franchisee_name">Franquiciado</Label>
+                <Label htmlFor="edit_seating_capacity">Capacidad de Asientos</Label>
                 <Input
-                  id="edit_franchisee_name"
-                  value={formData.franchisee_name}
-                  onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_franchisee_email">Email del Franquiciado</Label>
-                <Input
-                  id="edit_franchisee_email"
-                  type="email"
-                  value={formData.franchisee_email}
-                  onChange={(e) => setFormData({...formData, franchisee_email: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit_company_tax_id">CIF de la Sociedad</Label>
-                <Input
-                  id="edit_company_tax_id"
-                  value={formData.company_tax_id}
-                  onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
+                  id="edit_seating_capacity"
+                  type="number"
+                  value={formData.seating_capacity}
+                  onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
                 />
               </div>
               <div>
@@ -491,47 +697,13 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 />
               </div>
             </div>
+            
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={() => {setIsEditModalOpen(false); setSelectedRestaurant(null); resetForm();}}>
                 Cancelar
               </Button>
-              <Button type="submit">Guardar Cambios</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Asignación */}
-      <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Asignar Restaurante a Franquiciado</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleAssign} className="space-y-4">
-            <div>
-              <Label>Restaurante: {selectedRestaurant?.restaurant_name}</Label>
-            </div>
-            <div>
-              <Label htmlFor="franchisee">Seleccionar Franquiciado</Label>
-              <Select value={selectedFranchiseeId} onValueChange={setSelectedFranchiseeId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un franquiciado" />
-                </SelectTrigger>
-                <SelectContent>
-                  {franchisees.map((franchisee) => (
-                    <SelectItem key={franchisee.id} value={franchisee.id}>
-                      {franchisee.franchisee_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => {setIsAssignModalOpen(false); setSelectedRestaurant(null); setSelectedFranchiseeId('');}}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={!selectedFranchiseeId}>
-                Asignar Restaurante
+              <Button type="submit" disabled={updating} className="bg-red-600 hover:bg-red-700">
+                {updating ? 'Actualizando...' : 'Guardar Cambios'}
               </Button>
             </div>
           </form>
