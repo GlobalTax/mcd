@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,8 +77,8 @@ const UserManagement = () => {
     setCreating(true);
 
     try {
-      // Map TypeScript role back to database role
-      const dbRole = newUser.role === 'advisor' ? 'asesor' : newUser.role;
+      // Use database role directly (no mapping needed here since newUser.role is already the DB role)
+      const dbRole = newUser.role;
       
       // Crear el usuario en Supabase Auth
       const { data, error } = await supabase.auth.admin.createUser({
@@ -261,7 +262,7 @@ const UserManagement = () => {
                       <Label htmlFor="role">Rol</Label>
                       <Select
                         value={newUser.role}
-                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'advisor' | 'asistente') => 
+                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -272,7 +273,7 @@ const UserManagement = () => {
                           <SelectItem value="admin">Administrador</SelectItem>
                           <SelectItem value="manager">Gerente</SelectItem>
                           <SelectItem value="franchisee">Franquiciado</SelectItem>
-                          <SelectItem value="advisor">Asesor</SelectItem>
+                          <SelectItem value="asesor">Asesor</SelectItem>
                           <SelectItem value="asistente">Asistente</SelectItem>
                         </SelectContent>
                       </Select>
