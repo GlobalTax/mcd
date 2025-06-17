@@ -93,6 +93,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const clearUserData = () => {
+    console.log('clearUserData - Clearing all user data');
+    setUser(null);
+    setFranchisee(null);
+    setRestaurants([]);
+  };
+
   useEffect(() => {
     console.log('useAuth - Setting up auth state listener');
     
@@ -108,9 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }, 0);
         } else {
           console.log('useAuth - No session, clearing user data');
-          setUser(null);
-          setFranchisee(null);
-          setRestaurants([]);
+          clearUserData();
         }
         setLoading(false);
       }
@@ -172,11 +177,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Sesión cerrada correctamente');
+    try {
+      console.log('signOut - Starting logout process');
+      
+      // Clear user data immediately to prevent UI delays
+      clearUserData();
+      setSession(null);
+      
+      // Then attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('signOut - Error:', error);
+        // Don't show error toast for session_not_found errors as they're harmless
+        if (!error.message.includes('Session not found')) {
+          toast.error(error.message);
+        }
+      } else {
+        console.log('signOut - Success');
+        toast.success('Sesión cerrada correctamente');
+      }
+    } catch (error) {
+      console.error('signOut - Unexpected error:', error);
+      // Still clear the local state even if there's an error
+      clearUserData();
+      setSession(null);
     }
   };
 
