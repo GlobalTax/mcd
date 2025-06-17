@@ -1,9 +1,8 @@
-
 export interface User {
   id: string;
   email: string;
   full_name?: string;
-  role: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
+  role: 'admin' | 'franchisee' | 'manager' | 'advisor' | 'asistente';
   phone?: string;
   created_at: string;
   updated_at: string;
