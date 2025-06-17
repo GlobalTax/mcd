@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Mail, Shield, Eye, Trash2, Users } from 'lucide-react';
+import { UserPlus, Mail, Shield, Eye, Trash2, Users, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -66,7 +66,7 @@ export const InvitationPanel = () => {
         invited_by: user.email
       };
 
-      // Simular almacenamiento local de invitaciones (en un caso real sería en base de datos)
+      // Simular almacenamiento local de invitaciones
       const newInvitation = {
         ...invitation,
         id: Math.random().toString(36).substr(2, 9)
@@ -74,7 +74,6 @@ export const InvitationPanel = () => {
 
       setInvitations(prev => [...prev, newInvitation]);
 
-      // Simular envío de email (en un caso real usarías una edge function con Resend)
       const roleText = role === 'advisor' ? 'asesor' : 
                       role === 'manager' ? 'gestor' : 'visualizador';
       toast.success(`Invitación enviada a ${email} como ${roleText}`);
@@ -142,102 +141,110 @@ export const InvitationPanel = () => {
   }
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-8 border-0 shadow-lg bg-white">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-red-600" />
+          <CardTitle className="flex items-center gap-3 text-xl text-gray-900">
+            <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5 text-red-600" />
+            </div>
             Invitar Asesores y Colaboradores
           </CardTitle>
           <Button
             onClick={() => setShowInviteForm(!showInviteForm)}
-            className="bg-red-600 hover:bg-red-700"
+            className="bg-red-600 hover:bg-red-700 text-white"
             size="sm"
           >
-            <Mail className="w-4 h-4 mr-2" />
+            <Plus className="w-4 h-4 mr-2" />
             Nueva Invitación
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {showInviteForm && (
-          <form onSubmit={sendInvitation} className="space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email del Usuario</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="asesor@ejemplo.com"
-                  required
-                />
+          <div className="mb-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
+            <form onSubmit={sendInvitation} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700 font-medium">Email del Usuario</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="asesor@ejemplo.com"
+                    className="border-gray-300 focus:border-red-500 focus:ring-red-500"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="text-gray-700 font-medium">Tipo de Acceso</Label>
+                  <Select value={role} onValueChange={(value: 'advisor' | 'manager' | 'viewer') => setRole(value)}>
+                    <SelectTrigger className="border-gray-300 focus:border-red-500 focus:ring-red-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">
+                        <div className="flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-gray-500" />
+                          Solo Visualización
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="manager">
+                        <div className="flex items-center gap-2">
+                          <UserPlus className="w-4 h-4 text-green-500" />
+                          Gestor (puede modificar)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="advisor">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-4 h-4 text-blue-500" />
+                          Asesor (acceso completo)
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="role">Tipo de Acceso</Label>
-                <Select value={role} onValueChange={(value: 'advisor' | 'manager' | 'viewer') => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="viewer">
-                      <div className="flex items-center gap-2">
-                        <Eye className="w-4 h-4 text-gray-500" />
-                        Solo Visualización
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="manager">
-                      <div className="flex items-center gap-2">
-                        <UserPlus className="w-4 h-4 text-green-500" />
-                        Gestor (puede modificar)
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="advisor">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-blue-500" />
-                        Asesor (acceso completo)
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {loading ? 'Enviando...' : 'Enviar Invitación'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowInviteForm(false)}
+                  className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar
+                </Button>
               </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {loading ? 'Enviando...' : 'Enviar Invitación'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowInviteForm(false)}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
+            </form>
+          </div>
         )}
 
         {invitations.length > 0 && (
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Invitaciones Enviadas</h4>
-            <div className="space-y-2">
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900 text-lg">Invitaciones Enviadas</h4>
+            <div className="space-y-3">
               {invitations.map((invitation) => (
                 <div
                   key={invitation.id}
-                  className="flex items-center justify-between p-3 bg-white border rounded-lg"
+                  className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
                 >
-                  <div className="flex items-center gap-3">
-                    {getRoleIcon(invitation.role)}
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                      {getRoleIcon(invitation.role)}
+                    </div>
                     <div>
                       <p className="font-medium text-gray-900">{invitation.email}</p>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-3 mt-1">
                         <Badge className={getRoleBadgeColor(invitation.role)}>
                           {getRoleLabel(invitation.role)}
                         </Badge>
@@ -249,7 +256,7 @@ export const InvitationPanel = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
                     <span className="text-sm text-gray-500">
                       {new Date(invitation.created_at).toLocaleDateString('es-ES')}
                     </span>
@@ -269,10 +276,14 @@ export const InvitationPanel = () => {
         )}
 
         {invitations.length === 0 && !showInviteForm && (
-          <div className="text-center py-8 text-gray-500">
-            <Users className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p>No hay invitaciones enviadas</p>
-            <p className="text-sm">Invita a asesores y colaboradores para que te ayuden a gestionar tus restaurantes</p>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Users className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay invitaciones enviadas</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Invita a asesores y colaboradores para que te ayuden a gestionar tus restaurantes
+            </p>
           </div>
         )}
       </CardContent>

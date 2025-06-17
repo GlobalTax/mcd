@@ -4,7 +4,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Calculator, TrendingUp, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield, Plus, ArrowRight } from 'lucide-react';
+import { Building, Calculator, TrendingUp, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield, Plus, ArrowRight, BarChart3, Users } from 'lucide-react';
 import { Franchisee } from '@/types/restaurant';
 import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
@@ -79,103 +79,162 @@ const DashboardPage = () => {
       status: fr.status,
       lastYearRevenue: fr.last_year_revenue,
       baseRent: fr.monthly_rent,
-      isOwnedByMcD: false, // This would need to be determined based on business logic
+      isOwnedByMcD: false,
     })) : 
     allLocalRestaurants;
   
   const totalRestaurants = displayRestaurants?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-yellow-50">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-red-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">M</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">M</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Bienvenido, {user?.full_name || user?.email}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Portal de Franquiciados McDonald's
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Bienvenido, {user?.full_name || user?.email}
-              </h1>
-              <p className="text-gray-600 text-lg">
-                Portal de Franquiciados McDonald's
-              </p>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/settings')}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Configuración
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                className="border-red-200 text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Cerrar Sesión
+              </Button>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/settings')}
-              className="flex items-center gap-2"
-            >
-              <Settings className="w-4 h-4" />
-              Configuración
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
-            >
-              <LogOut className="w-4 h-4" />
-              Cerrar Sesión
-            </Button>
           </div>
         </div>
+      </header>
 
-        {/* Panel de invitaciones - siempre visible para franquiciados */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Panel de invitaciones */}
         <InvitationPanel />
 
         {/* Main Content */}
         {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
           <div className="space-y-8">
+            {/* Metrics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Restaurantes</p>
+                      <p className="text-3xl font-bold text-gray-900">{totalRestaurants}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-blue-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Ingresos Totales</p>
+                      <p className="text-3xl font-bold text-gray-900">€2.4M</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Valoración Media</p>
+                      <p className="text-3xl font-bold text-gray-900">€1.8M</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                      <Calculator className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Rentabilidad</p>
+                      <p className="text-3xl font-bold text-green-600">+12.5%</p>
+                    </div>
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-6 h-6 text-green-600" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
+              <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white cursor-pointer" 
                     onClick={() => navigate('/valuation')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calculator className="w-5 h-5 text-red-600" />
-                    Herramienta de Valoración
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    Accede a la herramienta profesional de valoración de restaurantes McDonald's
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-200 transition-colors">
+                    <Calculator className="w-6 h-6 text-red-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Herramienta de Valoración</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Accede a la herramienta profesional de valoración
                   </p>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
+              <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white cursor-pointer" 
                     onClick={() => navigate('/annual-budget')}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-red-600" />
-                    Presupuestos Anuales
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    Gestiona los presupuestos anuales mensuales de tus restaurantes
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Presupuestos Anuales</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Gestiona presupuestos anuales mensuales
                   </p>
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" />
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-red-600" />
-                    Análisis P&L
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    Analiza el rendimiento financiero de tus restaurantes
+              <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
+                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Análisis P&L</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Analiza el rendimiento financiero
                   </p>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mt-2"
+                    className="mt-2 border-gray-300"
                     onClick={() => {
                       const firstRestaurant = displayRestaurants[0];
                       const siteNumber = getSiteNumber(firstRestaurant);
@@ -190,18 +249,16 @@ const DashboardPage = () => {
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-red-600" />
-                    Gestión de Restaurantes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600">
-                    Administra la información de tus restaurantes asignados
+              <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
+                    <Building2 className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Gestión de Restaurantes</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Administra información de restaurantes
                   </p>
-                  <div className="text-sm text-gray-500 mt-2">
+                  <div className="text-sm text-gray-500">
                     {totalRestaurants} restaurantes asignados
                   </div>
                 </CardContent>
@@ -209,10 +266,17 @@ const DashboardPage = () => {
             </div>
 
             {/* Restaurants Table */}
-            <FranchiseeRestaurantsTable 
-              franchiseeId={franchisee?.id || ''}
-              restaurants={franchiseeRestaurants}
-            />
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader>
+                <CardTitle className="text-xl text-gray-900">Mis Restaurantes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FranchiseeRestaurantsTable 
+                  franchiseeId={franchisee?.id || ''}
+                  restaurants={franchiseeRestaurants}
+                />
+              </CardContent>
+            </Card>
 
             {/* Show legacy restaurants if we have local storage data but no Supabase data */}
             {!hasSupabaseRestaurants && allLocalRestaurants.length > 0 && (
@@ -264,24 +328,24 @@ const DashboardPage = () => {
             )}
           </div>
         ) : (
-          /* Visual Setup Guide - when no restaurants are assigned */
+          /* Welcome Section - when no restaurants are assigned */
           <div className="space-y-8">
-            {/* Welcome Section */}
-            <Card className="border-yellow-200 bg-yellow-50">
-              <CardContent className="p-8">
+            {/* Welcome Card */}
+            <Card className="border-0 shadow-lg bg-gradient-to-r from-red-50 to-yellow-50">
+              <CardContent className="p-12">
                 <div className="text-center">
-                  <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <div className="w-20 h-20 bg-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <Building className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-yellow-800 mb-4">
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">
                     ¡Bienvenido al Portal de McDonald's!
                   </h3>
-                  <p className="text-yellow-700 text-lg mb-6">
+                  <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
                     Tu asesor aún no te ha asignado restaurantes. Mientras tanto, puedes usar la herramienta de valoración.
                   </p>
                   <Button
                     size="lg"
-                    className="bg-red-600 hover:bg-red-700 text-white px-8 py-3"
+                    className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg"
                     onClick={() => navigate('/valuation')}
                   >
                     <Plus className="w-5 h-5 mr-2" />
