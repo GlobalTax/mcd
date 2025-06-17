@@ -4,8 +4,10 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Calculator, TrendingUp, Users, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield, Plus, ArrowRight } from 'lucide-react';
+import { Building, Calculator, TrendingUp, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield, Plus, ArrowRight } from 'lucide-react';
 import { Franchisee } from '@/types/restaurant';
+import FranchiseeRestaurantsTable from '@/components/FranchiseeRestaurantsTable';
+import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 
 // Tipo extendido para manejar ambos formatos de restaurant
 type DisplayRestaurant = {
@@ -32,6 +34,7 @@ const DashboardPage = () => {
   const { user, franchisee, restaurants, signOut } = useAuth();
   const navigate = useNavigate();
   const [localFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
+  const { restaurants: franchiseeRestaurants, loading: restaurantsLoading } = useFranchiseeRestaurants();
 
   const handleSignOut = async () => {
     await signOut();
@@ -56,8 +59,29 @@ const DashboardPage = () => {
     f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
   );
 
-  // Use local restaurants if available, otherwise fall back to Supabase restaurants
-  const displayRestaurants: DisplayRestaurant[] = allLocalRestaurants.length > 0 ? allLocalRestaurants : (restaurants || []);
+  // Use franchisee restaurants from Supabase if available, otherwise fall back to local storage
+  const hasSupabaseRestaurants = franchiseeRestaurants.length > 0;
+  const displayRestaurants: DisplayRestaurant[] = hasSupabaseRestaurants ? 
+    franchiseeRestaurants.map(fr => ({
+      id: fr.id,
+      name: fr.base_restaurant?.restaurant_name,
+      restaurant_name: fr.base_restaurant?.restaurant_name,
+      location: `${fr.base_restaurant?.city}, ${fr.base_restaurant?.address}`,
+      city: fr.base_restaurant?.city,
+      address: fr.base_restaurant?.address,
+      siteNumber: fr.base_restaurant?.site_number,
+      site_number: fr.base_restaurant?.site_number,
+      franchiseeName: franchisee?.franchisee_name,
+      franchise_start_date: fr.franchise_start_date,
+      franchise_end_date: fr.franchise_end_date,
+      restaurant_type: fr.base_restaurant?.restaurant_type,
+      status: fr.status,
+      lastYearRevenue: fr.last_year_revenue,
+      baseRent: fr.monthly_rent,
+      isOwnedByMcD: false, // This would need to be determined based on business logic
+    })) : 
+    allLocalRestaurants;
+  
   const totalRestaurants = displayRestaurants?.length || 0;
 
   return (
@@ -98,11 +122,11 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Main Content - Show visual guide when no restaurants */}
-        {displayRestaurants && displayRestaurants.length > 0 ? (
-          <div>
+        {/* Main Content */}
+        {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
+          <div className="space-y-8">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
                     onClick={() => navigate('/valuation')}>
                 <CardHeader>
@@ -140,167 +164,85 @@ const DashboardPage = () => {
                         navigate(`/restaurant/${siteNumber}/profitloss`);
                       }
                     }}
+                    disabled={displayRestaurants.length === 0}
                   >
                     Ir a P&L
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-red-600" />
+                    Gestión de Restaurantes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-600">
+                    Administra la información de tus restaurantes asignados
+                  </p>
+                  <div className="text-sm text-gray-500 mt-2">
+                    {totalRestaurants} restaurantes asignados
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Restaurants Section */}
-            <div className="mb-8">
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Mis Restaurantes</h2>
-                <p className="text-gray-600">{displayRestaurants.length} restaurantes disponibles</p>
-              </div>
+            {/* Restaurants Table */}
+            <FranchiseeRestaurantsTable />
 
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {displayRestaurants.map((restaurant) => (
-                  <Card
-                    key={restaurant.id}
-                    className="cursor-pointer transition-all hover:shadow-lg hover:border-red-200 group"
-                    onClick={() => {
-                      const siteNumber = getSiteNumber(restaurant);
-                      if (siteNumber) {
-                        navigate(`/restaurant/${siteNumber}`);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-xl text-gray-900 group-hover:text-red-600 transition-colors">
-                              {restaurant.name || restaurant.restaurant_name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
-                              <Hash className="w-4 h-4" />
-                              <span>Site: {getSiteNumber(restaurant)}</span>
+            {/* Show legacy restaurants if we have local storage data but no Supabase data */}
+            {!hasSupabaseRestaurants && allLocalRestaurants.length > 0 && (
+              <Card className="border-yellow-200 bg-yellow-50">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <Building className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-yellow-800">
+                        Datos de Herramienta de Valoración
+                      </h3>
+                      <p className="text-yellow-700 text-sm">
+                        Tienes {allLocalRestaurants.length} restaurantes de la herramienta de valoración. 
+                        Contacta con tu asesor para que te asigne restaurantes oficiales.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {allLocalRestaurants.slice(0, 3).map((restaurant) => (
+                      <Card key={restaurant.id} className="bg-white border-yellow-200">
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <div>
+                              <h4 className="font-medium">{restaurant.name}</h4>
+                              <p className="text-sm text-gray-600">{restaurant.location}</p>
                             </div>
-                            {(restaurant.franchiseeName || franchisee) && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                {restaurant.franchiseeName || franchisee?.franchisee_name}
-                              </p>
+                            {restaurant.lastYearRevenue && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <Euro className="w-4 h-4 text-green-600" />
+                                <span>€{formatNumber(restaurant.lastYearRevenue)}</span>
+                              </div>
                             )}
                           </div>
-                          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <span className="text-yellow-600 font-bold text-lg">M</span>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3 text-gray-600">
-                            <MapPin className="w-5 h-5" />
-                            <span className="font-medium">
-                              {restaurant.location || `${restaurant.city}, ${restaurant.address}`}
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-3 text-gray-600">
-                            <Building2 className="w-5 h-5" />
-                            <span className="capitalize">
-                              {restaurant.restaurant_type ? 
-                                restaurant.restaurant_type.replace('_', ' ') : 
-                                'Restaurante'
-                              }
-                            </span>
-                          </div>
-
-                          {/* Show financial data if available (from local storage) */}
-                          {restaurant.lastYearRevenue && (
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div className="flex items-center gap-2 text-gray-600">
-                                <Euro className="w-4 h-4 text-green-600" />
-                                <div>
-                                  <p className="text-xs text-gray-500">Facturación</p>
-                                  <p className="font-medium">€{formatNumber(restaurant.lastYearRevenue)}</p>
-                                </div>
-                              </div>
-                              {restaurant.baseRent && (
-                                <div className="flex items-center gap-2 text-gray-600">
-                                  <Building2 className="w-4 h-4 text-blue-600" />
-                                  <div>
-                                    <p className="text-xs text-gray-500">Renta Base</p>
-                                    <p className="font-medium">€{formatNumber(restaurant.baseRent)}</p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {(restaurant.opening_date || restaurant.contractEndDate) && (
-                            <div className="flex items-center gap-3 text-gray-600">
-                              <Calendar className="w-5 h-5" />
-                              <span>
-                                {restaurant.opening_date ? 
-                                  `Apertura: ${new Date(restaurant.opening_date).toLocaleDateString('es-ES')}` :
-                                  `Contrato hasta: ${new Date(restaurant.contractEndDate).toLocaleDateString('es-ES')}`
-                                }
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Show ownership status for local restaurants */}
-                          {restaurant.isOwnedByMcD && (
-                            <div className="flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-green-600" />
-                              <span className="text-green-600 text-sm font-medium">Propiedad McDonald's</span>
-                            </div>
-                          )}
-
-                          {/* Show current valuation if available */}
-                          {restaurant.currentValuation && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                              <div className="flex items-center gap-2 mb-1">
-                                <TrendingUp className="w-4 h-4 text-green-600" />
-                                <span className="text-green-800 font-medium text-sm">Valoración Actual</span>
-                              </div>
-                              <p className="text-lg font-bold text-green-800">
-                                €{formatNumber(restaurant.currentValuation.finalValuation)}
-                              </p>
-                              <p className="text-xs text-green-600">
-                                {new Date(restaurant.currentValuation.valuationDate).toLocaleDateString('es-ES')}
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              (restaurant.status === 'active' || !restaurant.status) ? 'bg-green-100 text-green-800' :
-                              restaurant.status === 'inactive' ? 'bg-red-100 text-red-800' :
-                              restaurant.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {restaurant.status === 'active' || !restaurant.status ? 'Activo' :
-                               restaurant.status === 'inactive' ? 'Inactivo' :
-                               restaurant.status === 'pending' ? 'Pendiente' :
-                               restaurant.status === 'closed' ? 'Cerrado' :
-                               restaurant.status}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const siteNumber = getSiteNumber(restaurant);
-                                if (siteNumber) {
-                                  navigate(`/restaurant/${siteNumber}/profitloss`);
-                                }
-                              }}
-                            >
-                              Ver P&L
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {allLocalRestaurants.length > 3 && (
+                    <p className="text-yellow-700 text-sm mt-3">
+                      Y {allLocalRestaurants.length - 3} restaurantes más...
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         ) : (
-          /* Visual Setup Guide */
+          /* Visual Setup Guide - when no restaurants are assigned */
           <div className="space-y-8">
             {/* Welcome Section */}
             <Card className="border-yellow-200 bg-yellow-50">
@@ -313,7 +255,7 @@ const DashboardPage = () => {
                     ¡Bienvenido al Portal de McDonald's!
                   </h3>
                   <p className="text-yellow-700 text-lg mb-6">
-                    Para comenzar, configura tu información de franquiciado y añade tus restaurantes.
+                    Tu asesor aún no te ha asignado restaurantes. Mientras tanto, puedes usar la herramienta de valoración.
                   </p>
                   <Button
                     size="lg"
@@ -321,7 +263,7 @@ const DashboardPage = () => {
                     onClick={() => navigate('/valuation')}
                   >
                     <Plus className="w-5 h-5 mr-2" />
-                    Comenzar Configuración
+                    Ir a Herramienta de Valoración
                   </Button>
                 </div>
               </CardContent>

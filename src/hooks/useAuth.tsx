@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -38,31 +37,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setUser(profile as User);
 
-      // Fetch franchisee data
-      const { data: franchiseeData, error: franchiseeError } = await supabase
-        .from('franchisees')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (franchiseeError) {
-        console.error('Error fetching franchisee:', franchiseeError);
-        return;
-      }
-
-      if (franchiseeData) {
-        setFranchisee(franchiseeData as Franchisee);
-
-        // Fetch restaurants
-        const { data: restaurantsData, error: restaurantsError } = await supabase
-          .from('restaurants')
+      // Only fetch franchisee data if user is a franchisee
+      if (profile.role === 'franchisee') {
+        // Fetch franchisee data
+        const { data: franchiseeData, error: franchiseeError } = await supabase
+          .from('franchisees')
           .select('*')
-          .eq('franchisee_id', franchiseeData.id);
+          .eq('user_id', userId)
+          .maybeSingle();
 
-        if (restaurantsError) {
-          console.error('Error fetching restaurants:', restaurantsError);
-        } else {
-          setRestaurants(restaurantsData as Restaurant[]);
+        if (franchiseeError) {
+          console.error('Error fetching franchisee:', franchiseeError);
+          return;
+        }
+
+        if (franchiseeData) {
+          setFranchisee(franchiseeData as Franchisee);
+
+          // Fetch restaurants (keeping compatibility with old structure)
+          const { data: restaurantsData, error: restaurantsError } = await supabase
+            .from('restaurants')
+            .select('*')
+            .eq('franchisee_id', franchiseeData.id);
+
+          if (restaurantsError) {
+            console.error('Error fetching restaurants:', restaurantsError);
+          } else {
+            setRestaurants(restaurantsData as Restaurant[]);
+          }
         }
       }
     } catch (error) {

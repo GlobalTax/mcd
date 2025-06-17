@@ -9,6 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      base_restaurants: {
+        Row: {
+          address: string
+          city: string
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          postal_code: string | null
+          restaurant_name: string
+          restaurant_type: string | null
+          seating_capacity: number | null
+          site_number: string
+          square_meters: number | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          postal_code?: string | null
+          restaurant_name: string
+          restaurant_type?: string | null
+          seating_capacity?: number | null
+          site_number: string
+          square_meters?: number | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          postal_code?: string | null
+          restaurant_name?: string
+          restaurant_type?: string | null
+          seating_capacity?: number | null
+          site_number?: string
+          square_meters?: number | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      franchisee_restaurants: {
+        Row: {
+          advertising_fee_percentage: number | null
+          assigned_at: string
+          average_monthly_sales: number | null
+          base_restaurant_id: string | null
+          franchise_end_date: string | null
+          franchise_fee_percentage: number | null
+          franchise_start_date: string | null
+          franchisee_id: string | null
+          id: string
+          last_year_revenue: number | null
+          lease_end_date: string | null
+          lease_start_date: string | null
+          monthly_rent: number | null
+          notes: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertising_fee_percentage?: number | null
+          assigned_at?: string
+          average_monthly_sales?: number | null
+          base_restaurant_id?: string | null
+          franchise_end_date?: string | null
+          franchise_fee_percentage?: number | null
+          franchise_start_date?: string | null
+          franchisee_id?: string | null
+          id?: string
+          last_year_revenue?: number | null
+          lease_end_date?: string | null
+          lease_start_date?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertising_fee_percentage?: number | null
+          assigned_at?: string
+          average_monthly_sales?: number | null
+          base_restaurant_id?: string | null
+          franchise_end_date?: string | null
+          franchise_fee_percentage?: number | null
+          franchise_start_date?: string | null
+          franchisee_id?: string | null
+          id?: string
+          last_year_revenue?: number | null
+          lease_end_date?: string | null
+          lease_start_date?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisee_restaurants_base_restaurant_id_fkey"
+            columns: ["base_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "base_restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "franchisee_restaurants_franchisee_id_fkey"
+            columns: ["franchisee_id"]
+            isOneToOne: false
+            referencedRelation: "franchisees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       franchisees: {
         Row: {
           address: string | null
@@ -61,6 +184,77 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_tracking: {
+        Row: {
+          actual_food_cost: number | null
+          actual_labor_cost: number | null
+          actual_marketing: number | null
+          actual_other_expenses: number | null
+          actual_rent: number | null
+          actual_revenue: number | null
+          actual_utilities: number | null
+          average_ticket: number | null
+          created_at: string
+          created_by: string | null
+          customer_count: number | null
+          franchisee_restaurant_id: string | null
+          id: string
+          labor_hours: number | null
+          month: number
+          notes: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          actual_food_cost?: number | null
+          actual_labor_cost?: number | null
+          actual_marketing?: number | null
+          actual_other_expenses?: number | null
+          actual_rent?: number | null
+          actual_revenue?: number | null
+          actual_utilities?: number | null
+          average_ticket?: number | null
+          created_at?: string
+          created_by?: string | null
+          customer_count?: number | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          labor_hours?: number | null
+          month: number
+          notes?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          actual_food_cost?: number | null
+          actual_labor_cost?: number | null
+          actual_marketing?: number | null
+          actual_other_expenses?: number | null
+          actual_rent?: number | null
+          actual_revenue?: number | null
+          actual_utilities?: number | null
+          average_ticket?: number | null
+          created_at?: string
+          created_by?: string | null
+          customer_count?: number | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          labor_hours?: number | null
+          month?: number
+          notes?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_tracking_franchisee_restaurant_id_fkey"
+            columns: ["franchisee_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "franchisee_restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -234,6 +428,68 @@ export type Database = {
           template_data?: Json
         }
         Relationships: []
+      }
+      restaurant_budgets: {
+        Row: {
+          budgeted_food_cost: number | null
+          budgeted_labor_cost: number | null
+          budgeted_marketing: number | null
+          budgeted_other_expenses: number | null
+          budgeted_rent: number | null
+          budgeted_revenue: number
+          budgeted_utilities: number | null
+          created_at: string
+          created_by: string | null
+          franchisee_restaurant_id: string | null
+          id: string
+          monthly_profit_target: number | null
+          monthly_revenue_target: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          budgeted_food_cost?: number | null
+          budgeted_labor_cost?: number | null
+          budgeted_marketing?: number | null
+          budgeted_other_expenses?: number | null
+          budgeted_rent?: number | null
+          budgeted_revenue: number
+          budgeted_utilities?: number | null
+          created_at?: string
+          created_by?: string | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          monthly_profit_target?: number | null
+          monthly_revenue_target?: number | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          budgeted_food_cost?: number | null
+          budgeted_labor_cost?: number | null
+          budgeted_marketing?: number | null
+          budgeted_other_expenses?: number | null
+          budgeted_rent?: number | null
+          budgeted_revenue?: number
+          budgeted_utilities?: number | null
+          created_at?: string
+          created_by?: string | null
+          franchisee_restaurant_id?: string | null
+          id?: string
+          monthly_profit_target?: number | null
+          monthly_revenue_target?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_budgets_franchisee_restaurant_id_fkey"
+            columns: ["franchisee_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "franchisee_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {
