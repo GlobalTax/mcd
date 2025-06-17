@@ -10,7 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Building, MapPin, Calendar, Euro, Hash } from 'lucide-react';
+import { Building, MapPin, Calendar, Euro, Hash, ExternalLink } from 'lucide-react';
 import { FranchiseeRestaurant } from '@/types/franchiseeRestaurant';
 
 interface FranchiseeRestaurantsTableProps {
@@ -32,6 +32,14 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
       style: 'currency',
       currency: 'EUR'
     }).format(amount);
+  };
+
+  const createGoogleMapsLink = (address?: string, city?: string) => {
+    if (!address && !city) return null;
+    
+    const fullAddress = [address, city].filter(Boolean).join(', ');
+    const encodedAddress = encodeURIComponent(fullAddress);
+    return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
   };
 
   console.log('FranchiseeRestaurantsTable - Rendering with restaurants:', restaurants);
@@ -84,6 +92,10 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
             <TableBody>
               {restaurants.map((restaurant) => {
                 const baseRestaurant = restaurant.base_restaurant;
+                const googleMapsLink = createGoogleMapsLink(
+                  baseRestaurant?.address, 
+                  baseRestaurant?.city
+                );
                 console.log('FranchiseeRestaurantsTable - Processing restaurant:', restaurant);
                 
                 return (
@@ -103,7 +115,20 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
                       <div className="flex items-start gap-1">
                         <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                         <div className="text-sm">
-                          <div>{baseRestaurant?.city || 'Sin ciudad'}</div>
+                          <div className="flex items-center gap-2">
+                            <span>{baseRestaurant?.city || 'Sin ciudad'}</span>
+                            {googleMapsLink && (
+                              <a
+                                href={googleMapsLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
+                                title="Ver en Google Maps"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
                           <div className="text-gray-500">
                             {baseRestaurant?.address || 'Sin dirección'}
                           </div>
