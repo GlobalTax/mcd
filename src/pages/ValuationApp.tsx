@@ -5,7 +5,6 @@ import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant'
 import { FranchiseeSelector } from '@/components/FranchiseeSelector';
 import { RestaurantManager } from '@/components/RestaurantManager';
 import { RestaurantDataManager } from '@/components/RestaurantDataManager';
-import { RestaurantDashboard } from '@/components/RestaurantDashboard';
 import { ValuationForm } from '@/components/ValuationForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Database } from 'lucide-react';
