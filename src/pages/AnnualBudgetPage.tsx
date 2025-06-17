@@ -81,8 +81,8 @@ export default function AnnualBudgetPage() {
                   <SelectContent>
                     {restaurants.map((restaurant) => (
                       <SelectItem key={restaurant.id} value={restaurant.id}>
-                        {restaurant.base_restaurants?.restaurant_name || 'Sin nombre'} - 
-                        {restaurant.base_restaurants?.site_number || 'Sin número'}
+                        {restaurant.base_restaurant?.restaurant_name || 'Sin nombre'} - 
+                        {restaurant.base_restaurant?.site_number || 'Sin número'}
                       </SelectItem>
                     ))}
                   </SelectContent>
