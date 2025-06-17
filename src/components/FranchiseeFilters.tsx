@@ -135,12 +135,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por ciudad */}
               <div className="space-y-2">
                 <Label>Ciudad</Label>
-                <Select value={filters.city} onValueChange={(value) => handleFilterChange('city', value)}>
+                <Select value={filters.city} onValueChange={(value) => handleFilterChange('city', value === 'all-cities' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todas las ciudades" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las ciudades</SelectItem>
+                    <SelectItem value="all-cities">Todas las ciudades</SelectItem>
                     {uniqueCities.map((city) => (
                       <SelectItem key={city} value={city}>
                         {city}
@@ -153,12 +153,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por provincia */}
               <div className="space-y-2">
                 <Label>Provincia</Label>
-                <Select value={filters.state} onValueChange={(value) => handleFilterChange('state', value)}>
+                <Select value={filters.state} onValueChange={(value) => handleFilterChange('state', value === 'all-states' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todas las provincias" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas las provincias</SelectItem>
+                    <SelectItem value="all-states">Todas las provincias</SelectItem>
                     {uniqueStates.map((state) => (
                       <SelectItem key={state} value={state}>
                         {state}
@@ -171,12 +171,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por número de restaurantes */}
               <div className="space-y-2">
                 <Label>Número de Restaurantes</Label>
-                <Select value={filters.restaurantCount} onValueChange={(value) => handleFilterChange('restaurantCount', value)}>
+                <Select value={filters.restaurantCount} onValueChange={(value) => handleFilterChange('restaurantCount', value === 'any-count' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Cualquier cantidad" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Cualquier cantidad</SelectItem>
+                    <SelectItem value="any-count">Cualquier cantidad</SelectItem>
                     <SelectItem value="0">Sin restaurantes (0)</SelectItem>
                     <SelectItem value="1">1 restaurante</SelectItem>
                     <SelectItem value="2-5">2-5 restaurantes</SelectItem>
@@ -189,12 +189,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por email */}
               <div className="space-y-2">
                 <Label>Tiene Email</Label>
-                <Select value={filters.hasEmail} onValueChange={(value) => handleFilterChange('hasEmail', value)}>
+                <Select value={filters.hasEmail} onValueChange={(value) => handleFilterChange('hasEmail', value === 'any-email' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Cualquiera" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Cualquiera</SelectItem>
+                    <SelectItem value="any-email">Cualquiera</SelectItem>
                     <SelectItem value="yes">Con email</SelectItem>
                     <SelectItem value="no">Sin email</SelectItem>
                   </SelectContent>
@@ -204,12 +204,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por CIF/NIF */}
               <div className="space-y-2">
                 <Label>Tiene CIF/NIF</Label>
-                <Select value={filters.hasTaxId} onValueChange={(value) => handleFilterChange('hasTaxId', value)}>
+                <Select value={filters.hasTaxId} onValueChange={(value) => handleFilterChange('hasTaxId', value === 'any-tax' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Cualquiera" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Cualquiera</SelectItem>
+                    <SelectItem value="any-tax">Cualquiera</SelectItem>
                     <SelectItem value="yes">Con CIF/NIF</SelectItem>
                     <SelectItem value="no">Sin CIF/NIF</SelectItem>
                   </SelectContent>
@@ -219,12 +219,12 @@ export const FranchiseeFiltersComponent: React.FC<FranchiseeFiltersProps> = ({
               {/* Filtro por nombre de empresa */}
               <div className="space-y-2">
                 <Label>Tiene Empresa</Label>
-                <Select value={filters.hasCompanyName} onValueChange={(value) => handleFilterChange('hasCompanyName', value)}>
+                <Select value={filters.hasCompanyName} onValueChange={(value) => handleFilterChange('hasCompanyName', value === 'any-company' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Cualquiera" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Cualquiera</SelectItem>
+                    <SelectItem value="any-company">Cualquiera</SelectItem>
                     <SelectItem value="yes">Con empresa</SelectItem>
                     <SelectItem value="no">Sin empresa</SelectItem>
                   </SelectContent>
