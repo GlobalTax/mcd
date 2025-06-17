@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,6 +24,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserData = async (userId: string) => {
     try {
+      console.log('fetchUserData - Starting fetch for user:', userId);
+      
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -35,16 +38,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      console.log('fetchUserData - Profile fetched:', profile);
+
       // Map database role "asesor" to TypeScript type "advisor"
       const mappedRole = profile.role === 'asesor' ? 'advisor' : profile.role;
       
-      setUser({
+      const userData = {
         ...profile,
         role: mappedRole
-      } as User);
+      } as User;
+
+      console.log('fetchUserData - Setting user with role:', userData.role);
+      setUser(userData);
 
       // Only fetch franchisee data if user is a franchisee
       if (profile.role === 'franchisee') {
+        console.log('fetchUserData - User is franchisee, fetching franchisee data');
+        
         // Fetch franchisee data
         const { data: franchiseeData, error: franchiseeError } = await supabase
           .from('franchisees')
@@ -72,6 +82,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setRestaurants(restaurantsData as Restaurant[]);
           }
         }
+      } else {
+        console.log('fetchUserData - User is not franchisee, role:', profile.role);
+        // Clear franchisee data for non-franchisee users
+        setFranchisee(null);
+        setRestaurants([]);
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
@@ -79,9 +94,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    console.log('useAuth - Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('useAuth - Auth state change:', event, session?.user?.id);
         setSession(session);
         
         if (session?.user) {
@@ -89,6 +107,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             fetchUserData(session.user.id);
           }, 0);
         } else {
+          console.log('useAuth - No session, clearing user data');
           setUser(null);
           setFranchisee(null);
           setRestaurants([]);
@@ -99,6 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('useAuth - Initial session check:', session?.user?.id);
       setSession(session);
       if (session?.user) {
         fetchUserData(session.user.id);
@@ -110,14 +130,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log('signIn - Attempting login for:', email);
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error('signIn - Error:', error);
       toast.error(error.message);
     } else {
+      console.log('signIn - Success');
       toast.success('Sesión iniciada correctamente');
     }
 

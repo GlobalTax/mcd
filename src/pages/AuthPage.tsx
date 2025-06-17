@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,18 +24,20 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('AuthPage - User state:', user);
-    console.log('AuthPage - Loading state:', loading);
+    console.log('AuthPage - Effect triggered');
+    console.log('AuthPage - User:', user);
+    console.log('AuthPage - Loading:', loading);
     
     if (user && !loading) {
       console.log('AuthPage - User role:', user.role);
+      console.log('AuthPage - Determining redirect...');
       
       // Redirigir usuarios con roles de asesor al panel de asesor
       if (['advisor', 'admin', 'superadmin'].includes(user.role)) {
-        console.log('AuthPage - Redirecting to advisor panel');
+        console.log('AuthPage - Redirecting advisor/admin/superadmin to /advisor');
         navigate('/advisor', { replace: true });
       } else {
-        console.log('AuthPage - Redirecting to dashboard');
+        console.log('AuthPage - Redirecting franchisee to /dashboard');
         navigate('/dashboard', { replace: true });
       }
     }
@@ -44,6 +47,7 @@ const AuthPage = () => {
     e.preventDefault();
     setIsLoading(true);
     
+    console.log('AuthPage - Starting sign in process');
     await signIn(email, password);
     
     setIsLoading(false);
@@ -77,12 +81,15 @@ const AuthPage = () => {
   };
 
   if (loading) {
+    console.log('AuthPage - Showing loading state');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
+
+  console.log('AuthPage - Rendering auth form');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-yellow-50 flex items-center justify-center p-4">
@@ -269,6 +276,7 @@ const AuthPage = () => {
                 </button>
               </p>
             </div>
+
           </CardContent>
         </Card>
       </div>
