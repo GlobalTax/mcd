@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Table, TableBody, Table Cell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { BudgetData } from '@/types/budgetTypes';
 
