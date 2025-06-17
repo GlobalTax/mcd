@@ -8,12 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const AuthPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('signin');
   
   const { signIn, signUp, user, loading } = useAuth();
@@ -43,6 +47,24 @@ const AuthPage = () => {
     setIsLoading(false);
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResettingPassword(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Se ha enviado un enlace de recuperación a tu correo electrónico');
+      setResetEmail('');
+    }
+
+    setIsResettingPassword(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -68,9 +90,10 @@ const AuthPage = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
                 <TabsTrigger value="signup">Registrarse</TabsTrigger>
+                <TabsTrigger value="reset">Recuperar</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
@@ -113,6 +136,16 @@ const AuthPage = () => {
                       'Iniciar Sesión'
                     )}
                   </Button>
+                  
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('reset')}
+                      className="text-sm text-red-600 hover:text-red-700 underline"
+                    >
+                      ¿Has olvidado tu contraseña?
+                    </button>
+                  </div>
                 </form>
               </TabsContent>
               
@@ -169,6 +202,47 @@ const AuthPage = () => {
                       'Crear Cuenta'
                     )}
                   </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="reset">
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="resetEmail">Email</Label>
+                    <Input
+                      id="resetEmail"
+                      type="email"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      placeholder="tu.email@ejemplo.com"
+                    />
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-red-600 hover:bg-red-700"
+                    disabled={isResettingPassword}
+                  >
+                    {isResettingPassword ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando enlace...
+                      </>
+                    ) : (
+                      'Enviar enlace de recuperación'
+                    )}
+                  </Button>
+                  
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('signin')}
+                      className="text-sm text-gray-600 hover:text-gray-700 underline"
+                    >
+                      Volver al inicio de sesión
+                    </button>
+                  </div>
                 </form>
               </TabsContent>
             </Tabs>
