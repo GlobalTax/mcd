@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Building, Users, FileText, LogOut, Store } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import AdvisorManagement from '@/components/AdvisorManagement';
-import FranchiseesManagement from '@/components/FranchiseesManagement';
-import AdvisorReports from '@/components/AdvisorReports';
+import { FranchiseesManagement } from '@/components/FranchiseesManagement';
+import { AdvisorReports } from '@/components/AdvisorReports';
 import { BaseRestaurantsTable } from '@/components/BaseRestaurantsTable';
 import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
+import { useFranchisees } from '@/hooks/useFranchisees';
 
 const AdvisorPage = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('advisors');
   const { restaurants, loading: restaurantsLoading, refetch: refetchRestaurants } = useBaseRestaurants();
+  const { franchisees, loading: franchiseesLoading, refetch: refetchFranchisees } = useFranchisees();
 
   if (loading) {
     return (
@@ -104,7 +105,17 @@ const AdvisorPage = () => {
                 <CardTitle>Gestión de Franquiciados</CardTitle>
               </CardHeader>
               <CardContent>
-                <FranchiseesManagement />
+                {franchiseesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Cargando franquiciados...</p>
+                  </div>
+                ) : (
+                  <FranchiseesManagement 
+                    franchisees={franchisees} 
+                    onRefresh={refetchFranchisees}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
