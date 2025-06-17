@@ -9,6 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      franchisees: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string | null
+          country: string | null
+          created_at: string
+          franchisee_name: string
+          id: string
+          postal_code: string | null
+          state: string | null
+          tax_id: string | null
+          total_restaurants: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          franchisee_name: string
+          id?: string
+          postal_code?: string | null
+          state?: string | null
+          tax_id?: string | null
+          total_restaurants?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          country?: string | null
+          created_at?: string
+          franchisee_name?: string
+          id?: string
+          postal_code?: string | null
+          state?: string | null
+          tax_id?: string | null
+          total_restaurants?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profit_loss_data: {
         Row: {
           advertising: number | null
@@ -112,7 +198,15 @@ export type Database = {
           utilities?: number | null
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_profit_loss_restaurant"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["site_number"]
+          },
+        ]
       }
       profit_loss_templates: {
         Row: {
@@ -140,6 +234,71 @@ export type Database = {
           template_data?: Json
         }
         Relationships: []
+      }
+      restaurants: {
+        Row: {
+          address: string
+          city: string
+          country: string | null
+          created_at: string
+          franchisee_id: string
+          id: string
+          opening_date: string | null
+          postal_code: string | null
+          restaurant_name: string
+          restaurant_type: string | null
+          seating_capacity: number | null
+          site_number: string
+          square_meters: number | null
+          state: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          country?: string | null
+          created_at?: string
+          franchisee_id: string
+          id?: string
+          opening_date?: string | null
+          postal_code?: string | null
+          restaurant_name: string
+          restaurant_type?: string | null
+          seating_capacity?: number | null
+          site_number: string
+          square_meters?: number | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          country?: string | null
+          created_at?: string
+          franchisee_id?: string
+          id?: string
+          opening_date?: string | null
+          postal_code?: string | null
+          restaurant_name?: string
+          restaurant_type?: string | null
+          seating_capacity?: number | null
+          site_number?: string
+          square_meters?: number | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_franchisee_id_fkey"
+            columns: ["franchisee_id"]
+            isOneToOne: false
+            referencedRelation: "franchisees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

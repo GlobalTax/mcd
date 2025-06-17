@@ -1,12 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProfitLossData, ProfitLossFormData, ProfitLossTemplate } from '@/types/profitLoss';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export const useProfitLossData = (restaurantId?: string, year?: number) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch P&L data
   const {
@@ -15,9 +16,9 @@ export const useProfitLossData = (restaurantId?: string, year?: number) => {
     error,
     refetch
   } = useQuery({
-    queryKey: ['profit-loss-data', restaurantId, year],
+    queryKey: ['profit-loss-data', restaurantId, year, user?.id],
     queryFn: async () => {
-      if (!restaurantId) return [];
+      if (!restaurantId || !user) return [];
       
       let query = supabase
         .from('profit_loss_data')
@@ -39,7 +40,7 @@ export const useProfitLossData = (restaurantId?: string, year?: number) => {
       
       return data as ProfitLossData[];
     },
-    enabled: !!restaurantId,
+    enabled: !!restaurantId && !!user,
   });
 
   // Fetch templates
@@ -68,7 +69,10 @@ export const useProfitLossData = (restaurantId?: string, year?: number) => {
     mutationFn: async (formData: ProfitLossFormData) => {
       const { data, error } = await supabase
         .from('profit_loss_data')
-        .insert([formData])
+        .insert([{
+          ...formData,
+          created_by: user?.email || 'system'
+        }])
         .select()
         .single();
 
