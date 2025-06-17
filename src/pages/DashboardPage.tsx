@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building, Calculator, TrendingUp, Users, Settings, LogOut } from 'lucide-react';
+import { Building, Calculator, TrendingUp, Users, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield } from 'lucide-react';
 
 const DashboardPage = () => {
   const { user, franchisee, restaurants, signOut } = useAuth();
@@ -13,6 +13,14 @@ const DashboardPage = () => {
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
+  };
+
+  // Helper function to safely format numbers
+  const formatNumber = (value: number | undefined | null): string => {
+    if (value === undefined || value === null || isNaN(value)) {
+      return '0';
+    }
+    return value.toLocaleString('es-ES');
   };
 
   return (
@@ -96,7 +104,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card className="hover:shadow-lg transition-shadow cursor-pointer" 
                 onClick={() => navigate('/valuation')}>
             <CardHeader>
@@ -111,38 +119,6 @@ const DashboardPage = () => {
               </p>
             </CardContent>
           </Card>
-
-          {restaurants && restaurants.length > 0 && (
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="w-5 h-5 text-red-600" />
-                  Mis Restaurantes
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {restaurants.slice(0, 3).map((restaurant) => (
-                    <div key={restaurant.id} className="flex justify-between items-center">
-                      <span className="text-sm">{restaurant.restaurant_name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(`/restaurant/${restaurant.site_number}`)}
-                      >
-                        Ver
-                      </Button>
-                    </div>
-                  ))}
-                  {restaurants.length > 3 && (
-                    <p className="text-xs text-gray-500">
-                      +{restaurants.length - 3} más...
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -169,9 +145,93 @@ const DashboardPage = () => {
           </Card>
         </div>
 
-        {/* Welcome Message */}
-        {(!franchisee || !restaurants || restaurants.length === 0) && (
-          <Card className="mt-8 border-yellow-200 bg-yellow-50">
+        {/* Restaurants Section */}
+        {restaurants && restaurants.length > 0 ? (
+          <div className="mb-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Mis Restaurantes</h2>
+              <p className="text-gray-600">{restaurants.length} restaurantes disponibles</p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {restaurants.map((restaurant) => (
+                <Card
+                  key={restaurant.id}
+                  className="cursor-pointer transition-all hover:shadow-lg hover:border-red-200 group"
+                  onClick={() => navigate(`/restaurant/${restaurant.site_number}`)}
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-semibold text-xl text-gray-900 group-hover:text-red-600 transition-colors">
+                            {restaurant.restaurant_name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                            <Hash className="w-4 h-4" />
+                            <span>Site: {restaurant.site_number}</span>
+                          </div>
+                          {franchisee && (
+                            <p className="text-sm text-gray-600 mt-1">{franchisee.franchisee_name}</p>
+                          )}
+                        </div>
+                        <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                          <span className="text-yellow-600 font-bold text-lg">M</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <MapPin className="w-5 h-5" />
+                          <span className="font-medium">{restaurant.city}, {restaurant.address}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3 text-gray-600">
+                          <Building2 className="w-5 h-5" />
+                          <span className="capitalize">{restaurant.restaurant_type.replace('_', ' ')}</span>
+                        </div>
+
+                        {restaurant.opening_date && (
+                          <div className="flex items-center gap-3 text-gray-600">
+                            <Calendar className="w-5 h-5" />
+                            <span>Apertura: {new Date(restaurant.opening_date).toLocaleDateString('es-ES')}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            restaurant.status === 'active' ? 'bg-green-100 text-green-800' :
+                            restaurant.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                            restaurant.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {restaurant.status === 'active' ? 'Activo' :
+                             restaurant.status === 'inactive' ? 'Inactivo' :
+                             restaurant.status === 'pending' ? 'Pendiente' :
+                             restaurant.status === 'closed' ? 'Cerrado' :
+                             restaurant.status}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/restaurant/${restaurant.site_number}/profitloss`);
+                            }}
+                          >
+                            Ver P&L
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Welcome Message */
+          <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-yellow-800 mb-2">
                 ¡Bienvenido al Portal de McDonald's!
