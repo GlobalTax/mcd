@@ -46,11 +46,11 @@ export const RestaurantsSection: React.FC<RestaurantsSectionProps> = ({
   return (
     <>
       {/* Restaurants Table */}
-      <Card className="border-0 shadow-xl bg-white/60 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-xl text-gray-900">Mis Restaurantes</CardTitle>
+      <Card className="border border-gray-200/60 shadow-sm bg-white">
+        <CardHeader className="border-b border-gray-200/60 bg-gray-50/50">
+          <CardTitle className="text-lg font-semibold text-gray-900">Mis Restaurantes</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <FranchiseeRestaurantsTable 
             franchiseeId={franchiseeId}
             restaurants={franchiseeRestaurants}
@@ -60,10 +60,10 @@ export const RestaurantsSection: React.FC<RestaurantsSectionProps> = ({
 
       {/* Show legacy restaurants if we have local storage data but no Supabase data */}
       {!hasSupabaseRestaurants && allLocalRestaurants.length > 0 && (
-        <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 shadow-lg">
+        <Card className="border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
                 <Building className="w-4 h-4 text-white" />
               </div>
               <div>
@@ -83,12 +83,12 @@ export const RestaurantsSection: React.FC<RestaurantsSectionProps> = ({
                   <CardContent className="p-4">
                     <div className="space-y-2">
                       <div>
-                        <h4 className="font-medium">{restaurant.name}</h4>
-                        <p className="text-sm text-gray-600">{restaurant.location}</p>
+                        <h4 className="font-medium text-sm">{restaurant.name}</h4>
+                        <p className="text-xs text-gray-600">{restaurant.location}</p>
                       </div>
                       {restaurant.lastYearRevenue && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Euro className="w-4 h-4 text-green-600" />
+                        <div className="flex items-center gap-2 text-xs">
+                          <Euro className="w-3 h-3 text-green-600" />
                           <span>€{formatNumber(restaurant.lastYearRevenue)}</span>
                         </div>
                       )}
