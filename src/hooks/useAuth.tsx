@@ -140,12 +140,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (error) {
       console.error('signIn - Error:', error);
       toast.error(error.message);
+      return { error: error.message };
     } else {
       console.log('signIn - Success');
       toast.success('Sesión iniciada correctamente');
+      return {};
     }
-
-    return { error };
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
@@ -164,11 +164,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (error) {
       toast.error(error.message);
+      return { error: error.message };
     } else {
       toast.success('Cuenta creada correctamente. Revisa tu email para confirmar tu cuenta.');
+      return {};
     }
-
-    return { error };
   };
 
   const signOut = async () => {

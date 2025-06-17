@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building, Calculator, TrendingUp, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield, Plus, ArrowRight } from 'lucide-react';
 import { Franchisee } from '@/types/restaurant';
-import FranchiseeRestaurantsTable from '@/components/FranchiseeRestaurantsTable';
+import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 
 // Tipo extendido para manejar ambos formatos de restaurant
