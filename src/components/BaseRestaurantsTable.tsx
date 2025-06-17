@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import { BaseRestaurant } from '@/types/franchiseeRestaurant';
 import { Franchisee } from '@/types/auth';
 import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
 import { useFranchisees } from '@/hooks/useFranchisees';
+import { DataImportDialog } from './DataImportDialog';
 
 interface BaseRestaurantsTableProps {
   restaurants: BaseRestaurant[];
@@ -134,113 +134,116 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Restaurantes Base</h2>
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Añadir Restaurante
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="site_number">Número de Local</Label>
-                  <Input
-                    id="site_number"
-                    value={formData.site_number}
-                    onChange={(e) => setFormData({...formData, site_number: e.target.value})}
-                    required
-                  />
+        <div className="flex space-x-2">
+          <DataImportDialog onImportComplete={onRefresh} />
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Añadir Restaurante
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Restaurante</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="site_number">Número de Local</Label>
+                    <Input
+                      id="site_number"
+                      value={formData.site_number}
+                      onChange={(e) => setFormData({...formData, site_number: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
+                    <Input
+                      id="restaurant_name"
+                      value={formData.restaurant_name}
+                      onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label htmlFor="address">Dirección</Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">Ciudad</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">Provincia</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => setFormData({...formData, state: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="postal_code">Código Postal</Label>
+                    <Input
+                      id="postal_code"
+                      value={formData.postal_code}
+                      onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
+                    <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="traditional">Tradicional</SelectItem>
+                        <SelectItem value="mall">Mall</SelectItem>
+                        <SelectItem value="drive_thru">Drive Thru</SelectItem>
+                        <SelectItem value="express">Express</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="square_meters">Metros Cuadrados</Label>
+                    <Input
+                      id="square_meters"
+                      type="number"
+                      value={formData.square_meters}
+                      onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
+                    <Input
+                      id="seating_capacity"
+                      type="number"
+                      value={formData.seating_capacity}
+                      onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="restaurant_name">Nombre del Restaurante</Label>
-                  <Input
-                    id="restaurant_name"
-                    value={formData.restaurant_name}
-                    onChange={(e) => setFormData({...formData, restaurant_name: e.target.value})}
-                    required
-                  />
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit">Crear Restaurante</Button>
                 </div>
-                <div className="col-span-2">
-                  <Label htmlFor="address">Dirección</Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="city">Ciudad</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => setFormData({...formData, city: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="state">Provincia</Label>
-                  <Input
-                    id="state"
-                    value={formData.state}
-                    onChange={(e) => setFormData({...formData, state: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="postal_code">Código Postal</Label>
-                  <Input
-                    id="postal_code"
-                    value={formData.postal_code}
-                    onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="restaurant_type">Tipo de Restaurante</Label>
-                  <Select value={formData.restaurant_type} onValueChange={(value) => setFormData({...formData, restaurant_type: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="traditional">Tradicional</SelectItem>
-                      <SelectItem value="mccafe">McCafé</SelectItem>
-                      <SelectItem value="drive_thru">Drive Thru</SelectItem>
-                      <SelectItem value="express">Express</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="square_meters">Metros Cuadrados</Label>
-                  <Input
-                    id="square_meters"
-                    type="number"
-                    value={formData.square_meters}
-                    onChange={(e) => setFormData({...formData, square_meters: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="seating_capacity">Capacidad de Asientos</Label>
-                  <Input
-                    id="seating_capacity"
-                    type="number"
-                    value={formData.seating_capacity}
-                    onChange={(e) => setFormData({...formData, seating_capacity: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Crear Restaurante</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Table>
@@ -291,7 +294,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
             <DialogTitle>Editar Restaurante</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4">
-            {/* ... same form fields as create modal ... */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="edit_site_number">Número de Local</Label>
@@ -353,7 +355,7 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="traditional">Tradicional</SelectItem>
-                    <SelectItem value="mccafe">McCafé</SelectItem>
+                    <SelectItem value="mall">Mall</SelectItem>
                     <SelectItem value="drive_thru">Drive Thru</SelectItem>
                     <SelectItem value="express">Express</SelectItem>
                   </SelectContent>
