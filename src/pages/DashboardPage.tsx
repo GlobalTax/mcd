@@ -8,6 +8,27 @@ import { Button } from '@/components/ui/button';
 import { Building, Calculator, TrendingUp, Users, Settings, LogOut, MapPin, Calendar, Hash, Euro, Building2, Shield } from 'lucide-react';
 import { Franchisee } from '@/types/restaurant';
 
+// Tipo extendido para manejar ambos formatos de restaurant
+type DisplayRestaurant = {
+  id: string;
+  name?: string;
+  restaurant_name?: string;
+  location?: string;
+  city?: string;
+  address?: string;
+  siteNumber?: string;
+  site_number?: string;
+  franchiseeName?: string;
+  opening_date?: string;
+  contractEndDate?: string;
+  restaurant_type?: string;
+  status?: string;
+  lastYearRevenue?: number;
+  baseRent?: number;
+  isOwnedByMcD?: boolean;
+  currentValuation?: any;
+};
+
 const DashboardPage = () => {
   const { user, franchisee, restaurants, signOut } = useAuth();
   const navigate = useNavigate();
@@ -26,13 +47,18 @@ const DashboardPage = () => {
     return value.toLocaleString('es-ES');
   };
 
+  // Helper function to get site number safely
+  const getSiteNumber = (restaurant: DisplayRestaurant): string | undefined => {
+    return restaurant.siteNumber || restaurant.site_number;
+  };
+
   // Get all restaurants from localStorage (from valuation tool)
   const allLocalRestaurants = localFranchisees.flatMap(f => 
     f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
   );
 
   // Use local restaurants if available, otherwise fall back to Supabase restaurants
-  const displayRestaurants = allLocalRestaurants.length > 0 ? allLocalRestaurants : restaurants;
+  const displayRestaurants: DisplayRestaurant[] = allLocalRestaurants.length > 0 ? allLocalRestaurants : (restaurants || []);
   const totalRestaurants = displayRestaurants?.length || 0;
 
   return (
@@ -153,7 +179,7 @@ const DashboardPage = () => {
                   className="mt-2"
                   onClick={() => {
                     const firstRestaurant = displayRestaurants[0];
-                    const siteNumber = firstRestaurant.siteNumber || firstRestaurant.site_number;
+                    const siteNumber = getSiteNumber(firstRestaurant);
                     if (siteNumber) {
                       navigate(`/restaurant/${siteNumber}/profitloss`);
                     }
@@ -180,7 +206,7 @@ const DashboardPage = () => {
                   key={restaurant.id}
                   className="cursor-pointer transition-all hover:shadow-lg hover:border-red-200 group"
                   onClick={() => {
-                    const siteNumber = restaurant.siteNumber || restaurant.site_number;
+                    const siteNumber = getSiteNumber(restaurant);
                     if (siteNumber) {
                       navigate(`/restaurant/${siteNumber}`);
                     }
@@ -195,7 +221,7 @@ const DashboardPage = () => {
                           </h3>
                           <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
                             <Hash className="w-4 h-4" />
-                            <span>Site: {restaurant.siteNumber || restaurant.site_number}</span>
+                            <span>Site: {getSiteNumber(restaurant)}</span>
                           </div>
                           {(restaurant.franchiseeName || franchisee) && (
                             <p className="text-sm text-gray-600 mt-1">
@@ -302,7 +328,7 @@ const DashboardPage = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const siteNumber = restaurant.siteNumber || restaurant.site_number;
+                              const siteNumber = getSiteNumber(restaurant);
                               if (siteNumber) {
                                 navigate(`/restaurant/${siteNumber}/profitloss`);
                               }
