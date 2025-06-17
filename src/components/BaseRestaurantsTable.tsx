@@ -258,8 +258,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
               <TableHead>C.P.</TableHead>
               <TableHead>País</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>m²</TableHead>
-              <TableHead>Asientos</TableHead>
               <TableHead>Creado</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
@@ -281,8 +279,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                     {restaurant.restaurant_type.replace('_', ' ')}
                   </span>
                 </TableCell>
-                <TableCell>{restaurant.square_meters || '-'}</TableCell>
-                <TableCell>{restaurant.seating_capacity || '-'}</TableCell>
                 <TableCell>
                   {new Date(restaurant.created_at).toLocaleDateString('es-ES')}
                 </TableCell>
