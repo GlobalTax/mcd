@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 interface RestaurantData {
@@ -23,8 +24,14 @@ interface RestaurantData {
 export const useDataImport = () => {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { user } = useAuth();
 
   const importRestaurantsData = async (data: RestaurantData[]) => {
+    if (!user?.id) {
+      toast.error('Usuario no autenticado');
+      return;
+    }
+
     setImporting(true);
     setProgress(0);
 
@@ -56,6 +63,8 @@ export const useDataImport = () => {
   };
 
   const createOrGetFranchisee = async (restaurant: RestaurantData) => {
+    if (!user?.id) return null;
+
     try {
       // Verificar si el franquiciado ya existe
       const { data: existingFranchisee } = await supabase
@@ -68,7 +77,7 @@ export const useDataImport = () => {
         return existingFranchisee.id;
       }
 
-      // Crear nuevo franquiciado
+      // Crear nuevo franquiciado usando el ID del usuario actual
       const { data: newFranchisee, error } = await supabase
         .from('franchisees')
         .insert({
@@ -79,7 +88,7 @@ export const useDataImport = () => {
           state: restaurant.provincia,
           country: 'España',
           tax_id: restaurant.nifSociedad || null,
-          user_id: '00000000-0000-0000-0000-000000000000' // Placeholder UUID
+          user_id: user.id // Usar el ID del usuario actual
         })
         .select('id')
         .single();
@@ -97,6 +106,8 @@ export const useDataImport = () => {
   };
 
   const createBaseRestaurant = async (restaurant: RestaurantData, franchiseeId: string) => {
+    if (!user?.id) return;
+
     try {
       // Verificar si el restaurante ya existe
       const { data: existingRestaurant } = await supabase
@@ -126,7 +137,8 @@ export const useDataImport = () => {
           city: restaurant.municipio,
           state: restaurant.provincia,
           country: 'España',
-          restaurant_type: restaurantTypeMap[restaurant.tipoInmueble] || 'traditional'
+          restaurant_type: restaurantTypeMap[restaurant.tipoInmueble] || 'traditional',
+          created_by: user.id // Agregar el usuario que creó el restaurante
         });
 
       if (restaurantError) {
