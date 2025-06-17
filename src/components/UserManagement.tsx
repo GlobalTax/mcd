@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +17,7 @@ interface NewUser {
   email: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'franchisee' | 'manager';
+  role: 'admin' | 'franchisee' | 'manager' | 'asesor';
 }
 
 const UserManagement = () => {
@@ -53,7 +54,7 @@ const UserManagement = () => {
       // Cast the role to the correct type
       const typedUsers = (data || []).map(userData => ({
         ...userData,
-        role: userData.role as 'admin' | 'franchisee' | 'manager'
+        role: userData.role as 'admin' | 'franchisee' | 'manager' | 'asesor'
       }));
 
       setUsers(typedUsers);
@@ -150,6 +151,8 @@ const UserManagement = () => {
         return 'bg-blue-100 text-blue-800';
       case 'franchisee':
         return 'bg-green-100 text-green-800';
+      case 'asesor':
+        return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -163,6 +166,8 @@ const UserManagement = () => {
         return 'Gerente';
       case 'franchisee':
         return 'Franquiciado';
+      case 'asesor':
+        return 'Asesor';
       default:
         return role;
     }
@@ -250,7 +255,7 @@ const UserManagement = () => {
                       <Label htmlFor="role">Rol</Label>
                       <Select
                         value={newUser.role}
-                        onValueChange={(value: 'admin' | 'franchisee' | 'manager') => 
+                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor') => 
                           setNewUser({ ...newUser, role: value })
                         }
                       >
@@ -261,6 +266,7 @@ const UserManagement = () => {
                           <SelectItem value="admin">Administrador</SelectItem>
                           <SelectItem value="manager">Gerente</SelectItem>
                           <SelectItem value="franchisee">Franquiciado</SelectItem>
+                          <SelectItem value="asesor">Asesor</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
