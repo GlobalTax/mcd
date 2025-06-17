@@ -16,6 +16,13 @@ const FranchiseeDetailPage = () => {
   const { user, loading: authLoading } = useAuth();
   const { franchisee, restaurants, loading, error } = useFranchiseeDetail(franchiseeId);
 
+  console.log('FranchiseeDetailPage - Render with:', { 
+    franchiseeId, 
+    franchisee: franchisee?.franchisee_name,
+    restaurantsCount: restaurants.length,
+    loading 
+  });
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -146,7 +153,7 @@ const FranchiseeDetailPage = () => {
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">Restaurantes:</span>
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge key={restaurants.length} className="bg-green-100 text-green-800">
                       {restaurants.length}
                     </Badge>
                   </div>

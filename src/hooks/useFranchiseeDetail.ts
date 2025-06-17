@@ -28,6 +28,10 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Limpiar datos anteriores
+      setFranchisee(null);
+      setRestaurants([]);
 
       console.log('fetchFranchiseeDetail - Starting fetch for franchiseeId:', franchiseeId);
 
@@ -110,6 +114,8 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
               created_by: restaurant.created_by
             }
           }));
+          
+          console.log('fetchFranchiseeDetail - Setting restaurants from base_restaurants:', convertedRestaurants.length);
           setRestaurants(convertedRestaurants);
           return;
         }
@@ -185,6 +191,8 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
             created_by: undefined
           }
         }));
+        
+        console.log('fetchFranchiseeDetail - Setting restaurants from restaurants table:', convertedRestaurants.length);
         setRestaurants(convertedRestaurants);
         return;
       }
@@ -247,6 +255,8 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
           ...restaurant,
           base_restaurant: restaurant.base_restaurant || null
         }));
+        
+        console.log('fetchFranchiseeDetail - Setting restaurants from franchisee_restaurants:', processedRestaurants.length);
         setRestaurants(processedRestaurants);
       }
 
@@ -259,8 +269,16 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
   };
 
   useEffect(() => {
+    console.log('useFranchiseeDetail - useEffect triggered with:', { userId: user?.id, franchiseeId });
     fetchFranchiseeDetail();
   }, [user?.id, franchiseeId]);
+
+  console.log('useFranchiseeDetail - Current state:', { 
+    franchisee: franchisee?.franchisee_name, 
+    restaurantsCount: restaurants.length,
+    loading,
+    error 
+  });
 
   return {
     franchisee,
