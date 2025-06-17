@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,10 +95,10 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-manrope;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-manrope;
   }
 }
