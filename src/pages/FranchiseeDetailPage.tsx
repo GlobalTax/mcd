@@ -123,10 +123,10 @@ const FranchiseeDetailPage = () => {
                   </div>
                 )}
 
-                {franchisee.profiles?.full_name && (
+                {franchisee.profiles?.phone && (
                   <div className="flex items-center space-x-2">
                     <Phone className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">{franchisee.profiles.full_name}</span>
+                    <span className="text-sm">{franchisee.profiles.phone}</span>
                   </div>
                 )}
 
