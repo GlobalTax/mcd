@@ -541,7 +541,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
               {columnSettings.dates && <TableHead>Fecha Apertura</TableHead>}
               {columnSettings.location && <TableHead>Ubicación Detallada</TableHead>}
               <TableHead>Tipo</TableHead>
-              <TableHead>Capacidad</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -636,16 +635,6 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({
                     <Badge variant="outline">
                       {restaurant.restaurant_type === 'traditional' ? 'Tradicional' : restaurant.restaurant_type}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {restaurant.seating_capacity && (
-                        <div>{restaurant.seating_capacity} asientos</div>
-                      )}
-                      {restaurant.square_meters && (
-                        <div className="text-gray-500">{restaurant.square_meters} m²</div>
-                      )}
-                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
