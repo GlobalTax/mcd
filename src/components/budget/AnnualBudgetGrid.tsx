@@ -68,7 +68,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   if (showComparison) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 w-full">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
@@ -110,7 +110,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="pb-4">
         <BudgetGridHeader
           year={year}
           hasChanges={hasChanges}
@@ -122,7 +122,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
         />
         <BudgetChangesBanner hasChanges={hasChanges} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <BudgetTable 
           data={rowData} 
           actualData={actualData}

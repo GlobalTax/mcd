@@ -30,7 +30,7 @@ export default function AnnualBudgetPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
+      <div className="container mx-auto px-6 py-8 max-w-[1600px]">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
@@ -113,12 +113,14 @@ export default function AnnualBudgetPage() {
           </CardContent>
         </Card>
 
-        {/* Tabla de Presupuesto */}
+        {/* Tabla de Presupuesto - Ocupa todo el ancho */}
         {selectedRestaurant ? (
-          <AnnualBudgetGrid
-            restaurantId={selectedRestaurant}
-            year={selectedYear}
-          />
+          <div className="w-full">
+            <AnnualBudgetGrid
+              restaurantId={selectedRestaurant}
+              year={selectedYear}
+            />
+          </div>
         ) : (
           <Card>
             <CardContent className="p-8 text-center">
