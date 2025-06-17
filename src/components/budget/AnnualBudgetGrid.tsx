@@ -110,7 +110,6 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   // Función memoizada para cargar datos
   const loadBudgetData = useCallback(async () => {
     if (restaurantId && year) {
-      console.log('AnnualBudgetGrid - Loading budget data for:', { restaurantId, year });
       await fetchBudgets(restaurantId, year);
     }
   }, [restaurantId, year, fetchBudgets]);
@@ -122,8 +121,6 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   // Procesar datos cuando cambien los budgets del hook
   useEffect(() => {
-    console.log('AnnualBudgetGrid - Processing budgets data:', budgets);
-    
     if (budgets.length > 0) {
       // Convertir datos de la BD al formato del grid
       const gridData = budgets.map(budget => ({
@@ -146,10 +143,8 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
         total: budget.jan + budget.feb + budget.mar + budget.apr + budget.may + budget.jun +
                budget.jul + budget.aug + budget.sep + budget.oct + budget.nov + budget.dec
       }));
-      console.log('AnnualBudgetGrid - Setting grid data from DB:', gridData);
       setRowData(gridData);
     } else {
-      console.log('AnnualBudgetGrid - No data from DB, using default structure');
       setRowData(defaultBudgetStructure);
     }
   }, [budgets, defaultBudgetStructure]);
@@ -157,15 +152,24 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   const handleCellChange = (id: string, field: string, value: number) => {
     console.log('Celda modificada:', { id, field, value });
     
+    // Lista de campos numéricos editables
+    const numericFields = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    
+    if (!numericFields.includes(field)) {
+      console.warn('Campo no editable:', field);
+      return;
+    }
+    
     // Actualizar el total de la fila
     const updatedData = [...rowData];
     const rowIndex = updatedData.findIndex(item => item.id === id);
     
     if (rowIndex !== -1) {
-      updatedData[rowIndex][field as keyof BudgetData] = value as any;
+      // Asignación segura solo para campos numéricos
+      (updatedData[rowIndex] as any)[field] = value;
       
-      const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-      updatedData[rowIndex].total = months.reduce((sum, month) => 
+      // Recalcular el total
+      updatedData[rowIndex].total = numericFields.reduce((sum, month) => 
         sum + (updatedData[rowIndex][month as keyof BudgetData] as number || 0), 0
       );
       
