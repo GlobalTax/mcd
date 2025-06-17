@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -191,7 +190,10 @@ const DashboardPage = () => {
             </div>
 
             {/* Restaurants Table */}
-            <FranchiseeRestaurantsTable />
+            <FranchiseeRestaurantsTable 
+              franchiseeId={franchisee?.id || ''}
+              restaurants={franchiseeRestaurants}
+            />
 
             {/* Show legacy restaurants if we have local storage data but no Supabase data */}
             {!hasSupabaseRestaurants && allLocalRestaurants.length > 0 && (

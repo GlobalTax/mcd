@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
@@ -21,73 +22,75 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <Toaster />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/advisor-auth" element={<AdvisorAuthPage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['franchisee']}>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/restaurant"
-              element={
-                <ProtectedRoute allowedRoles={['franchisee']}>
-                  <RestaurantPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profit-loss"
-              element={
-                <ProtectedRoute allowedRoles={['franchisee']}>
-                  <ProfitLossPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/advisor"
-              element={
-                <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
-                  <AdvisorPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/advisor/franchisee/:franchiseeId"
-              element={
-                <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
-                  <FranchiseeDetailPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/valuation"
-              element={
-                <ProtectedRoute allowedRoles={['franchisee']}>
-                  <ValuationApp />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute allowedRoles={['franchisee']}>
-                  <SettingsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <BrowserRouter>
+            <Toaster />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/advisor-auth" element={<AdvisorAuthPage />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/restaurant"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <RestaurantPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profit-loss"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <ProfitLossPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/advisor"
+                element={
+                  <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
+                    <AdvisorPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/advisor/franchisee/:franchiseeId"
+                element={
+                  <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
+                    <FranchiseeDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/valuation"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <ValuationApp />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
