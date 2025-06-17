@@ -4,12 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Building, Users, FileText, LogOut, Store } from 'lucide-react';
+import { Building, Users, FileText, LogOut, Store, AlertTriangle } from 'lucide-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import AdvisorManagement from '@/components/AdvisorManagement';
 import { FranchiseesManagement } from '@/components/FranchiseesManagement';
 import { AdvisorReports } from '@/components/AdvisorReports';
 import { BaseRestaurantsTable } from '@/components/BaseRestaurantsTable';
+import { DuplicateFranchiseesManager } from '@/components/DuplicateFranchiseesManager';
 import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
 
 const AdvisorPage = () => {
@@ -68,7 +69,7 @@ const AdvisorPage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="advisors" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Asesores
@@ -76,6 +77,10 @@ const AdvisorPage = () => {
             <TabsTrigger value="franchisees" className="flex items-center gap-2">
               <Building className="w-4 h-4" />
               Franquiciados
+            </TabsTrigger>
+            <TabsTrigger value="duplicates" className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              Duplicados
             </TabsTrigger>
             <TabsTrigger value="restaurants" className="flex items-center gap-2">
               <Store className="w-4 h-4" />
@@ -105,6 +110,17 @@ const AdvisorPage = () => {
               </CardHeader>
               <CardContent>
                 <FranchiseesManagement />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="duplicates">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gestión de Duplicados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DuplicateFranchiseesManager />
               </CardContent>
             </Card>
           </TabsContent>
