@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,8 @@ const AuthPage = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      if (user.role === 'advisor') {
+      // Redirigir usuarios con roles de asesor al panel de asesor
+      if (['advisor', 'admin', 'superadmin'].includes(user.role)) {
         navigate('/advisor');
       } else {
         navigate('/dashboard');
