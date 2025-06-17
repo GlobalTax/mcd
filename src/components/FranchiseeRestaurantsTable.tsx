@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -10,6 +9,14 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Building, MapPin, Calendar, Euro, Hash, ExternalLink } from 'lucide-react';
 import { FranchiseeRestaurant } from '@/types/franchiseeRestaurant';
 
@@ -18,9 +25,13 @@ interface FranchiseeRestaurantsTableProps {
   restaurants: FranchiseeRestaurant[];
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProps> = ({
   restaurants
 }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('es-ES');
@@ -40,6 +51,21 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
     const fullAddress = [address, city].filter(Boolean).join(', ');
     const encodedAddress = encodeURIComponent(fullAddress);
     return `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  };
+
+  // Calcular paginación
+  const totalPages = Math.ceil(restaurants.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentRestaurants = restaurants.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll suave hacia arriba de la tabla
+    document.querySelector('[data-table-container]')?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start' 
+    });
   };
 
   console.log('FranchiseeRestaurantsTable - Rendering with restaurants:', restaurants);
@@ -69,12 +95,19 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
   }
 
   return (
-    <Card>
+    <Card data-table-container>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building className="w-5 h-5" />
-          Restaurantes ({restaurants.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Building className="w-5 h-5" />
+            Restaurantes ({restaurants.length})
+          </CardTitle>
+          {totalPages > 1 && (
+            <div className="text-sm text-gray-500">
+              Mostrando {startIndex + 1}-{Math.min(endIndex, restaurants.length)} de {restaurants.length}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
@@ -90,7 +123,7 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
               </TableRow>
             </TableHeader>
             <TableBody>
-              {restaurants.map((restaurant) => {
+              {currentRestaurants.map((restaurant) => {
                 const baseRestaurant = restaurant.base_restaurant;
                 const googleMapsLink = createGoogleMapsLink(
                   baseRestaurant?.address, 
@@ -176,6 +209,41 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
             </TableBody>
           </Table>
         </div>
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex justify-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
