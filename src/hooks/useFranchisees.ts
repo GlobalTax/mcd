@@ -36,23 +36,44 @@ export const useFranchisees = () => {
 
       console.log('fetchFranchisees - Making Supabase query');
       
-      // Primero verificamos si la tabla existe y podemos hacer la consulta básica
-      const { data: testData, error: testError } = await supabase
+      // Primero verificamos cuántos franquiciados hay en total
+      const { count, error: countError } = await supabase
         .from('franchisees')
-        .select('id, franchisee_name')
-        .limit(1);
+        .select('*', { count: 'exact', head: true });
 
-      console.log('fetchFranchisees - Test query result:', { testData, testError });
+      console.log('fetchFranchisees - Total count:', count, 'Error:', countError);
 
-      if (testError) {
-        console.error('fetchFranchisees - Test query failed:', testError);
-        setError(`Error de acceso a la base de datos: ${testError.message}`);
-        toast.error(`Error de acceso a la base de datos: ${testError.message}`);
+      if (countError) {
+        console.error('fetchFranchisees - Count query failed:', countError);
+        setError(`Error contando franquiciados: ${countError.message}`);
+        toast.error(`Error contando franquiciados: ${countError.message}`);
         setLoading(false);
         return;
       }
 
-      // Ahora hacemos la consulta completa
+      // Consulta simple primero para ver si hay datos
+      console.log('fetchFranchisees - Fetching simple data');
+      const { data: simpleData, error: simpleError } = await supabase
+        .from('franchisees')
+        .select('id, franchisee_name, company_name, city, created_at')
+        .order('created_at', { ascending: false });
+
+      console.log('fetchFranchisees - Simple query result:', { 
+        count: simpleData?.length, 
+        error: simpleError,
+        sample: simpleData?.slice(0, 3)
+      });
+
+      if (simpleError) {
+        console.error('fetchFranchisees - Simple query failed:', simpleError);
+        setError(`Error en consulta simple: ${simpleError.message}`);
+        toast.error(`Error en consulta simple: ${simpleError.message}`);
+        setLoading(false);
+        return;
+      }
+
+      // Ahora hacemos la consulta completa con joins
+      console.log('fetchFranchisees - Fetching complete data with joins');
       const { data, error } = await supabase
         .from('franchisees')
         .select(`
@@ -61,12 +82,39 @@ export const useFranchisees = () => {
         `)
         .order('created_at', { ascending: false });
 
-      console.log('fetchFranchisees - Full query result:', { data, error });
+      console.log('fetchFranchisees - Full query result:', { 
+        count: data?.length, 
+        error: error,
+        totalInDB: count,
+        sample: data?.slice(0, 2)
+      });
 
       if (error) {
         console.error('Error fetching franchisees:', error);
-        setError(error.message);
+        setError(`Error en consulta completa: ${error.message}`);
         toast.error('Error al cargar los franquiciados: ' + error.message);
+        
+        // Usar datos simples como fallback
+        if (simpleData && simpleData.length > 0) {
+          console.log('fetchFranchisees - Using simple data as fallback');
+          const fallbackData = simpleData.map(item => ({
+            ...item,
+            user_id: '',
+            company_name: item.company_name || '',
+            tax_id: '',
+            address: '',
+            state: '',
+            postal_code: '',
+            country: 'España',
+            updated_at: item.created_at,
+            total_restaurants: 0,
+            profiles: null
+          })) as Franchisee[];
+          
+          setFranchisees(fallbackData);
+          toast.warning(`Usando datos básicos. Total en BD: ${count}, Mostrando: ${fallbackData.length}`);
+        }
+        setLoading(false);
         return;
       }
 
@@ -75,10 +123,10 @@ export const useFranchisees = () => {
       
       if (!data || data.length === 0) {
         console.log('fetchFranchisees - No franchisees found in database');
-        toast.info('No se encontraron franquiciados en el sistema');
+        toast.warning(`No se encontraron franquiciados. Total en BD: ${count}`);
       } else {
         console.log(`fetchFranchisees - Found ${data.length} franchisees`);
-        toast.success(`Se cargaron ${data.length} franquiciados`);
+        toast.success(`Se cargaron ${data.length} de ${count} franquiciados totales`);
       }
     } catch (err) {
       console.error('Error in fetchFranchisees:', err);
