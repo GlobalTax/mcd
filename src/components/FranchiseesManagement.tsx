@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Building, Grid, List, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import {
   Pagination,
@@ -503,7 +502,6 @@ export const FranchiseesManagement: React.FC = () => {
                   <TableHead>Empresa</TableHead>
                   <TableHead>CIF/NIF</TableHead>
                   <TableHead>Ciudad</TableHead>
-                  <TableHead>Restaurantes</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -518,11 +516,6 @@ export const FranchiseesManagement: React.FC = () => {
                     <TableCell>{franchisee.company_name || '-'}</TableCell>
                     <TableCell>{franchisee.tax_id || '-'}</TableCell>
                     <TableCell>{franchisee.city || '-'}</TableCell>
-                    <TableCell>
-                      <Badge className="bg-green-100 text-green-800">
-                        {franchisee.total_restaurants || 0}
-                      </Badge>
-                    </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Button 

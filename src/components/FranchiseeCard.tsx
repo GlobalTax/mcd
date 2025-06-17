@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Building, Mail, Phone, MapPin, Edit, Trash2, Plus, Eye } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
@@ -31,9 +30,6 @@ export const FranchiseeCard: React.FC<FranchiseeCardProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="text-lg">{franchisee.franchisee_name}</span>
-          <Badge className="bg-green-100 text-green-800">
-            {franchisee.total_restaurants || 0} Restaurantes
-          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
