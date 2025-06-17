@@ -1,27 +1,8 @@
 
 import React, { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, Table Cell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-
-interface BudgetData {
-  id: string;
-  category: string;
-  subcategory?: string;
-  isCategory: boolean;
-  jan: number;
-  feb: number;
-  mar: number;
-  apr: number;
-  may: number;
-  jun: number;
-  jul: number;
-  aug: number;
-  sep: number;
-  oct: number;
-  nov: number;
-  dec: number;
-  total: number;
-}
+import { BudgetData } from '@/types/budgetTypes';
 
 interface BudgetTableProps {
   data: BudgetData[];
