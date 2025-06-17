@@ -328,32 +328,10 @@ const DashboardPage = () => {
             </Card>
 
             {/* Step by Step Guide */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="relative overflow-hidden">
                 <div className="absolute top-4 right-4 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                   <span className="text-red-600 font-bold">1</span>
-                </div>
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                    Crear Franquiciado
-                  </h4>
-                  <p className="text-gray-600 mb-4">
-                    Configura tu información personal y de empresa como franquiciado de McDonald's.
-                  </p>
-                  <div className="text-sm text-gray-500">
-                    • Nombre y datos de contacto<br />
-                    • Información fiscal<br />
-                    • Detalles de la empresa
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="relative overflow-hidden">
-                <div className="absolute top-4 right-4 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 font-bold">2</span>
                 </div>
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
@@ -375,7 +353,7 @@ const DashboardPage = () => {
 
               <Card className="relative overflow-hidden">
                 <div className="absolute top-4 right-4 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 font-bold">3</span>
+                  <span className="text-red-600 font-bold">2</span>
                 </div>
                 <CardContent className="p-6">
                   <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
