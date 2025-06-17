@@ -29,6 +29,8 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
       setLoading(true);
       setError(null);
 
+      console.log('fetchFranchiseeDetail - Starting fetch for franchiseeId:', franchiseeId);
+
       // Obtener información del franquiciado
       const { data: franchiseeData, error: franchiseeError } = await supabase
         .from('franchisees')
@@ -50,14 +52,28 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
         return;
       }
 
+      console.log('fetchFranchiseeDetail - Franchisee data:', franchiseeData);
       setFranchisee(franchiseeData);
 
-      // Obtener restaurantes del franquiciado
+      // Obtener restaurantes del franquiciado - consulta mejorada
+      console.log('fetchFranchiseeDetail - Fetching restaurants for franchisee:', franchiseeId);
+      
       const { data: restaurantsData, error: restaurantsError } = await supabase
         .from('franchisee_restaurants')
         .select(`
           *,
-          base_restaurant:base_restaurants(*)
+          base_restaurant:base_restaurant_id(
+            id,
+            site_number,
+            restaurant_name,
+            address,
+            city,
+            state,
+            postal_code,
+            country,
+            restaurant_type,
+            opening_date
+          )
         `)
         .eq('franchisee_id', franchiseeId)
         .order('assigned_at', { ascending: false });
@@ -65,7 +81,9 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
       if (restaurantsError) {
         console.error('Error fetching restaurants:', restaurantsError);
         toast.error('Error al cargar los restaurantes');
+        setRestaurants([]);
       } else {
+        console.log('fetchFranchiseeDetail - Restaurants data:', restaurantsData);
         setRestaurants(restaurantsData || []);
       }
 
@@ -89,3 +107,4 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
     refetch: fetchFranchiseeDetail
   };
 };
+

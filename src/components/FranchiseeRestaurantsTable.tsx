@@ -34,6 +34,8 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
     }).format(amount);
   };
 
+  console.log('FranchiseeRestaurantsTable - Rendering with restaurants:', restaurants);
+
   if (restaurants.length === 0) {
     return (
       <Card>
@@ -80,67 +82,72 @@ export const FranchiseeRestaurantsTable: React.FC<FranchiseeRestaurantsTableProp
               </TableRow>
             </TableHeader>
             <TableBody>
-              {restaurants.map((restaurant) => (
-                <TableRow key={restaurant.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {restaurant.base_restaurant?.restaurant_name || 'Sin nombre'}
-                      </div>
-                      <div className="text-sm text-gray-500 flex items-center gap-1">
-                        <Hash className="w-3 h-3" />
-                        {restaurant.base_restaurant?.site_number || 'Sin número'}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-start gap-1">
-                      <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
-                      <div className="text-sm">
-                        <div>{restaurant.base_restaurant?.city || 'Sin ciudad'}</div>
-                        <div className="text-gray-500">
-                          {restaurant.base_restaurant?.address || 'Sin dirección'}
+              {restaurants.map((restaurant) => {
+                const baseRestaurant = restaurant.base_restaurant;
+                console.log('FranchiseeRestaurantsTable - Processing restaurant:', restaurant);
+                
+                return (
+                  <TableRow key={restaurant.id}>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {baseRestaurant?.restaurant_name || 'Sin nombre'}
+                        </div>
+                        <div className="text-sm text-gray-500 flex items-center gap-1">
+                          <Hash className="w-3 h-3" />
+                          {baseRestaurant?.site_number || 'Sin número'}
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-start gap-1">
+                        <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                        <div className="text-sm">
+                          <div>{baseRestaurant?.city || 'Sin ciudad'}</div>
+                          <div className="text-gray-500">
+                            {baseRestaurant?.address || 'Sin dirección'}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-green-600" />
+                          <span>Inicio: {formatDate(restaurant.franchise_start_date)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-red-600" />
+                          <span>Fin: {formatDate(restaurant.franchise_end_date)}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-green-600" />
-                        <span>Inicio: {formatDate(restaurant.franchise_start_date)}</span>
+                        <Euro className="w-4 h-4 text-blue-600" />
+                        <span>{formatCurrency(restaurant.monthly_rent)}</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-red-600" />
-                        <span>Fin: {formatDate(restaurant.franchise_end_date)}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>Año pasado: {formatCurrency(restaurant.last_year_revenue)}</div>
+                        <div className="text-gray-500">
+                          Mensual: {formatCurrency(restaurant.average_monthly_sales)}
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Euro className="w-4 h-4 text-blue-600" />
-                      <span>{formatCurrency(restaurant.monthly_rent)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>Año pasado: {formatCurrency(restaurant.last_year_revenue)}</div>
-                      <div className="text-gray-500">
-                        Mensual: {formatCurrency(restaurant.average_monthly_sales)}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={`${
-                      restaurant.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {restaurant.status === 'active' ? 'Activo' : 'Inactivo'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${
+                        restaurant.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {restaurant.status === 'active' ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>
