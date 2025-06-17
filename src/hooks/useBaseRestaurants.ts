@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +12,8 @@ export const useBaseRestaurants = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchRestaurants = async () => {
-    if (!user || user.role !== 'advisor') {
+    if (!user || !['advisor', 'admin', 'superadmin'].includes(user.role)) {
+      console.log('User role not authorized for base restaurants:', user?.role);
       setLoading(false);
       return;
     }
@@ -19,6 +21,7 @@ export const useBaseRestaurants = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching base restaurants for user:', user.id, 'with role:', user.role);
 
       const { data, error } = await supabase
         .from('base_restaurants')
@@ -31,6 +34,7 @@ export const useBaseRestaurants = () => {
         return;
       }
 
+      console.log('Fetched restaurants:', data?.length || 0, 'restaurants');
       setRestaurants(data || []);
     } catch (err) {
       console.error('Error in fetchRestaurants:', err);
@@ -109,8 +113,9 @@ export const useBaseRestaurants = () => {
   };
 
   useEffect(() => {
+    console.log('useBaseRestaurants useEffect triggered, user:', user?.id, 'role:', user?.role);
     fetchRestaurants();
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   return {
     restaurants,
