@@ -1,11 +1,9 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Building, Mail, Phone, MapPin, Calendar, Euro } from 'lucide-react';
+import { ArrowLeft, Building, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useFranchiseeDetail } from '@/hooks/useFranchiseeDetail';
 import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
@@ -102,7 +100,7 @@ const FranchiseeDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Información del Franquiciado */}
           <div className="lg:col-span-1">
-            <Card key={`card-${franchiseeId}-${restaurants.length}-${Date.now()}`}>
+            <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building className="w-5 h-5" />
@@ -151,15 +149,6 @@ const FranchiseeDetailPage = () => {
                   </div>
                 )}
 
-                <div className="pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-500">Restaurantes:</span>
-                    <Badge key={`badge-${restaurants.length}-${Date.now()}`} className="bg-green-100 text-green-800">
-                      {restaurants.length}
-                    </Badge>
-                  </div>
-                </div>
-
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-500">Fecha de registro:</span>
                   <span className="text-sm">
@@ -173,7 +162,6 @@ const FranchiseeDetailPage = () => {
           {/* Restaurantes del Franquiciado */}
           <div className="lg:col-span-2">
             <FranchiseeRestaurantsTable 
-              key={`table-${franchiseeId}-${restaurants.length}`}
               franchiseeId={franchiseeId!}
               restaurants={restaurants}
             />
