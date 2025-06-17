@@ -1,14 +1,11 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Save, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAnnualBudgets } from '@/hooks/useAnnualBudgets';
+import { BudgetTable } from './BudgetTable';
 
 interface BudgetData {
   id: string;
@@ -44,13 +41,6 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   const [rowData, setRowData] = useState<BudgetData[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const { budgets, loading, error, fetchBudgets, saveBudgets } = useAnnualBudgets();
-
-  console.log('AnnualBudgetGrid - Render with props:', { restaurantId, year });
-  console.log('AnnualBudgetGrid - Hook state:', { 
-    budgetsLength: budgets.length, 
-    loading, 
-    error 
-  });
 
   // Datos de ejemplo para cuando no hay datos en la BD
   const defaultBudgetStructure: BudgetData[] = useMemo(() => [
@@ -118,16 +108,15 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   ], []);
 
   // Función memoizada para cargar datos
-  const loadBudgetData = useCallback(() => {
+  const loadBudgetData = useCallback(async () => {
     if (restaurantId && year) {
       console.log('AnnualBudgetGrid - Loading budget data for:', { restaurantId, year });
-      fetchBudgets(restaurantId, year);
+      await fetchBudgets(restaurantId, year);
     }
   }, [restaurantId, year, fetchBudgets]);
 
   // Cargar datos cuando cambien las props
   useEffect(() => {
-    console.log('AnnualBudgetGrid - useEffect for data loading triggered');
     loadBudgetData();
   }, [loadBudgetData]);
 
@@ -165,194 +154,16 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     }
   }, [budgets, defaultBudgetStructure]);
 
-  const columnDefs: ColDef[] = useMemo(() => [
-    {
-      headerName: 'Concepto',
-      field: 'display',
-      valueGetter: (params: any) => {
-        return params.data.subcategory || params.data.category;
-      },
-      width: 250,
-      pinned: 'left',
-      cellStyle: (params: any) => {
-        if (params.data.isCategory) {
-          return { 
-            fontWeight: 'bold', 
-            backgroundColor: '#f8f9fa',
-            borderBottom: '2px solid #dee2e6'
-          };
-        }
-        return { paddingLeft: '20px' };
-      }
-    },
-    {
-      headerName: 'Ene',
-      field: 'jan',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Feb',
-      field: 'feb',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Mar',
-      field: 'mar',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Abr',
-      field: 'apr',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'May',
-      field: 'may',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Jun',
-      field: 'jun',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Jul',
-      field: 'jul',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Ago',
-      field: 'aug',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Sep',
-      field: 'sep',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Oct',
-      field: 'oct',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Nov',
-      field: 'nov',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Dec',
-      field: 'dec',
-      width: 100,
-      editable: (params: any) => !params.data.isCategory,
-      type: 'numericColumn',
-      valueFormatter: (params: any) => {
-        if (params.data.isCategory) return '';
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      }
-    },
-    {
-      headerName: 'Total',
-      field: 'total',
-      width: 120,
-      pinned: 'right',
-      valueFormatter: (params: any) => {
-        const value = params.value || 0;
-        return `€${value.toLocaleString()}`;
-      },
-      cellStyle: { 
-        fontWeight: 'bold',
-        backgroundColor: '#e8f4f8'
-      }
-    }
-  ], []);
-
-  const handleCellValueChanged = (event: any) => {
-    console.log('Celda modificada:', event);
+  const handleCellChange = (id: string, field: string, value: number) => {
+    console.log('Celda modificada:', { id, field, value });
     
     // Actualizar el total de la fila
     const updatedData = [...rowData];
-    const rowIndex = updatedData.findIndex(item => item.id === event.data.id);
+    const rowIndex = updatedData.findIndex(item => item.id === id);
     
     if (rowIndex !== -1) {
+      updatedData[rowIndex][field as keyof BudgetData] = value as any;
+      
       const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
       updatedData[rowIndex].total = months.reduce((sum, month) => 
         sum + (updatedData[rowIndex][month as keyof BudgetData] as number || 0), 0
@@ -382,8 +193,6 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   const handleExport = () => {
     toast.info('Funcionalidad de exportación próximamente');
   };
-
-  console.log('AnnualBudgetGrid - Rendering with rowData:', rowData);
 
   if (loading) {
     return (
@@ -454,45 +263,10 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
         )}
       </CardHeader>
       <CardContent>
-        <div 
-          className="ag-theme-alpine" 
-          style={{ 
-            height: '600px', 
-            width: '100%',
-            minHeight: '600px'
-          }}
-        >
-          <AgGridReact
-            columnDefs={columnDefs}
-            rowData={rowData}
-            onCellValueChanged={handleCellValueChanged}
-            defaultColDef={{
-              sortable: true,
-              filter: true,
-              resizable: true,
-              cellClass: 'cell-wrap-text',
-              autoHeight: true
-            }}
-            suppressRowClickSelection={true}
-            rowSelection="multiple"
-            animateRows={true}
-            enableCellTextSelection={true}
-            undoRedoCellEditing={true}
-            undoRedoCellEditingLimit={20}
-            stopEditingWhenCellsLoseFocus={true}
-            domLayout="normal"
-            suppressHorizontalScroll={false}
-            suppressColumnVirtualisation={true}
-            onGridReady={(params) => {
-              console.log('AG Grid ready:', params);
-              params.api.sizeColumnsToFit();
-            }}
-            onFirstDataRendered={(params) => {
-              console.log('First data rendered:', params);
-              params.api.sizeColumnsToFit();
-            }}
-          />
-        </div>
+        <BudgetTable 
+          data={rowData} 
+          onCellChange={handleCellChange}
+        />
       </CardContent>
     </Card>
   );
