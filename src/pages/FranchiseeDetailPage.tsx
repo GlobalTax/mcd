@@ -20,7 +20,8 @@ const FranchiseeDetailPage = () => {
     franchiseeId, 
     franchisee: franchisee?.franchisee_name,
     restaurantsCount: restaurants.length,
-    loading 
+    loading,
+    restaurants: restaurants.map(r => ({ id: r.id, name: r.base_restaurant?.restaurant_name }))
   });
 
   if (authLoading) {
@@ -101,7 +102,7 @@ const FranchiseeDetailPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Información del Franquiciado */}
           <div className="lg:col-span-1">
-            <Card key={`franchisee-card-${franchiseeId}-${restaurants.length}`}>
+            <Card key={`card-${franchiseeId}-${restaurants.length}-${Date.now()}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building className="w-5 h-5" />
@@ -153,7 +154,7 @@ const FranchiseeDetailPage = () => {
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-500">Restaurantes:</span>
-                    <Badge className="bg-green-100 text-green-800">
+                    <Badge key={`badge-${restaurants.length}-${Date.now()}`} className="bg-green-100 text-green-800">
                       {restaurants.length}
                     </Badge>
                   </div>
@@ -172,6 +173,7 @@ const FranchiseeDetailPage = () => {
           {/* Restaurantes del Franquiciado */}
           <div className="lg:col-span-2">
             <FranchiseeRestaurantsTable 
+              key={`table-${franchiseeId}-${restaurants.length}`}
               franchiseeId={franchiseeId!}
               restaurants={restaurants}
             />
