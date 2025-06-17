@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
+import { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Save, Download, Plus } from 'lucide-react';
+import { Save, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAnnualBudgets } from '@/hooks/useAnnualBudgets';
 
 interface BudgetData {
   id: string;
@@ -40,8 +42,8 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   onSave
 }) => {
   const [rowData, setRowData] = useState<BudgetData[]>([]);
-  const [loading, setLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const { budgets, loading, fetchBudgets, saveBudgets } = useAnnualBudgets();
 
   // Datos de ejemplo para la estructura del presupuesto
   const defaultBudgetStructure: BudgetData[] = [
@@ -113,20 +115,40 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   }, [restaurantId, year]);
 
   const loadBudgetData = async () => {
-    setLoading(true);
-    try {
-      // Aquí cargaríamos los datos reales desde la API
-      // Por ahora usamos datos de ejemplo
+    if (!restaurantId) return;
+    
+    await fetchBudgets(restaurantId, year);
+    
+    if (budgets.length > 0) {
+      // Convertir datos de la BD al formato del grid
+      const gridData = budgets.map(budget => ({
+        id: budget.id,
+        category: budget.category,
+        subcategory: budget.subcategory || '',
+        isCategory: false,
+        jan: budget.jan,
+        feb: budget.feb,
+        mar: budget.mar,
+        apr: budget.apr,
+        may: budget.may,
+        jun: budget.jun,
+        jul: budget.jul,
+        aug: budget.aug,
+        sep: budget.sep,
+        oct: budget.oct,
+        nov: budget.nov,
+        dec: budget.dec,
+        total: budget.jan + budget.feb + budget.mar + budget.apr + budget.may + budget.jun +
+               budget.jul + budget.aug + budget.sep + budget.oct + budget.nov + budget.dec
+      }));
+      setRowData(gridData);
+    } else {
+      // Usar datos por defecto si no hay datos en la BD
       setRowData(defaultBudgetStructure);
-    } catch (error) {
-      console.error('Error loading budget data:', error);
-      toast.error('Error al cargar los datos del presupuesto');
-    } finally {
-      setLoading(false);
     }
   };
 
-  const columnDefs = useMemo(() => [
+  const columnDefs: ColDef[] = useMemo(() => [
     {
       headerName: 'Concepto',
       field: 'subcategory',
@@ -148,7 +170,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       headerName: 'Ene',
       field: 'jan',
       width: 100,
-      editable: (params: any) => !params.data.isCategory,
+      editable: (params: any) =>  !params.data.isCategory,
       type: 'numericColumn',
       valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
     },
@@ -289,18 +311,16 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   };
 
   const handleSave = async () => {
-    if (!onSave || !hasChanges) return;
+    if (!hasChanges) return;
     
-    setLoading(true);
     try {
-      await onSave(rowData);
-      setHasChanges(false);
-      toast.success('Presupuesto guardado correctamente');
+      const success = await saveBudgets(restaurantId, year, rowData);
+      if (success) {
+        setHasChanges(false);
+      }
     } catch (error) {
       console.error('Error saving budget:', error);
       toast.error('Error al guardar el presupuesto');
-    } finally {
-      setLoading(false);
     }
   };
 

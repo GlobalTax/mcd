@@ -9,6 +9,90 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      annual_budgets: {
+        Row: {
+          apr: number | null
+          aug: number | null
+          category: string
+          created_at: string
+          created_by: string | null
+          dec: number | null
+          feb: number | null
+          id: string
+          jan: number | null
+          jul: number | null
+          jun: number | null
+          mar: number | null
+          may: number | null
+          nov: number | null
+          oct: number | null
+          restaurant_id: string
+          sep: number | null
+          subcategory: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          apr?: number | null
+          aug?: number | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          dec?: number | null
+          feb?: number | null
+          id?: string
+          jan?: number | null
+          jul?: number | null
+          jun?: number | null
+          mar?: number | null
+          may?: number | null
+          nov?: number | null
+          oct?: number | null
+          restaurant_id: string
+          sep?: number | null
+          subcategory?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          apr?: number | null
+          aug?: number | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          dec?: number | null
+          feb?: number | null
+          id?: string
+          jan?: number | null
+          jul?: number | null
+          jun?: number | null
+          mar?: number | null
+          may?: number | null
+          nov?: number | null
+          oct?: number | null
+          restaurant_id?: string
+          sep?: number | null
+          subcategory?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "annual_budgets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "annual_budgets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "franchisee_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       base_restaurants: {
         Row: {
           address: string

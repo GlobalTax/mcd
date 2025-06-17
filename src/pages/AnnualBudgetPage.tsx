@@ -17,13 +17,6 @@ export default function AnnualBudgetPage() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
-  const handleSaveBudget = async (data: any[]) => {
-    console.log('Guardando presupuesto:', data);
-    // Aquí implementaríamos la lógica para guardar en Supabase
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  };
-
   if (restaurantsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -125,7 +118,6 @@ export default function AnnualBudgetPage() {
           <AnnualBudgetGrid
             restaurantId={selectedRestaurant}
             year={selectedYear}
-            onSave={handleSaveBudget}
           />
         ) : (
           <Card>
