@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +23,7 @@ export const FranchiseesManagement: React.FC = () => {
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
 
   const [formData, setFormData] = useState({
     franchisee_name: '',
@@ -234,120 +234,140 @@ export const FranchiseesManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestión de Franquiciados</h2>
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-red-600 hover:bg-red-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Crear Franquiciado
+        <div className="flex items-center space-x-4">
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="rounded-r-none"
+            >
+              <Grid className="w-4 h-4" />
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Crear Nuevo Franquiciado</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="franchisee_name">Nombre del Franquiciado</Label>
-                  <Input
-                    id="franchisee_name"
-                    value={formData.franchisee_name}
-                    onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company_name">Nombre de la Empresa</Label>
-                  <Input
-                    id="company_name"
-                    value={formData.company_name}
-                    onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="tax_id">CIF/NIF</Label>
-                  <Input
-                    id="tax_id"
-                    value={formData.tax_id}
-                    onChange={(e) => setFormData({...formData, tax_id: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                    minLength={6}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Dirección</Label>
+            <Button
+              variant={viewMode === 'table' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              className="rounded-l-none"
+            >
+              <List className="w-4 h-4" />
+            </Button>
+          </div>
+          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-red-600 hover:bg-red-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Franquiciado
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Crear Nuevo Franquiciado</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleCreate} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
+                  <div>
+                    <Label htmlFor="franchisee_name">Nombre del Franquiciado</Label>
                     <Input
-                      placeholder="Dirección"
-                      value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      id="franchisee_name"
+                      value={formData.franchisee_name}
+                      onChange={(e) => setFormData({...formData, franchisee_name: e.target.value})}
+                      required
                     />
                   </div>
                   <div>
+                    <Label htmlFor="company_name">Nombre de la Empresa</Label>
                     <Input
-                      placeholder="Ciudad"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      id="company_name"
+                      value={formData.company_name}
+                      onChange={(e) => setFormData({...formData, company_name: e.target.value})}
                     />
                   </div>
                   <div>
+                    <Label htmlFor="tax_id">CIF/NIF</Label>
                     <Input
-                      placeholder="Provincia"
-                      value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
+                      id="tax_id"
+                      value={formData.tax_id}
+                      onChange={(e) => setFormData({...formData, tax_id: e.target.value})}
                     />
                   </div>
                   <div>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      placeholder="Código Postal"
-                      value={formData.postal_code}
-                      onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Teléfono</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      minLength={6}
+                      required
                     />
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={creating} className="bg-red-600 hover:bg-red-700">
-                  {creating ? 'Creando...' : 'Crear Franquiciado'}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                
+                <div className="space-y-2">
+                  <Label>Dirección</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                      <Input
+                        placeholder="Dirección"
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Ciudad"
+                        value={formData.city}
+                        onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Provincia"
+                        value={formData.state}
+                        onChange={(e) => setFormData({...formData, state: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        placeholder="Código Postal"
+                        value={formData.postal_code}
+                        onChange={(e) => setFormData({...formData, postal_code: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={creating} className="bg-red-600 hover:bg-red-700">
+                    {creating ? 'Creando...' : 'Crear Franquiciado'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="mb-6">
@@ -362,17 +382,63 @@ export const FranchiseesManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredFranchisees.map((franchisee) => (
-          <FranchiseeCard
-            key={franchisee.id}
-            franchisee={franchisee}
-            onEdit={openEditModal}
-            onDelete={handleDelete}
-            onAssignRestaurant={openAssignModal}
-          />
-        ))}
-      </div>
+      {viewMode === 'cards' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFranchisees.map((franchisee) => (
+            <FranchiseeCard
+              key={franchisee.id}
+              franchisee={franchisee}
+              onEdit={openEditModal}
+              onDelete={handleDelete}
+              onAssignRestaurant={openAssignModal}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>CIF/NIF</TableHead>
+                <TableHead>Ciudad</TableHead>
+                <TableHead>Restaurantes</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredFranchisees.map((franchisee) => (
+                <TableRow key={franchisee.id}>
+                  <TableCell className="font-medium">{franchisee.franchisee_name}</TableCell>
+                  <TableCell>{franchisee.company_name || '-'}</TableCell>
+                  <TableCell>{franchisee.tax_id || '-'}</TableCell>
+                  <TableCell>{franchisee.city || '-'}</TableCell>
+                  <TableCell>
+                    <Badge className="bg-green-100 text-green-800">
+                      {franchisee.total_restaurants || 0}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" onClick={() => openAssignModal(franchisee)}>
+                        <Plus className="w-3 h-3 mr-1" />
+                        Asignar
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openEditModal(franchisee)}>
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDelete(franchisee)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       {filteredFranchisees.length === 0 && !loading && (
         <div className="text-center py-12">
