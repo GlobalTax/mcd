@@ -7,6 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List, Eye } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +23,12 @@ import { FranchiseeCard } from './FranchiseeCard';
 import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
 import { useNavigate } from 'react-router-dom';
 
+const ITEMS_PER_PAGE = 10;
+
 export const FranchiseesManagement: React.FC = () => {
   const { franchisees, loading, error, refetch: onRefresh } = useFranchisees();
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
@@ -47,6 +58,23 @@ export const FranchiseesManagement: React.FC = () => {
     (franchisee.company_name && franchisee.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (franchisee.city && franchisee.city.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Cálculos de paginación
+  const totalPages = Math.ceil(filteredFranchisees.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentFranchisees = filteredFranchisees.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll suave hacia arriba
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset page cuando cambia el término de búsqueda
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const resetForm = () => {
     setFormData({
@@ -388,9 +416,49 @@ export const FranchiseesManagement: React.FC = () => {
         </div>
       </div>
 
+      {/* Contador de resultados y paginación para vista de tarjetas */}
+      {viewMode === 'cards' && filteredFranchisees.length > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            Mostrando {startIndex + 1}-{Math.min(endIndex, filteredFranchisees.length)} de {filteredFranchisees.length} franquiciados
+          </div>
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
+
       {viewMode === 'cards' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFranchisees.map((franchisee) => (
+          {currentFranchisees.map((franchisee) => (
             <FranchiseeCard
               key={franchisee.id}
               franchisee={franchisee}
@@ -401,83 +469,129 @@ export const FranchiseesManagement: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Empresa</TableHead>
-                <TableHead>CIF/NIF</TableHead>
-                <TableHead>Ciudad</TableHead>
-                <TableHead>Restaurantes</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredFranchisees.map((franchisee) => (
-                <TableRow 
-                  key={franchisee.id} 
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleViewDetails(franchisee)}
-                >
-                  <TableCell className="font-medium">{franchisee.franchisee_name}</TableCell>
-                  <TableCell>{franchisee.company_name || '-'}</TableCell>
-                  <TableCell>{franchisee.tax_id || '-'}</TableCell>
-                  <TableCell>{franchisee.city || '-'}</TableCell>
-                  <TableCell>
-                    <Badge className="bg-green-100 text-green-800">
-                      {franchisee.total_restaurants || 0}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openAssignModal(franchisee);
-                        }}
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        Asignar
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(franchisee);
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditModal(franchisee);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(franchisee);
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <div className="space-y-4">
+          {/* Contador para vista de tabla */}
+          {filteredFranchisees.length > 0 && (
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                Mostrando {startIndex + 1}-{Math.min(endIndex, filteredFranchisees.length)} de {filteredFranchisees.length} franquiciados
+              </div>
+            </div>
+          )}
+          
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Empresa</TableHead>
+                  <TableHead>CIF/NIF</TableHead>
+                  <TableHead>Ciudad</TableHead>
+                  <TableHead>Restaurantes</TableHead>
+                  <TableHead>Acciones</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {currentFranchisees.map((franchisee) => (
+                  <TableRow 
+                    key={franchisee.id} 
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleViewDetails(franchisee)}
+                  >
+                    <TableCell className="font-medium">{franchisee.franchisee_name}</TableCell>
+                    <TableCell>{franchisee.company_name || '-'}</TableCell>
+                    <TableCell>{franchisee.tax_id || '-'}</TableCell>
+                    <TableCell>{franchisee.city || '-'}</TableCell>
+                    <TableCell>
+                      <Badge className="bg-green-100 text-green-800">
+                        {franchisee.total_restaurants || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAssignModal(franchisee);
+                          }}
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Asignar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(franchisee);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(franchisee);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="destructive" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(franchisee);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Paginación para vista de tabla */}
+          {totalPages > 1 && (
+            <div className="flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(page)}
+                        isActive={currentPage === page}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                      className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </div>
       )}
 
