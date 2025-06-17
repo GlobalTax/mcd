@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search, Loader2, Grid, List, Eye, AlertCircle, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Grid, List, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import {
   Pagination,
   PaginationContent,
@@ -23,6 +23,8 @@ import { toast } from 'sonner';
 import { FranchiseeCard } from './FranchiseeCard';
 import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
 import { useNavigate } from 'react-router-dom';
+import { FranchiseeFiltersComponent } from './FranchiseeFilters';
+import { useFranchiseeFilters } from '@/hooks/useFranchiseeFilters';
 
 const ITEMS_PER_PAGE = 40;
 
@@ -36,8 +38,10 @@ export const FranchiseesManagement: React.FC = () => {
   const [selectedFranchisee, setSelectedFranchisee] = useState<Franchisee | null>(null);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+
+  // Usar el hook de filtros
+  const { filters, setFilters, filteredFranchisees, clearFilters } = useFranchiseeFilters(franchisees);
 
   const [formData, setFormData] = useState({
     franchisee_name: '',
@@ -54,13 +58,7 @@ export const FranchiseesManagement: React.FC = () => {
 
   console.log('FranchiseesManagement render - loading:', loading, 'error:', error, 'franchisees:', franchisees);
 
-  const filteredFranchisees = franchisees.filter(franchisee =>
-    franchisee.franchisee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (franchisee.company_name && franchisee.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (franchisee.city && franchisee.city.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Cálculos de paginación
+  // Cálculos de paginación con franquiciados filtrados
   const totalPages = Math.ceil(filteredFranchisees.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -68,14 +66,13 @@ export const FranchiseesManagement: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll suave hacia arriba
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Reset page cuando cambia el término de búsqueda
+  // Reset page cuando cambian los filtros
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [filters]);
 
   const resetForm = () => {
     setFormData({
@@ -249,7 +246,7 @@ export const FranchiseesManagement: React.FC = () => {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600" />
           <span className="text-lg">Cargando franquiciados...</span>
           <p className="text-sm text-gray-500">Verificando conexión con la base de datos</p>
         </div>
@@ -288,7 +285,7 @@ export const FranchiseesManagement: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold">Gestión de Franquiciados</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Total encontrados: {franchisees.length} franquiciados
+            Mostrando {filteredFranchisees.length} de {franchisees.length} franquiciados
           </p>
         </div>
         <div className="flex items-center space-x-4">
@@ -427,17 +424,13 @@ export const FranchiseesManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Buscar franquiciados por nombre, empresa o ciudad..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
+      {/* Sistema de filtros */}
+      <FranchiseeFiltersComponent
+        franchisees={franchisees}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onClearFilters={clearFilters}
+      />
 
       {/* Contador de resultados y paginación para vista de tarjetas */}
       {viewMode === 'cards' && filteredFranchisees.length > 0 && (
@@ -622,25 +615,20 @@ export const FranchiseesManagement: React.FC = () => {
         <div className="text-center py-12">
           <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {searchTerm ? 'No se encontraron franquiciados' : 'No hay franquiciados'}
+            No se encontraron franquiciados
           </h3>
           <p className="text-gray-500 mb-4">
-            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Parece que no hay franquiciados en la base de datos'}
+            Intenta ajustar los filtros para encontrar lo que buscas
           </p>
           <div className="flex justify-center space-x-2">
+            <Button onClick={clearFilters} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Limpiar filtros
+            </Button>
             <Button onClick={onRefresh} variant="outline" className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
               Recargar datos
             </Button>
-            {!searchTerm && (
-              <Button 
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Crear primer franquiciado
-              </Button>
-            )}
           </div>
         </div>
       )}
