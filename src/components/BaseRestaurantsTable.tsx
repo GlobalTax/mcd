@@ -246,46 +246,64 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Número</TableHead>
-            <TableHead>Nombre</TableHead>
-            <TableHead>Dirección</TableHead>
-            <TableHead>Ciudad</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>m²</TableHead>
-            <TableHead>Asientos</TableHead>
-            <TableHead>Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {restaurants.map((restaurant) => (
-            <TableRow key={restaurant.id}>
-              <TableCell className="font-medium">{restaurant.site_number}</TableCell>
-              <TableCell>{restaurant.restaurant_name}</TableCell>
-              <TableCell>{restaurant.address}</TableCell>
-              <TableCell>{restaurant.city}</TableCell>
-              <TableCell>{restaurant.restaurant_type}</TableCell>
-              <TableCell>{restaurant.square_meters}</TableCell>
-              <TableCell>{restaurant.seating_capacity}</TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline" onClick={() => openEditModal(restaurant)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => openAssignModal(restaurant)}>
-                    <Users className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => handleDelete(restaurant)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Site</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Dirección</TableHead>
+              <TableHead>Ciudad</TableHead>
+              <TableHead>Provincia</TableHead>
+              <TableHead>C.P.</TableHead>
+              <TableHead>País</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>m²</TableHead>
+              <TableHead>Asientos</TableHead>
+              <TableHead>Creado</TableHead>
+              <TableHead>Acciones</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {restaurants.map((restaurant) => (
+              <TableRow key={restaurant.id}>
+                <TableCell className="font-medium">{restaurant.site_number}</TableCell>
+                <TableCell>{restaurant.restaurant_name}</TableCell>
+                <TableCell className="max-w-xs truncate" title={restaurant.address}>
+                  {restaurant.address}
+                </TableCell>
+                <TableCell>{restaurant.city}</TableCell>
+                <TableCell>{restaurant.state || '-'}</TableCell>
+                <TableCell>{restaurant.postal_code || '-'}</TableCell>
+                <TableCell>{restaurant.country}</TableCell>
+                <TableCell>
+                  <span className="capitalize">
+                    {restaurant.restaurant_type.replace('_', ' ')}
+                  </span>
+                </TableCell>
+                <TableCell>{restaurant.square_meters || '-'}</TableCell>
+                <TableCell>{restaurant.seating_capacity || '-'}</TableCell>
+                <TableCell>
+                  {new Date(restaurant.created_at).toLocaleDateString('es-ES')}
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-2">
+                    <Button size="sm" variant="outline" onClick={() => openEditModal(restaurant)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => openAssignModal(restaurant)}>
+                      <Users className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => handleDelete(restaurant)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* Modal de Edición */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
