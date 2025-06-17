@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 
@@ -28,7 +28,14 @@ interface BudgetTableProps {
   onCellChange: (id: string, field: string, value: number) => void;
 }
 
+interface EditingCell {
+  rowId: string;
+  field: string;
+}
+
 export const BudgetTable: React.FC<BudgetTableProps> = ({ data, onCellChange }) => {
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
+
   const months = [
     { key: 'jan', label: 'Ene' },
     { key: 'feb', label: 'Feb' },
@@ -44,13 +51,38 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, onCellChange }) 
     { key: 'dec', label: 'Dic' }
   ];
 
-  const handleInputChange = (id: string, field: string, value: string) => {
+  const handleCellClick = (rowId: string, field: string, isCategory: boolean) => {
+    if (isCategory) return; // No permitir edición en filas de categoría
+    setEditingCell({ rowId, field });
+  };
+
+  const handleInputChange = (value: string) => {
     const numValue = parseFloat(value) || 0;
-    onCellChange(id, field, numValue);
+    if (editingCell) {
+      onCellChange(editingCell.rowId, editingCell.field, numValue);
+    }
+  };
+
+  const handleInputBlur = () => {
+    setEditingCell(null);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      setEditingCell(null);
+    }
   };
 
   const formatCurrency = (value: number) => {
     return `€${value.toLocaleString()}`;
+  };
+
+  const getCellValue = (row: BudgetData, field: string): number => {
+    return row[field as keyof BudgetData] as number;
+  };
+
+  const isEditing = (rowId: string, field: string): boolean => {
+    return editingCell?.rowId === rowId && editingCell?.field === field;
   };
 
   return (
@@ -76,17 +108,28 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, onCellChange }) 
                 </div>
               </TableCell>
               {months.map(month => (
-                <TableCell key={month.key} className="text-center">
+                <TableCell 
+                  key={month.key} 
+                  className={`text-center ${!row.isCategory ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                  onClick={() => handleCellClick(row.id, month.key, row.isCategory)}
+                >
                   {row.isCategory ? (
                     <span className="text-gray-400">-</span>
-                  ) : (
+                  ) : isEditing(row.id, month.key) ? (
                     <Input
                       type="number"
-                      value={row[month.key as keyof BudgetData] as number}
-                      onChange={(e) => handleInputChange(row.id, month.key, e.target.value)}
-                      className="w-full text-center border-0 focus:border focus:border-blue-300 bg-transparent"
+                      defaultValue={getCellValue(row, month.key)}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      onBlur={handleInputBlur}
+                      onKeyPress={handleKeyPress}
+                      className="w-full text-center border-blue-300 focus:border-blue-500"
+                      autoFocus
                       step="100"
                     />
+                  ) : (
+                    <span className="block w-full py-2 px-1 rounded hover:bg-blue-50">
+                      {formatCurrency(getCellValue(row, month.key))}
+                    </span>
                   )}
                 </TableCell>
               ))}
