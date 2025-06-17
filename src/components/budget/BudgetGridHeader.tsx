@@ -1,25 +1,39 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Save, Download } from 'lucide-react';
-import { toast } from 'sonner';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Save, Download, BarChart3, ChevronDown } from 'lucide-react';
+import { useBudgetExport } from '@/hooks/useBudgetExport';
+import { BudgetData } from '@/types/budgetTypes';
 
 interface BudgetGridHeaderProps {
   year: number;
   hasChanges: boolean;
   loading: boolean;
+  budgetData: BudgetData[];
+  restaurantName?: string;
   onSave: () => void;
+  onShowComparison: () => void;
 }
 
 export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
   year,
   hasChanges,
   loading,
-  onSave
+  budgetData,
+  restaurantName,
+  onSave,
+  onShowComparison
 }) => {
-  const handleExport = () => {
-    toast.info('Funcionalidad de exportación próximamente');
+  const { exportToCSV, exportToExcel } = useBudgetExport();
+
+  const handleExportCSV = () => {
+    exportToCSV(budgetData, year, restaurantName);
+  };
+
+  const handleExportExcel = () => {
+    exportToExcel(budgetData, year, restaurantName);
   };
 
   return (
@@ -34,11 +48,33 @@ export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleExport}
+          onClick={onShowComparison}
+          className="flex items-center gap-2"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Exportar
+          <BarChart3 className="w-4 h-4" />
+          Comparativo
         </Button>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Exportar
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={handleExportCSV}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportExcel}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar Excel
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button 
           size="sm" 
           onClick={onSave}
