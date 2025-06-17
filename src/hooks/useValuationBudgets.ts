@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ValuationBudget, ValuationBudgetFormData, ProjectedYear } from '@/types/budget';
+import { ValuationBudget, ValuationBudgetFormData, ValuationBudgetUpdateData, ProjectedYear } from '@/types/budget';
 import { toast } from 'sonner';
 
 export const useValuationBudgets = () => {
@@ -49,15 +49,25 @@ export const useValuationBudgets = () => {
         return;
       }
 
-      console.log('fetchBudgets - Setting budgets data:', budgetsData);
-      setBudgets(budgetsData || []);
+      console.log('fetchBudgets - Raw data from Supabase:', budgetsData);
       
-      if (!budgetsData || budgetsData.length === 0) {
+      // Transformar los datos para manejar el tipo Json de projected_cash_flows
+      const transformedBudgets = (budgetsData || []).map(budget => ({
+        ...budget,
+        projected_cash_flows: Array.isArray(budget.projected_cash_flows) 
+          ? budget.projected_cash_flows 
+          : budget.projected_cash_flows ? JSON.parse(budget.projected_cash_flows as string) : []
+      })) as ValuationBudget[];
+
+      console.log('fetchBudgets - Setting budgets data:', transformedBudgets);
+      setBudgets(transformedBudgets);
+      
+      if (!transformedBudgets || transformedBudgets.length === 0) {
         console.log('fetchBudgets - No budgets found in database');
         toast.info('No se encontraron presupuestos de valoración');
       } else {
-        console.log(`fetchBudgets - Found ${budgetsData.length} budgets`);
-        toast.success(`Se cargaron ${budgetsData.length} presupuestos`);
+        console.log(`fetchBudgets - Found ${transformedBudgets.length} budgets`);
+        toast.success(`Se cargaron ${transformedBudgets.length} presupuestos`);
       }
     } catch (err) {
       console.error('Error in fetchBudgets:', err);
@@ -103,7 +113,7 @@ export const useValuationBudgets = () => {
     }
   };
 
-  const updateBudget = async (id: string, budgetData: Partial<ValuationBudgetFormData>): Promise<boolean> => {
+  const updateBudget = async (id: string, budgetData: ValuationBudgetUpdateData): Promise<boolean> => {
     try {
       console.log('Updating budget with id:', id, 'data:', budgetData);
 
@@ -201,7 +211,7 @@ export const useValuationBudgets = () => {
     return projections;
   };
 
-  const shouldRecalculate = (data: Partial<ValuationBudgetFormData>): boolean => {
+  const shouldRecalculate = (data: ValuationBudgetUpdateData): boolean => {
     const financialFields = [
       'initial_sales', 'sales_growth_rate', 'inflation_rate', 'discount_rate',
       'years_projection', 'pac_percentage', 'rent_percentage', 'service_fees_percentage',
