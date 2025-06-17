@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,7 +50,13 @@ const UserManagement = () => {
         return;
       }
 
-      setUsers(data || []);
+      // Cast the role to the correct type
+      const typedUsers = (data || []).map(userData => ({
+        ...userData,
+        role: userData.role as 'admin' | 'franchisee' | 'manager'
+      }));
+
+      setUsers(typedUsers);
     } catch (error) {
       console.error('Error in fetchUsers:', error);
       toast.error('Error al cargar usuarios');
