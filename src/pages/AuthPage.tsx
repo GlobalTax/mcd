@@ -23,12 +23,19 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('AuthPage - User state:', user);
+    console.log('AuthPage - Loading state:', loading);
+    
     if (user && !loading) {
+      console.log('AuthPage - User role:', user.role);
+      
       // Redirigir usuarios con roles de asesor al panel de asesor
       if (['advisor', 'admin', 'superadmin'].includes(user.role)) {
-        navigate('/advisor');
+        console.log('AuthPage - Redirecting to advisor panel');
+        navigate('/advisor', { replace: true });
       } else {
-        navigate('/dashboard');
+        console.log('AuthPage - Redirecting to dashboard');
+        navigate('/dashboard', { replace: true });
       }
     }
   }, [user, loading, navigate]);
