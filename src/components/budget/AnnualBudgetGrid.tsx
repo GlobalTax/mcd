@@ -127,6 +127,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   // Cargar datos cuando cambien las props
   useEffect(() => {
+    console.log('AnnualBudgetGrid - useEffect for data loading triggered');
     loadBudgetData();
   }, [loadBudgetData]);
 
@@ -158,18 +159,19 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       }));
       console.log('AnnualBudgetGrid - Setting grid data from DB:', gridData);
       setRowData(gridData);
-    } else if (!loading) {
-      // Solo usar datos por defecto si no está cargando y no hay datos
+    } else {
       console.log('AnnualBudgetGrid - No data from DB, using default structure');
       setRowData(defaultBudgetStructure);
     }
-  }, [budgets, loading, defaultBudgetStructure]);
+  }, [budgets, defaultBudgetStructure]);
 
   const columnDefs: ColDef[] = useMemo(() => [
     {
       headerName: 'Concepto',
-      field: 'subcategory',
-      valueGetter: (params: any) => params.data.subcategory || params.data.category,
+      field: 'display',
+      valueGetter: (params: any) => {
+        return params.data.subcategory || params.data.category;
+      },
       width: 250,
       pinned: 'left',
       cellStyle: (params: any) => {
@@ -187,9 +189,13 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       headerName: 'Ene',
       field: 'jan',
       width: 100,
-      editable: (params: any) =>  !params.data.isCategory,
+      editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Feb',
@@ -197,7 +203,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Mar',
@@ -205,7 +215,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Abr',
@@ -213,7 +227,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'May',
@@ -221,7 +239,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Jun',
@@ -229,7 +251,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Jul',
@@ -237,7 +263,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Ago',
@@ -245,7 +275,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Sep',
@@ -253,7 +287,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Oct',
@@ -261,7 +299,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Nov',
@@ -269,7 +311,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Dec',
@@ -277,35 +323,27 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       width: 100,
       editable: (params: any) => !params.data.isCategory,
       type: 'numericColumn',
-      valueFormatter: (params: any) => params.data.isCategory ? '' : `€${params.value?.toLocaleString() || 0}`
+      valueFormatter: (params: any) => {
+        if (params.data.isCategory) return '';
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      }
     },
     {
       headerName: 'Total',
       field: 'total',
       width: 120,
       pinned: 'right',
-      valueGetter: calculateRowTotal,
-      valueFormatter: (params: any) => `€${params.value?.toLocaleString() || 0}`,
+      valueFormatter: (params: any) => {
+        const value = params.value || 0;
+        return `€${value.toLocaleString()}`;
+      },
       cellStyle: { 
         fontWeight: 'bold',
         backgroundColor: '#e8f4f8'
       }
     }
   ], []);
-
-  function calculateRowTotal(params: any) {
-    if (params.data.isCategory) {
-      // Para categorías, sumar todos los subcategorías
-      const categoryItems = rowData.filter(item => 
-        item.category === params.data.category && !item.isCategory
-      );
-      return categoryItems.reduce((sum, item) => sum + item.total, 0);
-    }
-    
-    // Para elementos individuales, sumar todos los meses
-    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-    return months.reduce((sum, month) => sum + (params.data[month] || 0), 0);
-  }
 
   const handleCellValueChanged = (event: any) => {
     console.log('Celda modificada:', event);
@@ -342,11 +380,10 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   };
 
   const handleExport = () => {
-    // Implementar exportación a Excel/CSV
     toast.info('Funcionalidad de exportación próximamente');
   };
 
-  console.log('AnnualBudgetGrid - Rendering with rowData length:', rowData.length);
+  console.log('AnnualBudgetGrid - Rendering with rowData:', rowData);
 
   if (loading) {
     return (
@@ -419,7 +456,11 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
       <CardContent>
         <div 
           className="ag-theme-alpine" 
-          style={{ height: 600, width: '100%' }}
+          style={{ 
+            height: '600px', 
+            width: '100%',
+            minHeight: '600px'
+          }}
         >
           <AgGridReact
             columnDefs={columnDefs}
@@ -428,7 +469,9 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
             defaultColDef={{
               sortable: true,
               filter: true,
-              resizable: true
+              resizable: true,
+              cellClass: 'cell-wrap-text',
+              autoHeight: true
             }}
             suppressRowClickSelection={true}
             rowSelection="multiple"
@@ -437,6 +480,17 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
             undoRedoCellEditing={true}
             undoRedoCellEditingLimit={20}
             stopEditingWhenCellsLoseFocus={true}
+            domLayout="normal"
+            suppressHorizontalScroll={false}
+            suppressColumnVirtualisation={true}
+            onGridReady={(params) => {
+              console.log('AG Grid ready:', params);
+              params.api.sizeColumnsToFit();
+            }}
+            onFirstDataRendered={(params) => {
+              console.log('First data rendered:', params);
+              params.api.sizeColumnsToFit();
+            }}
           />
         </div>
       </CardContent>
