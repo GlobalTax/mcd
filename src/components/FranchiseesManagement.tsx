@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -7,11 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, Building, Mail, Phone, MapPin, Search } from 'lucide-react';
 import { Franchisee } from '@/types/auth';
 import { useFranchisees } from '@/hooks/useFranchisees';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { FranchiseeCard } from './FranchiseeCard';
+import { RestaurantAssignmentDialog } from './RestaurantAssignmentDialog';
 
 interface FranchiseesManagementProps {
   franchisees: Franchisee[];
@@ -21,9 +22,11 @@ interface FranchiseesManagementProps {
 export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ franchisees, onRefresh }) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedFranchisee, setSelectedFranchisee] = useState<Franchisee | null>(null);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
     franchisee_name: '',
@@ -37,6 +40,12 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
     phone: '',
     password: ''
   });
+
+  const filteredFranchisees = franchisees.filter(franchisee =>
+    franchisee.franchisee_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (franchisee.company_name && franchisee.company_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (franchisee.city && franchisee.city.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const resetForm = () => {
     setFormData({
@@ -58,7 +67,6 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
     setCreating(true);
 
     try {
-      // Crear el usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: formData.email,
         password: formData.password,
@@ -74,7 +82,6 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
       }
 
       if (authData.user) {
-        // Actualizar el perfil con el rol
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
@@ -88,7 +95,6 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
           console.error('Error updating profile:', profileError);
         }
 
-        // Crear el registro de franquiciado
         const { error: franchiseeError } = await supabase
           .from('franchisees')
           .insert({
@@ -198,6 +204,11 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
       password: ''
     });
     setIsEditModalOpen(true);
+  };
+
+  const openAssignModal = (franchisee: Franchisee) => {
+    setSelectedFranchisee(franchisee);
+    setIsAssignModalOpen(true);
   };
 
   return (
@@ -320,44 +331,41 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
         </Dialog>
       </div>
 
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Buscar franquiciados por nombre, empresa o ciudad..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {franchisees.map((franchisee) => (
-          <Card key={franchisee.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="text-lg">{franchisee.franchisee_name}</span>
-                <Badge className="bg-green-100 text-green-800">
-                  {franchisee.total_restaurants || 0} Restaurantes
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {franchisee.company_name && (
-                <div className="flex items-center space-x-2">
-                  <Building className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm">{franchisee.company_name}</span>
-                </div>
-              )}
-              
-              {franchisee.city && (
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm">{franchisee.city}, {franchisee.state}</span>
-                </div>
-              )}
-              
-              <div className="flex justify-end space-x-2">
-                <Button size="sm" variant="outline" onClick={() => openEditModal(franchisee)}>
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => handleDelete(franchisee)}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {filteredFranchisees.map((franchisee) => (
+          <FranchiseeCard
+            key={franchisee.id}
+            franchisee={franchisee}
+            onEdit={openEditModal}
+            onDelete={handleDelete}
+            onAssignRestaurant={openAssignModal}
+          />
         ))}
       </div>
+
+      {filteredFranchisees.length === 0 && (
+        <div className="text-center py-12">
+          <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            {searchTerm ? 'No se encontraron franquiciados' : 'No hay franquiciados'}
+          </h3>
+          <p className="text-gray-500">
+            {searchTerm ? 'Intenta con otros términos de búsqueda' : 'Comienza creando tu primer franquiciado'}
+          </p>
+        </div>
+      )}
 
       {/* Modal de Edición */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -439,6 +447,13 @@ export const FranchiseesManagement: React.FC<FranchiseesManagementProps> = ({ fr
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Asignación de Restaurantes */}
+      <RestaurantAssignmentDialog
+        isOpen={isAssignModalOpen}
+        onClose={() => setIsAssignModalOpen(false)}
+        selectedFranchisee={selectedFranchisee}
+      />
     </div>
   );
 };
