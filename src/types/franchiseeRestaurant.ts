@@ -1,3 +1,4 @@
+
 export interface BaseRestaurant {
   id: string;
   site_number: string;
@@ -15,6 +16,7 @@ export interface BaseRestaurant {
   company_tax_id?: string;
   square_meters?: number;
   seating_capacity?: number;
+  opening_date?: string;
   created_at: string;
   updated_at: string;
   created_by?: string;

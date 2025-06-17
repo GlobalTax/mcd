@@ -78,6 +78,19 @@ export const useDataImport = () => {
         'Free-Standing': 'drive_thru'
       };
 
+      // Formatear fecha de apertura
+      let openingDate = null;
+      if (restaurant.fechaApertura && restaurant.fechaApertura.trim()) {
+        // Asumiendo formato DD/MM/YYYY o similar
+        const dateStr = restaurant.fechaApertura.trim();
+        if (dateStr.includes('/')) {
+          const [day, month, year] = dateStr.split('/');
+          openingDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        } else if (dateStr.includes('-')) {
+          openingDate = dateStr; // Ya está en formato correcto
+        }
+      }
+
       // Crear restaurante base con todos los campos nuevos
       const { error: restaurantError } = await supabase
         .from('base_restaurants')
@@ -94,6 +107,7 @@ export const useDataImport = () => {
           franchisee_name: restaurant.franquiciado,
           franchisee_email: restaurant.mailFranquiciado,
           company_tax_id: restaurant.nifSociedad,
+          opening_date: openingDate,
           created_by: user.id
         });
 

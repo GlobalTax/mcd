@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,8 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
     franchisee_email: '',
     company_tax_id: '',
     square_meters: '',
-    seating_capacity: ''
+    seating_capacity: '',
+    opening_date: ''
   });
 
   const resetForm = () => {
@@ -60,7 +62,8 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       franchisee_email: '',
       company_tax_id: '',
       square_meters: '',
-      seating_capacity: ''
+      seating_capacity: '',
+      opening_date: ''
     });
   };
 
@@ -135,7 +138,8 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
       franchisee_email: restaurant.franchisee_email || '',
       company_tax_id: restaurant.company_tax_id || '',
       square_meters: restaurant.square_meters?.toString() || '',
-      seating_capacity: restaurant.seating_capacity?.toString() || ''
+      seating_capacity: restaurant.seating_capacity?.toString() || '',
+      opening_date: restaurant.opening_date || ''
     });
     setIsEditModalOpen(true);
   };
@@ -271,6 +275,15 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                       onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
                     />
                   </div>
+                  <div>
+                    <Label htmlFor="opening_date">Fecha de Apertura</Label>
+                    <Input
+                      id="opening_date"
+                      type="date"
+                      value={formData.opening_date}
+                      onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
+                    />
+                  </div>
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => {setIsCreateModalOpen(false); resetForm();}}>
@@ -301,6 +314,7 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
               <TableHead>Franquiciado</TableHead>
               <TableHead>Email Franquiciado</TableHead>
               <TableHead>CIF Sociedad</TableHead>
+              <TableHead>Fecha Apertura</TableHead>
               <TableHead>Creado</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
@@ -327,6 +341,9 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                 <TableCell>{restaurant.franchisee_name || '-'}</TableCell>
                 <TableCell>{restaurant.franchisee_email || '-'}</TableCell>
                 <TableCell>{restaurant.company_tax_id || '-'}</TableCell>
+                <TableCell>
+                  {restaurant.opening_date ? new Date(restaurant.opening_date).toLocaleDateString('es-ES') : '-'}
+                </TableCell>
                 <TableCell>
                   {new Date(restaurant.created_at).toLocaleDateString('es-ES')}
                 </TableCell>
@@ -462,6 +479,15 @@ export const BaseRestaurantsTable: React.FC<BaseRestaurantsTableProps> = ({ rest
                   id="edit_company_tax_id"
                   value={formData.company_tax_id}
                   onChange={(e) => setFormData({...formData, company_tax_id: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit_opening_date">Fecha de Apertura</Label>
+                <Input
+                  id="edit_opening_date"
+                  type="date"
+                  value={formData.opening_date}
+                  onChange={(e) => setFormData({...formData, opening_date: e.target.value})}
                 />
               </div>
             </div>

@@ -21,6 +21,7 @@ export type Database = {
           franchisee_email: string | null
           franchisee_name: string | null
           id: string
+          opening_date: string | null
           postal_code: string | null
           property_type: string | null
           restaurant_name: string
@@ -42,6 +43,7 @@ export type Database = {
           franchisee_email?: string | null
           franchisee_name?: string | null
           id?: string
+          opening_date?: string | null
           postal_code?: string | null
           property_type?: string | null
           restaurant_name: string
@@ -63,6 +65,7 @@ export type Database = {
           franchisee_email?: string | null
           franchisee_name?: string | null
           id?: string
+          opening_date?: string | null
           postal_code?: string | null
           property_type?: string | null
           restaurant_name?: string
