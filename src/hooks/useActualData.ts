@@ -93,7 +93,9 @@ export const useActualData = () => {
 
           const monthKey = getMonthKey(record.month);
           if (monthKey) {
-            groupedData[key][monthKey as keyof ActualData] = (groupedData[key][monthKey as keyof ActualData] as number) + (cat.value || 0);
+            // Arreglar el error de tipo usando una aserción de tipo más específica
+            const currentValue = groupedData[key][monthKey as keyof Omit<ActualData, 'id' | 'category' | 'subcategory' | 'total'>] as number;
+            (groupedData[key] as any)[monthKey] = currentValue + (cat.value || 0);
           }
         });
       });
