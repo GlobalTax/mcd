@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +21,7 @@ const AdvisorPage = () => {
   const totalAssignments = franchisees.reduce((sum, franchisee) => sum + (franchisee.total_restaurants || 0), 0);
   const unassignedRestaurants = restaurants.length - totalAssignments;
 
-  if (!user || user.role !== 'advisor') {
+  if (!user || !['advisor', 'admin', 'superadmin'].includes(user.role)) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
