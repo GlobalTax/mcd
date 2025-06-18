@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfitLossData } from '@/types/profitLoss';
@@ -54,7 +53,9 @@ export const ProfitLossTable =  ({ data, showOnlyTotals = false }: ProfitLossTab
     year: data[0]?.year || new Date().getFullYear(),
     month: 0,
     restaurant_id: data[0]?.restaurant_id || '',
+    id: 'yearly-total',
     other_revenue: 0,
+    paper_cost: 0,
     total_cost_of_sales: 0,
     management_labor: 0,
     crew_labor: 0,

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, TrendingUp, BarChart3, Eye, EyeOff } from 'lucide-react';
+import { Save, Eye, EyeOff } from 'lucide-react';
 import { BudgetData } from '@/types/budgetTypes';
 
 interface BudgetGridHeaderProps {
@@ -11,8 +11,6 @@ interface BudgetGridHeaderProps {
   budgetData: BudgetData[];
   restaurantName?: string;
   onSave: () => void;
-  onShowComparison: () => void;
-  showComparison?: boolean;
   showActuals?: boolean;
   onToggleActuals?: () => void;
 }
@@ -24,8 +22,6 @@ export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
   budgetData,
   restaurantName,
   onSave,
-  onShowComparison,
-  showComparison = false,
   showActuals = false,
   onToggleActuals
 }) => {
@@ -60,15 +56,6 @@ export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
 
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <Button
-            onClick={onShowComparison}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <BarChart3 className="w-4 h-4" />
-            {showComparison ? 'Ocultar Comparativa' : 'Mostrar Comparativa'}
-          </Button>
-          
           {onToggleActuals && (
             <Button
               onClick={onToggleActuals}
