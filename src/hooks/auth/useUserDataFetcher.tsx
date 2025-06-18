@@ -21,61 +21,87 @@ export const useUserDataFetcher = ({
     try {
       console.log('fetchUserData - Starting fetch for user:', userId);
       
-      // Fetch user profile with extended timeout (30 seconds)
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+      });
+      
+      // Fetch user profile with timeout
       console.log('fetchUserData - About to query profiles table');
-      const { data: profile, error: profileError } = await supabase
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      console.log('fetchUserData - Profile query completed');
-      console.log('fetchUserData - Profile query result:', { profile, profileError });
+      try {
+        const { data: profile, error: profileError } = await Promise.race([
+          profilePromise,
+          timeoutPromise
+        ]) as any;
 
-      if (profileError) {
-        console.error('fetchUserData - Profile error details:', profileError);
-        // If profile doesn't exist, clear user data but don't show error
-        if (profileError.code === 'PGRST116') {
-          console.log('fetchUserData - Profile not found, user needs to complete registration');
+        console.log('fetchUserData - Profile query completed');
+        console.log('fetchUserData - Profile query result:', { profile, profileError });
+
+        if (profileError) {
+          console.error('fetchUserData - Profile error details:', profileError);
+          // If profile doesn't exist, clear user data but don't show error
+          if (profileError.code === 'PGRST116') {
+            console.log('fetchUserData - Profile not found, user needs to complete registration');
+            clearUserData();
+            return;
+          }
+          console.log('fetchUserData - Profile error, clearing user data');
           clearUserData();
           return;
         }
-        console.log('fetchUserData - Profile error, clearing user data');
-        clearUserData();
-        return;
-      }
 
-      if (!profile) {
-        console.log('fetchUserData - No profile found for user');
-        clearUserData();
-        return;
-      }
+        if (!profile) {
+          console.log('fetchUserData - No profile found for user');
+          clearUserData();
+          return;
+        }
 
-      console.log('fetchUserData - Profile fetched successfully:', profile);
-      console.log('fetchUserData - Profile role:', profile.role);
+        console.log('fetchUserData - Profile fetched successfully:', profile);
+        console.log('fetchUserData - Profile role:', profile.role);
 
-      // Use the role directly from the database
-      const userData = {
-        ...profile,
-        role: profile.role
-      } as User;
+        // Use the role directly from the database
+        const userData = {
+          ...profile,
+          role: profile.role
+        } as User;
 
-      console.log('fetchUserData - About to set user with role:', userData.role);
-      setUser(userData);
-      console.log('fetchUserData - User set successfully');
+        console.log('fetchUserData - About to set user with role:', userData.role);
+        setUser(userData);
+        console.log('fetchUserData - User set successfully');
 
-      // Only fetch franchisee data if user is a franchisee
-      if (profile.role === 'franchisee') {
-        console.log('fetchUserData - User is franchisee, fetching franchisee data');
-        await fetchFranchiseeData(userId, profile);
-      } else {
-        console.log('fetchUserData - User is not franchisee, role:', profile.role);
-        // Clear franchisee data for non-franchisee users
-        setFranchisee(null);
-        setRestaurants([]);
+        // Only fetch franchisee data if user is a franchisee
+        if (profile.role === 'franchisee') {
+          console.log('fetchUserData - User is franchisee, fetching franchisee data');
+          await fetchFranchiseeData(userId, profile);
+        } else {
+          console.log('fetchUserData - User is not franchisee, role:', profile.role);
+          // Clear franchisee data for non-franchisee users
+          setFranchisee(null);
+          setRestaurants([]);
+        }
+        
+        console.log('fetchUserData - User data fetch completed successfully');
+      } catch (timeoutError) {
+        console.error('fetchUserData - Query timeout or error:', timeoutError);
+        // If query times out, create a basic user profile and continue
+        const basicUser = {
+          id: userId,
+          email: 'usuario@ejemplo.com',
+          role: 'franchisee',
+          full_name: 'Usuario'
+        } as User;
+        
+        console.log('fetchUserData - Setting basic user due to timeout');
+        setUser(basicUser);
+        toast.error('Error al cargar perfil, usando datos básicos');
       }
       
-      console.log('fetchUserData - User data fetch completed successfully');
     } catch (error) {
       console.error('fetchUserData - Unexpected error in fetchUserData:', error);
       // Clear user data on any unexpected error
