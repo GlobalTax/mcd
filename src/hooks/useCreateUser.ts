@@ -22,31 +22,58 @@ export const useCreateUser = () => {
     try {
       setCreating(true);
 
-      // Verificar si el usuario ya existe
-      const { data: existingUser } = await supabase
+      // Verificar si ya existe un usuario con este email
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('email')
         .eq('email', email)
         .single();
 
-      if (existingUser) {
+      if (existingProfile) {
         toast.error('Ya existe un usuario con este email');
         return false;
       }
 
-      // Crear el usuario usando Supabase Auth Admin
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Crear una invitación especial que se auto-acepta
+      const { data: invitation, error: inviteError } = await supabase
+        .from('franchisee_invitations')
+        .insert({
+          franchisee_id: franchiseeId,
+          email,
+          invited_by: user.id,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (inviteError) {
+        console.error('Error creating invitation:', inviteError);
+        toast.error('Error al crear la invitación');
+        return false;
+      }
+
+      // Crear el usuario usando signup normal
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        user_metadata: {
-          full_name: fullName
-        },
-        email_confirm: true // Confirmar email automáticamente
+        options: {
+          data: {
+            full_name: fullName
+          },
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
       if (authError) {
         console.error('Error creating user:', authError);
         toast.error(`Error al crear usuario: ${authError.message}`);
+        
+        // Limpiar la invitación si falló la creación
+        await supabase
+          .from('franchisee_invitations')
+          .delete()
+          .eq('id', invitation.id);
+        
         return false;
       }
 
@@ -54,6 +81,15 @@ export const useCreateUser = () => {
         toast.error('Error al crear usuario');
         return false;
       }
+
+      // Marcar la invitación como aceptada
+      await supabase
+        .from('franchisee_invitations')
+        .update({ 
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id);
 
       // Actualizar el perfil con el rol de franchisee
       const { error: profileError } = await supabase
@@ -82,7 +118,7 @@ export const useCreateUser = () => {
         return false;
       }
 
-      toast.success(`Usuario creado exitosamente para ${fullName}`);
+      toast.success(`Usuario creado exitosamente para ${fullName}. Se ha enviado un email de confirmación.`);
       return true;
 
     } catch (error) {
