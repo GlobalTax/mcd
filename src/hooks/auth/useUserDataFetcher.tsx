@@ -22,12 +22,24 @@ export const useUserDataFetcher = ({
       console.log('fetchUserData - Starting fetch for user:', userId);
       console.log('fetchUserData - About to query profiles table');
       
-      // Fetch user profile with better error handling
-      const { data: profile, error: profileError } = await supabase
+      // Añadir timeout para evitar consultas colgadas
+      const profileQuery = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
+
+      console.log('fetchUserData - Profile query created, executing...');
+      
+      // Implementar timeout
+      const timeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile query timeout')), 10000)
+      );
+
+      const { data: profile, error: profileError } = await Promise.race([
+        profileQuery,
+        timeout
+      ]) as any;
 
       console.log('fetchUserData - Profile query completed');
       console.log('fetchUserData - Profile query result:', { profile, profileError });
