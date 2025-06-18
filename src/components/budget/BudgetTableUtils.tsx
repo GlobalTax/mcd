@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { BudgetData } from '@/types/budgetTypes';
 import { HeaderLabels } from './BudgetTableTypes';
 
