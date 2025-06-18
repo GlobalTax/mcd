@@ -21,13 +21,20 @@ const Index = () => {
     
     if (user && !loading) {
       console.log('Index - User authenticated, redirecting based on role:', user.role);
-      // Redirigir usuarios autenticados según su rol
-      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
-        console.log('Index - Redirecting asesor/admin/superadmin to /advisor');
-        navigate('/advisor', { replace: true });
-      } else if (user.role === 'franchisee') {
-        console.log('Index - Redirecting franchisee to /dashboard');
-        navigate('/dashboard', { replace: true });
+      
+      try {
+        // Redirigir usuarios autenticados según su rol
+        if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
+          console.log('Index - Redirecting asesor/admin/superadmin to /advisor');
+          navigate('/advisor', { replace: true });
+        } else if (user.role === 'franchisee') {
+          console.log('Index - Redirecting franchisee to /dashboard');
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log('Index - Unknown role, staying on landing page:', user.role);
+        }
+      } catch (error) {
+        console.error('Index - Error during navigation:', error);
       }
     } else if (!loading) {
       console.log('Index - No user found, showing landing page');
@@ -74,10 +81,17 @@ const Index = () => {
                   <span className="text-sm text-gray-600">Hola, {user.full_name || user.email}</span>
                   <Button 
                     onClick={() => {
-                      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
-                        navigate('/advisor');
-                      } else {
-                        navigate('/dashboard');
+                      console.log('Index - Manual navigation button clicked for user role:', user.role);
+                      try {
+                        if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
+                          console.log('Index - Manual redirect to /advisor');
+                          navigate('/advisor');
+                        } else {
+                          console.log('Index - Manual redirect to /dashboard');
+                          navigate('/dashboard');
+                        }
+                      } catch (error) {
+                        console.error('Index - Error in manual navigation:', error);
                       }
                     }}
                     className="bg-red-600 hover:bg-red-700 text-white"
@@ -120,6 +134,26 @@ const Index = () => {
             administración de restaurantes McDonald's
           </p>
         </div>
+
+        {/* Debug Info - Solo visible si hay usuario */}
+        {user && (
+          <div className="mb-8 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">Debug Info:</h3>
+            <p className="text-sm text-yellow-700">Usuario: {user.email}</p>
+            <p className="text-sm text-yellow-700">Rol: {user.role}</p>
+            <p className="text-sm text-yellow-700">Loading: {loading ? 'true' : 'false'}</p>
+            <Button 
+              onClick={() => {
+                console.log('Index - Force redirect clicked');
+                navigate('/dashboard', { replace: true });
+              }}
+              className="mt-2 text-xs"
+              size="sm"
+            >
+              Forzar redirección al Dashboard
+            </Button>
+          </div>
+        )}
 
         {/* Main Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
