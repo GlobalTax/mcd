@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, BarChart3, Shield, Store, ArrowRight, TrendingUp, Calculator } from "lucide-react";
@@ -9,7 +10,15 @@ const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
+  console.log('Index - Component rendered');
+  console.log('Index - User:', user);
+  console.log('Index - Loading:', loading);
+
   useEffect(() => {
+    console.log('Index - useEffect triggered');
+    console.log('Index - User in effect:', user);
+    console.log('Index - Loading in effect:', loading);
+    
     if (user && !loading) {
       console.log('Index - User authenticated, redirecting based on role:', user.role);
       // Redirigir usuarios autenticados según su rol
@@ -20,10 +29,15 @@ const Index = () => {
         console.log('Index - Redirecting franchisee to /dashboard');
         navigate('/dashboard', { replace: true });
       }
+    } else if (!loading) {
+      console.log('Index - No user found, showing landing page');
     }
   }, [user, loading, navigate]);
 
+  console.log('Index - About to render, loading state:', loading);
+
   if (loading) {
+    console.log('Index - Rendering loading state');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -35,6 +49,8 @@ const Index = () => {
       </div>
     );
   }
+
+  console.log('Index - Rendering main content');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,7 +124,7 @@ const Index = () => {
         {/* Main Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
           {/* Franquiciados Card */}
-          <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white" onClick={() => navigate('/auth')}>
+          <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white cursor-pointer" onClick={() => navigate('/auth')}>
             <CardHeader className="pb-6">
               <div className="flex items-center justify-between">
                 <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center group-hover:bg-red-200 transition-colors">
@@ -140,7 +156,7 @@ const Index = () => {
           </Card>
 
           {/* Asesores Card */}
-          <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white" onClick={() => navigate('/advisor-auth')}>
+          <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white cursor-pointer" onClick={() => navigate('/advisor-auth')}>
             <CardHeader className="pb-6">
               <div className="flex items-center justify-between">
                 <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
