@@ -16,7 +16,7 @@ import { es } from 'date-fns/locale';
 export default function FranchiseeDetailPage() {
   const { franchiseeId } = useParams<{ franchiseeId: string }>();
   const navigate = useNavigate();
-  const { franchisee, restaurants, loading, error } = useFranchiseeDetail(franchiseeId);
+  const { franchisee, restaurants, loading, error, refetch } = useFranchiseeDetail(franchiseeId);
 
   // Mostrar mensaje de carga
   if (loading) {
@@ -79,6 +79,10 @@ export default function FranchiseeDetailPage() {
       return <Badge variant="outline" className="text-green-600 border-green-300"><Wifi className="w-3 h-3 mr-1" />En línea</Badge>;
     }
     return <Badge variant="outline" className="text-gray-600 border-gray-300"><WifiOff className="w-3 h-3 mr-1" />Desconectado</Badge>;
+  };
+
+  const handleUserDeleted = () => {
+    refetch(); // Refrescar los datos del franquiciado
   };
 
   return (
@@ -173,6 +177,10 @@ export default function FranchiseeDetailPage() {
         <FranchiseeInvitationPanel 
           franchiseeId={franchisee.id} 
           franchiseeEmail={franchisee.profiles?.email}
+          hasAccount={franchisee.hasAccount}
+          userId={franchisee.user_id}
+          fullName={franchisee.profiles?.full_name}
+          onUserDeleted={handleUserDeleted}
         />
         <FranchiseeAccessHistory franchiseeId={franchisee.id} />
       </div>
