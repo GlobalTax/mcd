@@ -21,24 +21,42 @@ export const DashboardSummary = ({
     isTemporaryData
   });
 
-  // Verificar que displayRestaurants sea un array válido
-  const safeRestaurants = Array.isArray(displayRestaurants) ? displayRestaurants : [];
+  // Verificación exhaustiva de datos
+  const safeRestaurants = Array.isArray(displayRestaurants) ? displayRestaurants.filter(r => r && typeof r === 'object') : [];
+  const safeTotalRestaurants = typeof totalRestaurants === 'number' ? totalRestaurants : 0;
   
-  // Calcular métricas básicas de forma segura
-  const activeRestaurants = safeRestaurants.filter(r => 
-    r?.status === 'active' || !r?.status
-  ).length;
+  // Calcular métricas con verificaciones adicionales
+  const activeRestaurants = safeRestaurants.filter(r => {
+    try {
+      return r?.status === 'active' || !r?.status;
+    } catch (error) {
+      console.warn('DashboardSummary - Error filtering restaurant:', error);
+      return false;
+    }
+  }).length;
   
   const totalRevenue = safeRestaurants.reduce((sum, r) => {
-    const revenue = r?.lastYearRevenue || 0;
-    return sum + (typeof revenue === 'number' ? revenue : 0);
+    try {
+      const revenue = r?.lastYearRevenue;
+      if (typeof revenue === 'number' && !isNaN(revenue)) {
+        return sum + revenue;
+      }
+      return sum;
+    } catch (error) {
+      console.warn('DashboardSummary - Error calculating revenue:', error);
+      return sum;
+    }
   }, 0);
   
-  const avgRevenue = totalRestaurants > 0 ? totalRevenue / totalRestaurants : 0;
+  const avgRevenue = safeTotalRestaurants > 0 ? totalRevenue / safeTotalRestaurants : 0;
 
   const handleRefresh = () => {
     console.log('DashboardSummary - Refreshing page');
-    window.location.reload();
+    try {
+      window.location.reload();
+    } catch (error) {
+      console.error('DashboardSummary - Error refreshing page:', error);
+    }
   };
 
   return (
@@ -77,7 +95,7 @@ export const DashboardSummary = ({
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalRestaurants}</div>
+            <div className="text-2xl font-bold">{safeTotalRestaurants}</div>
             <p className="text-xs text-muted-foreground">
               {activeRestaurants} activos
             </p>
@@ -136,7 +154,7 @@ export const DashboardSummary = ({
           <CardTitle>Mis Restaurantes</CardTitle>
         </CardHeader>
         <CardContent>
-          {totalRestaurants === 0 ? (
+          {safeTotalRestaurants === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No hay restaurantes asignados</p>
@@ -150,17 +168,17 @@ export const DashboardSummary = ({
           ) : (
             <div className="space-y-4">
               {safeRestaurants.map((restaurant, index) => {
-                // Verificar que el restaurant sea válido
-                if (!restaurant) {
+                // Verificación exhaustiva de cada restaurant
+                if (!restaurant || typeof restaurant !== 'object') {
                   console.warn('DashboardSummary - Invalid restaurant at index:', index);
                   return null;
                 }
 
-                const restaurantId = restaurant.id || `restaurant-${index}`;
+                const restaurantId = restaurant.id || `restaurant-${index}-${Date.now()}`;
                 const restaurantName = restaurant.name || restaurant.restaurant_name || `Restaurante ${restaurant.siteNumber || restaurant.site_number || index + 1}`;
                 const location = restaurant.location || `${restaurant.city || 'Ciudad'}, ${restaurant.address || 'Dirección'}`;
                 const siteNumber = restaurant.siteNumber || restaurant.site_number || 'N/A';
-                const revenue = restaurant.lastYearRevenue || 0;
+                const revenue = typeof restaurant.lastYearRevenue === 'number' ? restaurant.lastYearRevenue : 0;
                 const status = restaurant.status || 'active';
 
                 return (
@@ -172,7 +190,7 @@ export const DashboardSummary = ({
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-medium">
-                        €{(typeof revenue === 'number' ? revenue : 0).toLocaleString()}
+                        €{revenue.toLocaleString()}
                       </div>
                       <div className="text-xs text-muted-foreground">Año anterior</div>
                       <div className={`text-xs px-2 py-1 rounded-full ${

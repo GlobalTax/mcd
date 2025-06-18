@@ -50,40 +50,50 @@ const DashboardPage = () => {
     return null;
   }
 
-  const allLocalRestaurants = Array.isArray(localFranchisees) ? 
-    localFranchisees.flatMap(f => 
-      (f.restaurants || []).map(r => ({ ...r, franchiseeName: f.name }))
-    ) : [];
-
-  // Verificar si el franchisee es temporal de forma segura
-  const isTemporaryFranchisee = franchisee?.id?.startsWith('temp-') || false;
-  const hasSupabaseRestaurants = !isTemporaryFranchisee && Array.isArray(franchiseeRestaurants) && franchiseeRestaurants.length > 0;
+  // Datos seguros con verificaciones adicionales
+  const safeLocalFranchisees = Array.isArray(localFranchisees) ? localFranchisees : [];
+  const safeFranchiseeRestaurants = Array.isArray(franchiseeRestaurants) ? franchiseeRestaurants : [];
   
-  // Construir displayRestaurants de forma segura
+  const allLocalRestaurants = safeLocalFranchisees.flatMap(f => 
+    Array.isArray(f?.restaurants) ? f.restaurants.map(r => ({ 
+      ...r, 
+      franchiseeName: f?.name || 'Franquiciado' 
+    })) : []
+  );
+
+  // Verificar si el franchisee es temporal de forma más segura
+  const isTemporaryFranchisee = !franchisee || franchisee?.id?.startsWith('temp-') || false;
+  const hasSupabaseRestaurants = !isTemporaryFranchisee && safeFranchiseeRestaurants.length > 0;
+  
+  // Construir displayRestaurants con verificaciones exhaustivas
   const displayRestaurants: DisplayRestaurant[] = hasSupabaseRestaurants ? 
-    franchiseeRestaurants.map(fr => ({
-      id: fr.id || 'unknown',
-      name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
-      restaurant_name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
-      location: fr.base_restaurant ? `${fr.base_restaurant.city || 'Ciudad'}, ${fr.base_restaurant.address || 'Dirección'}` : 'Ubicación no disponible',
-      city: fr.base_restaurant?.city || 'Ciudad',
-      address: fr.base_restaurant?.address || 'Dirección',
-      siteNumber: fr.base_restaurant?.site_number || 'N/A',
-      site_number: fr.base_restaurant?.site_number || 'N/A',
-      franchiseeName: franchisee?.franchisee_name || 'Franquiciado',
-      franchise_start_date: fr.franchise_start_date,
-      franchise_end_date: fr.franchise_end_date,
-      restaurant_type: fr.base_restaurant?.restaurant_type || 'traditional',
-      status: fr.status || 'active',
-      lastYearRevenue: fr.last_year_revenue || 0,
-      baseRent: fr.monthly_rent || 0,
-      isOwnedByMcD: false,
-    })) : 
+    safeFranchiseeRestaurants
+      .filter(fr => fr && fr.base_restaurant) // Filtrar datos inválidos
+      .map(fr => ({
+        id: fr.id || `restaurant-${Math.random()}`,
+        name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
+        restaurant_name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
+        location: fr.base_restaurant ? 
+          `${fr.base_restaurant.city || 'Ciudad'}, ${fr.base_restaurant.address || 'Dirección'}` : 
+          'Ubicación no disponible',
+        city: fr.base_restaurant?.city || 'Ciudad',
+        address: fr.base_restaurant?.address || 'Dirección',
+        siteNumber: fr.base_restaurant?.site_number || 'N/A',
+        site_number: fr.base_restaurant?.site_number || 'N/A',
+        franchiseeName: franchisee?.franchisee_name || 'Franquiciado',
+        franchise_start_date: fr.franchise_start_date,
+        franchise_end_date: fr.franchise_end_date,
+        restaurant_type: fr.base_restaurant?.restaurant_type || 'traditional',
+        status: fr.status || 'active',
+        lastYearRevenue: typeof fr.last_year_revenue === 'number' ? fr.last_year_revenue : 0,
+        baseRent: typeof fr.monthly_rent === 'number' ? fr.monthly_rent : 0,
+        isOwnedByMcD: false,
+      })) : 
     allLocalRestaurants;
   
   const totalRestaurants = displayRestaurants?.length || 0;
 
-  // Loading state mejorado
+  // Loading state mejorado con timeout handling
   if (restaurantsLoading && !isTemporaryFranchisee) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -109,8 +119,8 @@ const DashboardPage = () => {
           </header>
 
           <main className="flex-1 p-6">
-            {/* Mostrar dashboard con datos verificados */}
-            {(hasSupabaseRestaurants || isTemporaryFranchisee || (!restaurantsLoading && Array.isArray(franchiseeRestaurants))) ? (
+            {/* Solo mostrar dashboard si tenemos datos válidos o es temporal */}
+            {(hasSupabaseRestaurants || isTemporaryFranchisee || (!restaurantsLoading && user)) ? (
               <DashboardSummary 
                 totalRestaurants={totalRestaurants} 
                 displayRestaurants={displayRestaurants}
