@@ -22,6 +22,15 @@ export const useCreateUser = () => {
       return false;
     }
 
+    console.log('Usuario actual:', user);
+    console.log('Rol del usuario:', user.role);
+
+    // Verificar que el usuario tenga permisos de administrador
+    if (!['admin', 'advisor', 'asesor', 'superadmin'].includes(user.role)) {
+      toast.error('No tienes permisos de administrador para crear usuarios');
+      return false;
+    }
+
     try {
       setCreating(true);
       console.log('Iniciando creación de usuario:', { email, fullName, role });
@@ -39,7 +48,9 @@ export const useCreateUser = () => {
         return false;
       }
 
-      // Crear el usuario usando admin.createUser
+      console.log('Intentando crear usuario con admin.createUser...');
+
+      // Intentar crear el usuario usando admin.createUser
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
@@ -53,8 +64,58 @@ export const useCreateUser = () => {
 
       if (authError) {
         console.error('Error creating user:', authError);
-        toast.error(`Error al crear usuario: ${authError.message}`);
-        return false;
+        
+        // Si es un error de permisos, intentar con signUp
+        if (authError.message.includes('not allowed') || authError.message.includes('permission')) {
+          console.log('Intentando crear usuario con signUp como alternativa...');
+          
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName
+              }
+            }
+          });
+
+          if (signUpError) {
+            console.error('Error with signUp:', signUpError);
+            toast.error(`Error al crear usuario: ${signUpError.message}`);
+            return false;
+          }
+
+          if (!signUpData.user) {
+            console.error('No user returned from signUp');
+            toast.error('Error al crear usuario');
+            return false;
+          }
+
+          console.log('Usuario creado con signUp:', signUpData.user);
+
+          // Crear el perfil directamente en la tabla profiles
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: signUpData.user.id,
+              email: email,
+              full_name: fullName,
+              role: role
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            toast.error('Usuario creado pero error al crear perfil');
+            return false;
+          }
+
+          console.log('Perfil creado exitosamente con signUp');
+          toast.success(`Usuario ${fullName} creado exitosamente.`);
+          return true;
+        } else {
+          toast.error(`Error al crear usuario: ${authError.message}`);
+          return false;
+        }
       }
 
       if (!authData.user) {
@@ -83,7 +144,7 @@ export const useCreateUser = () => {
 
       console.log('Perfil creado exitosamente');
 
-      toast.success(`Usuario ${fullName} creado exitosamente. El usuario puede iniciar sesión inmediatamente.`);
+      toast.success(`Usuario ${fullName} creado exitosamente.`);
       return true;
 
     } catch (error) {
