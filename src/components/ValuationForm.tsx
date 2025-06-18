@@ -4,17 +4,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Restaurant, ValuationFormData } from '@/types/restaurant';
 import { calculateRestaurantValuation } from '@/utils/valuationCalculator';
 import { Calculator, DollarSign } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ValuationFormProps {
-  restaurant: Restaurant;
-  onSaveValuation: (valuation: any) => void;
+  restaurant?: Restaurant;
+  onSaveValuation?: (valuation: any) => void;
 }
 
 export function ValuationForm({ restaurant, onSaveValuation }: ValuationFormProps) {
+  // Default restaurant data if none provided
+  const defaultRestaurant = {
+    id: 'default',
+    name: 'Restaurante McDonald\'s',
+    location: 'Ubicación por determinar'
+  };
+
+  const currentRestaurant = restaurant || defaultRestaurant;
+
   const [formData, setFormData] = useState<ValuationFormData>({
     valuationDate: new Date().toISOString().split('T')[0],
     initialSales: 2454919,
@@ -45,15 +54,18 @@ export function ValuationForm({ restaurant, onSaveValuation }: ValuationFormProp
   };
 
   const handleSave = () => {
-    if (result) {
+    if (result && onSaveValuation) {
       onSaveValuation({
         ...formData,
         ...result,
-        restaurantId: restaurant.id,
+        restaurantId: currentRestaurant.id,
         id: Date.now().toString(),
         createdAt: new Date(),
         createdBy: 'Usuario'
       });
+      toast.success('Valoración guardada correctamente');
+    } else if (result && !onSaveValuation) {
+      toast.success('Valoración calculada correctamente');
     }
   };
 
@@ -70,8 +82,8 @@ export function ValuationForm({ restaurant, onSaveValuation }: ValuationFormProp
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Valoración de {restaurant.name}</h2>
-          <p className="text-gray-600">{restaurant.location}</p>
+          <h2 className="text-2xl font-bold">Valoración de {currentRestaurant.name}</h2>
+          <p className="text-gray-600">{currentRestaurant.location}</p>
         </div>
       </div>
 

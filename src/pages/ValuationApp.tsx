@@ -5,6 +5,11 @@ import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { ValuationForm } from '@/components/ValuationForm';
 
 export default function ValuationApp() {
+  const handleSaveValuation = (valuation: any) => {
+    console.log('Valoración guardada:', valuation);
+    // Aquí puedes implementar la lógica para guardar la valoración
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -19,7 +24,7 @@ export default function ValuationApp() {
           </header>
 
           <main className="flex-1 p-6">
-            <ValuationForm />
+            <ValuationForm onSaveValuation={handleSaveValuation} />
           </main>
         </SidebarInset>
       </div>
