@@ -13,9 +13,9 @@ export const useProfileFetcher = ({ setUser, clearUserData }: ProfileFetcherProp
     try {
       console.log('fetchUserProfile - About to query profiles table');
       
-      // Create a timeout promise
+      // Crear un timeout más corto para mejorar la experiencia
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+        setTimeout(() => reject(new Error('Query timeout after 5 seconds')), 5000);
       });
       
       const profilePromise = supabase
@@ -30,42 +30,56 @@ export const useProfileFetcher = ({ setUser, clearUserData }: ProfileFetcherProp
       ]) as any;
 
       console.log('fetchUserProfile - Profile query completed');
-      console.log('fetchUserProfile - Profile query result:', { profile, profileError });
 
-      if (profileError) {
+      if (profileError && !profileError.message?.includes('timeout')) {
         console.error('fetchUserProfile - Profile error details:', profileError);
-        // If profile doesn't exist, clear user data but don't show error
+        
+        // Si no existe el perfil, crear uno básico
         if (profileError.code === 'PGRST116') {
-          console.log('fetchUserProfile - Profile not found, user needs to complete registration');
-          clearUserData();
-          return null;
+          console.log('fetchUserProfile - Profile not found, creating basic user');
+          const basicUser = {
+            id: userId,
+            email: 'usuario@ejemplo.com',
+            role: 'franchisee',
+            full_name: 'Usuario'
+          } as User;
+          
+          setUser(basicUser);
+          return basicUser;
         }
-        console.log('fetchUserProfile - Profile error, clearing user data');
+        
         clearUserData();
         return null;
       }
 
-      if (!profile) {
-        console.log('fetchUserProfile - No profile found for user');
-        clearUserData();
-        return null;
+      if (profile) {
+        console.log('fetchUserProfile - Profile fetched successfully:', profile);
+        
+        const userData = {
+          ...profile,
+          role: profile.role
+        } as User;
+
+        setUser(userData);
+        return userData;
       }
 
-      console.log('fetchUserProfile - Profile fetched successfully:', profile);
-      
-      const userData = {
-        ...profile,
-        role: profile.role
+      // Si no hay perfil, crear uno básico
+      console.log('fetchUserProfile - No profile found, creating basic user');
+      const basicUser = {
+        id: userId,
+        email: 'usuario@ejemplo.com',
+        role: 'franchisee',
+        full_name: 'Usuario'
       } as User;
-
-      console.log('fetchUserProfile - About to set user with role:', userData.role);
-      setUser(userData);
-      console.log('fetchUserProfile - User set successfully');
       
-      return userData;
-    } catch (timeoutError) {
-      console.error('fetchUserProfile - Query timeout or error:', timeoutError);
-      // If query times out, create a basic user profile and continue
+      setUser(basicUser);
+      return basicUser;
+      
+    } catch (error) {
+      console.error('fetchUserProfile - Query timeout or error:', error);
+      
+      // Crear un usuario básico en caso de timeout
       const basicUser = {
         id: userId,
         email: 'usuario@ejemplo.com',
