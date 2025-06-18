@@ -28,7 +28,7 @@ const RestaurantSelector = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Building2 className="w-5 h-5" />
-          Seleccionar Restaurante
+          Seleccionar Restaurante para Valorar
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -46,14 +46,24 @@ const RestaurantSelector = ({
             <SelectValue placeholder="Selecciona un restaurante para valorar..." />
           </SelectTrigger>
           <SelectContent>
-            {restaurants.map((restaurant) => (
-              <SelectItem key={restaurant.id} value={restaurant.id}>
-                <div className="flex flex-col">
-                  <span className="font-medium">{restaurant.name}</span>
-                  <span className="text-sm text-gray-500">#{restaurant.site_number}</span>
-                </div>
+            {loading ? (
+              <SelectItem value="" disabled>
+                Cargando restaurantes...
               </SelectItem>
-            ))}
+            ) : restaurants.length === 0 ? (
+              <SelectItem value="" disabled>
+                No hay restaurantes disponibles
+              </SelectItem>
+            ) : (
+              restaurants.map((restaurant) => (
+                <SelectItem key={restaurant.id} value={restaurant.id}>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{restaurant.name}</span>
+                    <span className="text-sm text-gray-500">#{restaurant.site_number}</span>
+                  </div>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
         

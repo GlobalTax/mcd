@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useRestaurantValuations } from '@/hooks/useRestaurantValuations';
-import { useBaseRestaurants } from '@/hooks/useBaseRestaurants';
+import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 import { RestaurantValuation, RestaurantOption } from '@/types/restaurantValuation';
 import RestaurantSelector from './RestaurantSelector';
 import ValuationHistory from './ValuationHistory';
@@ -23,7 +23,7 @@ const RestaurantValuationManager = ({
   onLoadValuation, 
   onSaveSuccess 
 }: RestaurantValuationManagerProps) => {
-  const { restaurants } = useBaseRestaurants();
+  const { restaurants, loading: restaurantsLoading } = useFranchiseeRestaurants();
   const { 
     valuations, 
     saveValuation, 
@@ -37,11 +37,14 @@ const RestaurantValuationManager = ({
   const [valuationName, setValuationName] = useState('');
   const [currentValuationId, setCurrentValuationId] = useState<string | null>(null);
 
-  const restaurantOptions: RestaurantOption[] = restaurants.map(r => ({
-    id: r.id,
-    name: r.restaurant_name,
-    site_number: r.site_number
-  }));
+  // Convertir restaurantes de franquiciado a opciones para el selector
+  const restaurantOptions: RestaurantOption[] = restaurants
+    .filter(r => r.base_restaurant) // Solo restaurantes con información base
+    .map(r => ({
+      id: r.base_restaurant!.id,
+      name: r.base_restaurant!.restaurant_name,
+      site_number: r.base_restaurant!.site_number
+    }));
 
   const handleSaveValuation = async () => {
     if (!selectedRestaurant) {
@@ -92,7 +95,7 @@ const RestaurantValuationManager = ({
     setSelectedRestaurant({
       id: valuation.restaurant_id,
       name: valuation.restaurant_name,
-      site_number: 'N/A' // We'll need to get this from the restaurant data
+      site_number: 'N/A' // Será actualizado cuando se seleccione
     });
     onLoadValuation(valuation);
     toast.success(`Valoración "${valuation.valuation_name}" cargada correctamente`);
@@ -120,12 +123,47 @@ const RestaurantValuationManager = ({
     setIsNewValuationOpen(true);
   };
 
+  if (restaurantsLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando restaurantes...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (restaurants.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No hay restaurantes disponibles
+              </h3>
+              <p className="text-gray-600">
+                No tienes restaurantes asignados para realizar valoraciones.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <RestaurantSelector
         restaurants={restaurantOptions}
         selectedRestaurant={selectedRestaurant}
         onRestaurantChange={setSelectedRestaurant}
+        loading={restaurantsLoading}
       />
 
       {selectedRestaurant && (
