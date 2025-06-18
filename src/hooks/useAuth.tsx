@@ -33,6 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .maybeSingle();
 
+      console.log('fetchUserData - Profile query result:', { profile, profileError });
+
       if (profileError) {
         console.error('Error fetching profile:', profileError);
         // If profile doesn't exist, clear user data but don't show error
@@ -121,9 +123,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('useAuth - Auth state change:', event, session?.user?.id);
+        console.log('useAuth - Full session:', session);
         setSession(session);
         
         if (session?.user) {
+          console.log('useAuth - User found in session, fetching user data');
           setTimeout(() => {
             fetchUserData(session.user.id);
           }, 0);
@@ -138,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('useAuth - Initial session check:', session?.user?.id);
+      console.log('useAuth - Initial session full:', session);
       setSession(session);
       if (session?.user) {
         fetchUserData(session.user.id);
@@ -230,6 +235,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(null);
     }
   };
+
+  console.log('useAuth - Current state:', { user, session: !!session, loading });
 
   const value = {
     user,
