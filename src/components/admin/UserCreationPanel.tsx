@@ -1,78 +1,116 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { UserPlus, Mail, Users } from 'lucide-react';
-import { useUserCreation, type UserRole } from '@/hooks/useUserCreation';
-import { useAuth } from '@/hooks/useAuth';
+import { UserPlus, Mail } from 'lucide-react';
+import { useUserCreation, UserRole } from '@/hooks/useUserCreation';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface Franchisee {
+  id: string;
+  franchisee_name: string;
+  user_id: string | null;
+}
 
 export const UserCreationPanel = () => {
-  const { user } = useAuth();
   const { createUser, sendInvitation, creating } = useUserCreation();
+  const [availableFranchisees, setAvailableFranchisees] = useState<Franchisee[]>([]);
   
-  const [userForm, setUserForm] = useState({
+  // Estados para creación directa
+  const [createForm, setCreateForm] = useState({
     email: '',
-    fullName: '',
     password: '',
-    role: 'franchisee' as UserRole
+    fullName: '',
+    role: 'franchisee' as UserRole,
+    existingFranchiseeId: ''
   });
 
+  // Estados para invitación
   const [inviteForm, setInviteForm] = useState({
     email: '',
     role: 'franchisee' as UserRole
   });
 
+  useEffect(() => {
+    fetchAvailableFranchisees();
+  }, []);
+
+  const fetchAvailableFranchisees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('franchisees')
+        .select('id, franchisee_name, user_id')
+        .is('user_id', null)
+        .order('franchisee_name');
+
+      if (error) {
+        console.error('Error fetching franchisees:', error);
+        return;
+      }
+
+      setAvailableFranchisees(data || []);
+    } catch (error) {
+      console.error('Error in fetchAvailableFranchisees:', error);
+    }
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userForm.email.trim() || !userForm.fullName.trim() || !userForm.password.trim()) {
-      return;
-    }
-
-    if (userForm.password.length < 6) {
+    if (!createForm.email || !createForm.password || !createForm.fullName) {
+      toast.error('Por favor completa todos los campos obligatorios');
       return;
     }
 
     const success = await createUser(
-      userForm.email.trim(),
-      userForm.password.trim(),
-      userForm.fullName.trim(),
-      userForm.role
+      createForm.email,
+      createForm.password,
+      createForm.fullName,
+      createForm.role,
+      createForm.existingFranchiseeId || undefined
     );
 
     if (success) {
-      setUserForm({ email: '', fullName: '', password: '', role: 'franchisee' });
+      setCreateForm({
+        email: '',
+        password: '',
+        fullName: '',
+        role: 'franchisee',
+        existingFranchiseeId: ''
+      });
+      // Actualizar lista de franquiciados disponibles
+      fetchAvailableFranchisees();
     }
   };
 
   const handleSendInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inviteForm.email.trim()) {
+    if (!inviteForm.email) {
+      toast.error('Por favor ingresa un email');
       return;
     }
 
-    const success = await sendInvitation(inviteForm.email.trim(), inviteForm.role);
+    const success = await sendInvitation(inviteForm.email, inviteForm.role);
 
     if (success) {
-      setInviteForm({ email: '', role: 'franchisee' });
+      setInviteForm({
+        email: '',
+        role: 'franchisee'
+      });
     }
   };
 
-  // Solo mostrar para admins
-  if (!user || !['admin', 'asesor', 'superadmin'].includes(user.role)) {
-    return null;
-  }
-
   return (
-    <Card className="mb-8">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Users className="w-5 h-5" />
+          <UserPlus className="w-5 h-5" />
           Gestión de Usuarios
         </CardTitle>
       </CardHeader>
@@ -83,127 +121,131 @@ export const UserCreationPanel = () => {
             <TabsTrigger value="invite">Enviar Invitación</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="create" className="space-y-4">
+          <TabsContent value="create">
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Nombre Completo *</Label>
+                <div>
+                  <Label htmlFor="create-email">Email *</Label>
                   <Input
-                    id="fullName"
-                    placeholder="Nombre del usuario"
-                    value={userForm.fullName}
-                    onChange={(e) => setUserForm(prev => ({ ...prev, fullName: e.target.value }))}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="createEmail">Email *</Label>
-                  <Input
-                    id="createEmail"
-                    placeholder="Email del usuario"
-                    value={userForm.email}
-                    onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                    id="create-email"
                     type="email"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="usuario@email.com"
                     required
                   />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña *</Label>
+                <div>
+                  <Label htmlFor="create-password">Contraseña *</Label>
                   <Input
-                    id="password"
-                    placeholder="Contraseña (mínimo 6 caracteres)"
-                    value={userForm.password}
-                    onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                    id="create-password"
                     type="password"
-                    minLength={6}
+                    value={createForm.password}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Contraseña segura"
                     required
                   />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="role">Rol</Label>
-                  <Select
-                    value={userForm.role}
-                    onValueChange={(value: UserRole) => setUserForm(prev => ({ ...prev, role: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="franchisee">Franquiciado</SelectItem>
-                      <SelectItem value="manager">Gerente</SelectItem>
-                      <SelectItem value="asesor">Asesor</SelectItem>
-                      <SelectItem value="asistente">Asistente</SelectItem>
-                      {user?.role === 'superadmin' && (
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
               
-              <Button 
-                type="submit"
-                disabled={creating}
-                className="w-full"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
+              <div>
+                <Label htmlFor="create-name">Nombre Completo *</Label>
+                <Input
+                  id="create-name"
+                  value={createForm.fullName}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  placeholder="Nombre y apellidos"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="create-role">Rol</Label>
+                <Select 
+                  value={createForm.role} 
+                  onValueChange={(value) => setCreateForm(prev => ({ ...prev, role: value as UserRole }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="franchisee">Franquiciado</SelectItem>
+                    <SelectItem value="manager">Gerente</SelectItem>
+                    <SelectItem value="asesor">Asesor</SelectItem>
+                    <SelectItem value="asistente">Asistente</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {createForm.role === 'franchisee' && availableFranchisees.length > 0 && (
+                <div>
+                  <Label htmlFor="existing-franchisee">Franquiciado Existente (Opcional)</Label>
+                  <Select 
+                    value={createForm.existingFranchiseeId} 
+                    onValueChange={(value) => setCreateForm(prev => ({ ...prev, existingFranchiseeId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un franquiciado existente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Crear nuevo franquiciado</SelectItem>
+                      {availableFranchisees.map((franchisee) => (
+                        <SelectItem key={franchisee.id} value={franchisee.id}>
+                          {franchisee.franchisee_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Si seleccionas un franquiciado existente, el usuario podrá ver sus restaurantes.
+                  </p>
+                </div>
+              )}
+
+              <Button type="submit" disabled={creating} className="w-full">
                 {creating ? 'Creando...' : 'Crear Usuario'}
               </Button>
             </form>
           </TabsContent>
-          
-          <TabsContent value="invite" className="space-y-4">
+
+          <TabsContent value="invite">
             <form onSubmit={handleSendInvitation} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="inviteEmail">Email *</Label>
-                  <Input
-                    id="inviteEmail"
-                    placeholder="Email del usuario"
-                    value={inviteForm.email}
-                    onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
-                    type="email"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="inviteRole">Rol</Label>
-                  <Select
-                    value={inviteForm.role}
-                    onValueChange={(value: UserRole) => setInviteForm(prev => ({ ...prev, role: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="franchisee">Franquiciado</SelectItem>
-                      <SelectItem value="manager">Gerente</SelectItem>
-                      <SelectItem value="asesor">Asesor</SelectItem>
-                      <SelectItem value="asistente">Asistente</SelectItem>
-                      {user?.role === 'superadmin' && (
-                        <SelectItem value="admin">Administrador</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="invite-email">Email *</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  value={inviteForm.email}
+                  onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="usuario@email.com"
+                  required
+                />
               </div>
-              
-              <Button 
-                type="submit"
-                disabled={creating}
-                className="w-full"
-              >
+
+              <div>
+                <Label htmlFor="invite-role">Rol</Label>
+                <Select 
+                  value={inviteForm.role} 
+                  onValueChange={(value) => setInviteForm(prev => ({ ...prev, role: value as UserRole }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="franchisee">Franquiciado</SelectItem>
+                    <SelectItem value="manager">Gerente</SelectItem>
+                    <SelectItem value="asesor">Asesor</SelectItem>
+                    <SelectItem value="asistente">Asistente</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button type="submit" disabled={creating} className="w-full">
                 <Mail className="w-4 h-4 mr-2" />
                 {creating ? 'Enviando...' : 'Enviar Invitación'}
               </Button>
-              
-              <p className="text-sm text-gray-500 text-center">
-                Se enviará un correo con instrucciones para crear la cuenta
-              </p>
             </form>
           </TabsContent>
         </Tabs>

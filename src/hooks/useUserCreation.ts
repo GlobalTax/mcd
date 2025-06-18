@@ -14,7 +14,8 @@ export const useUserCreation = () => {
     email: string, 
     password: string, 
     fullName: string, 
-    role: UserRole = 'franchisee'
+    role: UserRole = 'franchisee',
+    existingFranchiseeId?: string
   ) => {
     if (!user) {
       toast.error('No tienes permisos para crear usuarios');
@@ -29,7 +30,7 @@ export const useUserCreation = () => {
 
     try {
       setCreating(true);
-      console.log('Creando usuario:', { email, fullName, role });
+      console.log('Creando usuario:', { email, fullName, role, existingFranchiseeId });
 
       // Verificar si ya existe
       const { data: existingProfile } = await supabase
@@ -83,18 +84,36 @@ export const useUserCreation = () => {
         return false;
       }
 
-      // Si es franquiciado, crear entrada en franchisees
+      // Si es franquiciado, manejar la asignación
       if (role === 'franchisee') {
-        const { error: franchiseeError } = await supabase
-          .from('franchisees')
-          .insert({
-            user_id: signUpData.user.id,
-            franchisee_name: fullName
-          });
+        if (existingFranchiseeId) {
+          // Vincular usuario a franquiciado existente
+          const { error: updateError } = await supabase
+            .from('franchisees')
+            .update({ user_id: signUpData.user.id })
+            .eq('id', existingFranchiseeId);
 
-        if (franchiseeError) {
-          console.error('Error creating franchisee:', franchiseeError);
-          toast.error('Usuario creado pero error al crear franquiciado');
+          if (updateError) {
+            console.error('Error linking to existing franchisee:', updateError);
+            toast.error('Usuario creado pero error al vincular con franquiciado existente');
+            return false;
+          }
+
+          console.log('Usuario vinculado a franquiciado existente:', existingFranchiseeId);
+        } else {
+          // Crear nuevo franquiciado
+          const { error: franchiseeError } = await supabase
+            .from('franchisees')
+            .insert({
+              user_id: signUpData.user.id,
+              franchisee_name: fullName
+            });
+
+          if (franchiseeError) {
+            console.error('Error creating franchisee:', franchiseeError);
+            toast.error('Usuario creado pero error al crear franquiciado');
+            return false;
+          }
         }
       }
 
