@@ -3,7 +3,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
-import ProfitLossDashboard from '@/components/profitloss/ProfitLossDashboard';
+import { FinancialStatementTabs } from '@/components/profitloss/FinancialStatementTabs';
 
 const ProfitLossPage = () => {
   const { siteNumber } = useParams();
@@ -17,8 +17,8 @@ const ProfitLossPage = () => {
             <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6">
               <SidebarTrigger className="-ml-1" />
               <div className="flex-1">
-                <h1 className="text-lg font-semibold text-gray-900">Análisis P&L</h1>
-                <p className="text-sm text-gray-500">Análisis de rentabilidad</p>
+                <h1 className="text-lg font-semibold text-gray-900">Estados Financieros</h1>
+                <p className="text-sm text-gray-500">Análisis completo de rentabilidad</p>
               </div>
             </header>
             <main className="flex-1 p-6">
@@ -40,12 +40,12 @@ const ProfitLossPage = () => {
           <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6">
             <SidebarTrigger className="-ml-1" />
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900">Análisis P&L</h1>
-              <p className="text-sm text-gray-500">Análisis de rentabilidad - Restaurante #{siteNumber}</p>
+              <h1 className="text-lg font-semibold text-gray-900">Estados Financieros</h1>
+              <p className="text-sm text-gray-500">Análisis completo - Restaurante #{siteNumber}</p>
             </div>
           </header>
           <main className="flex-1 p-6">
-            <ProfitLossDashboard restaurantId={siteNumber} />
+            <FinancialStatementTabs restaurantId={siteNumber} />
           </main>
         </SidebarInset>
       </div>
