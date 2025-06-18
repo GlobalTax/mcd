@@ -26,15 +26,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('fetchUserData - Starting fetch for user:', userId);
       
-      // Fetch user profile
+      // Fetch user profile with better error handling
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
+        // If profile doesn't exist, clear user data but don't show error
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, user needs to complete registration');
+          clearUserData();
+          return;
+        }
+        return;
+      }
+
+      if (!profile) {
+        console.log('No profile found for user');
+        clearUserData();
         return;
       }
 
@@ -90,6 +102,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error in fetchUserData:', error);
+      // Clear user data on any unexpected error
+      clearUserData();
     }
   };
 
@@ -137,42 +151,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     console.log('signIn - Attempting login for:', email);
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      console.error('signIn - Error:', error);
-      toast.error(error.message);
-      return { error: error.message };
-    } else {
-      console.log('signIn - Success');
-      toast.success('Sesión iniciada correctamente');
-      return {};
+      if (error) {
+        console.error('signIn - Error:', error);
+        toast.error(error.message);
+        return { error: error.message };
+      } else {
+        console.log('signIn - Success');
+        toast.success('Sesión iniciada correctamente');
+        return {};
+      }
+    } catch (error) {
+      console.error('signIn - Unexpected error:', error);
+      toast.error('Error inesperado al iniciar sesión');
+      return { error: 'Error inesperado al iniciar sesión' };
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName,
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      toast.error(error.message);
-      return { error: error.message };
-    } else {
-      toast.success('Cuenta creada correctamente. Revisa tu email para confirmar tu cuenta.');
-      return {};
+      if (error) {
+        toast.error(error.message);
+        return { error: error.message };
+      } else {
+        toast.success('Cuenta creada correctamente. Revisa tu email para confirmar tu cuenta.');
+        return {};
+      }
+    } catch (error) {
+      console.error('signUp - Unexpected error:', error);
+      toast.error('Error inesperado al crear cuenta');
+      return { error: 'Error inesperado al crear cuenta' };
     }
   };
 

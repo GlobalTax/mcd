@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useCreateUser } from '@/hooks/useCreateUser';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,9 @@ interface NewUser {
 
 const UserManagement = () => {
   const { user } = useAuth();
+  const { createUser, creating } = useCreateUser();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newUser, setNewUser] = useState<NewUser>({
     email: '',
@@ -74,80 +75,17 @@ const UserManagement = () => {
       return;
     }
 
-    setCreating(true);
+    const success = await createUser(
+      newUser.email,
+      newUser.password,
+      newUser.fullName,
+      newUser.role
+    );
 
-    try {
-      // Use database role directly
-      const dbRole = newUser.role;
-      
-      // Crear el usuario en Supabase Auth
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: newUser.email,
-        password: newUser.password,
-        user_metadata: {
-          full_name: newUser.fullName,
-          role: dbRole
-        },
-        email_confirm: true
-      });
-
-      if (error) {
-        console.error('Error creating user:', error);
-        toast.error(error.message);
-        return;
-      }
-
-      if (data.user) {
-        // Usar la función RPC para crear el perfil con el rol correcto
-        const { error: profileError } = await supabase.rpc('create_franchisee_profile', {
-          user_id: data.user.id,
-          user_email: newUser.email,
-          user_full_name: newUser.fullName
-        });
-
-        if (profileError) {
-          console.error('Error creating profile with RPC:', profileError);
-          
-          // Como alternativa, intentar actualizar el perfil directamente
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: dbRole,
-              full_name: newUser.fullName 
-            })
-            .eq('id', data.user.id);
-
-          if (updateError) {
-            console.error('Error updating profile:', updateError);
-            toast.error('Usuario creado pero error al asignar rol');
-          } else {
-            toast.success('Usuario creado exitosamente');
-          }
-        } else {
-          // Si se creó con la función RPC pero necesita actualizar el rol
-          if (dbRole !== 'franchisee') {
-            const { error: roleUpdateError } = await supabase
-              .from('profiles')
-              .update({ role: dbRole })
-              .eq('id', data.user.id);
-
-            if (roleUpdateError) {
-              console.error('Error updating role:', roleUpdateError);
-              toast.error('Usuario creado pero error al asignar rol específico');
-            }
-          }
-          toast.success('Usuario creado exitosamente');
-        }
-
-        setNewUser({ email: '', password: '', fullName: '', role: 'franchisee' });
-        setShowCreateForm(false);
-        fetchUsers();
-      }
-    } catch (error) {
-      console.error('Error in handleCreateUser:', error);
-      toast.error('Error al crear usuario');
-    } finally {
-      setCreating(false);
+    if (success) {
+      setNewUser({ email: '', password: '', fullName: '', role: 'franchisee' });
+      setShowCreateForm(false);
+      fetchUsers();
     }
   };
 

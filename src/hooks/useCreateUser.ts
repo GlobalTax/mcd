@@ -12,7 +12,7 @@ export const useCreateUser = () => {
     email: string, 
     password: string, 
     fullName: string, 
-    franchiseeId: string
+    role: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente' = 'franchisee'
   ) => {
     if (!user) {
       toast.error('No tienes permisos para crear usuarios');
@@ -21,7 +21,7 @@ export const useCreateUser = () => {
 
     try {
       setCreating(true);
-      console.log('Iniciando creación de usuario:', { email, fullName, franchiseeId });
+      console.log('Iniciando creación de usuario:', { email, fullName, role });
 
       // Verificar si ya existe un usuario con este email
       const { data: existingProfile } = await supabase
@@ -62,55 +62,25 @@ export const useCreateUser = () => {
 
       console.log('Usuario creado en auth:', authData.user);
 
-      // Crear el perfil usando la función RPC mejorada
-      console.log('Creando perfil usando función RPC');
-      const { error: profileCreateError } = await supabase.rpc('create_franchisee_profile', {
-        user_id: authData.user.id,
-        user_email: email,
-        user_full_name: fullName
-      });
+      // Crear el perfil directamente en la tabla profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          role: role
+        });
 
-      if (profileCreateError) {
-        console.error('Error creating profile with RPC:', profileCreateError);
+      if (profileError) {
+        console.error('Error creating profile:', profileError);
         toast.error('Usuario creado pero error al crear perfil');
         return false;
       }
 
       console.log('Perfil creado exitosamente');
 
-      // Crear una invitación marcada como aceptada
-      const { error: inviteError } = await supabase
-        .from('franchisee_invitations')
-        .insert({
-          franchisee_id: franchiseeId,
-          email,
-          invited_by: user.id,
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
-        });
-
-      if (inviteError) {
-        console.error('Error creating invitation:', inviteError);
-        // No es crítico, continuamos
-      } else {
-        console.log('Invitación creada y marcada como aceptada');
-      }
-
-      // Actualizar el franquiciado con el nuevo user_id
-      const { error: franchiseeError } = await supabase
-        .from('franchisees')
-        .update({ user_id: authData.user.id })
-        .eq('id', franchiseeId);
-
-      if (franchiseeError) {
-        console.error('Error linking franchisee:', franchiseeError);
-        toast.error('Usuario creado pero error al vincular con franquiciado');
-        return false;
-      }
-
-      console.log('Franquiciado vinculado con usuario');
-
-      toast.success(`Usuario creado exitosamente para ${fullName}. El usuario puede iniciar sesión inmediatamente.`);
+      toast.success(`Usuario ${fullName} creado exitosamente. El usuario puede iniciar sesión inmediatamente.`);
       return true;
 
     } catch (error) {

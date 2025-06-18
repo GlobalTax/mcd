@@ -1004,6 +1004,10 @@ export type Database = {
         Args: { user_id: string; user_email: string; user_full_name: string }
         Returns: undefined
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       manually_assign_restaurants_to_existing_franchisees: {
         Args: Record<PropertyKey, never>
         Returns: undefined
