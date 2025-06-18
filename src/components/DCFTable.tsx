@@ -171,15 +171,6 @@ const DCFTable = () => {
   return (
     <div className="bg-white min-h-screen" style={{ fontFamily: tableStyles.fontFamily }}>
       <div className="space-y-6 p-6 max-w-full mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Valoración Rte. PARC CENTRAL
-          </h1>
-          <p className="text-gray-600">
-            Modelo de valoración por flujo de caja descontado (Entrada manual por años)
-          </p>
-        </div>
-
         <TableStyleEditor 
           styles={tableStyles}
           onStylesChange={setTableStyles}
