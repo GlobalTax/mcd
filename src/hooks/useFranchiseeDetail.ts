@@ -26,7 +26,7 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
       return;
     }
 
-    if (user.role !== 'advisor' && user.role !== 'admin' && user.role !== 'superadmin') {
+    if (user.role !== 'asesor' && user.role !== 'admin' && user.role !== 'superadmin') {
       setError('No tienes permisos para ver esta información');
       setLoading(false);
       return;

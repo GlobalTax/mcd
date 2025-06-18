@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,7 +19,7 @@ export const useFranchisees = () => {
       return;
     }
 
-    if (user.role !== 'advisor' && user.role !== 'admin' && user.role !== 'superadmin') {
+    if (user.role !== 'asesor' && user.role !== 'admin' && user.role !== 'superadmin') {
       console.log('fetchFranchisees - User role is not authorized:', user.role);
       setError('No tienes permisos para ver los franquiciados');
       toast.error('No tienes permisos para ver los franquiciados');
