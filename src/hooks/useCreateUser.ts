@@ -21,6 +21,7 @@ export const useCreateUser = () => {
 
     try {
       setCreating(true);
+      console.log('Iniciando creación de usuario:', { email, fullName, franchiseeId });
 
       // Verificar si ya existe un usuario con este email
       const { data: existingProfile } = await supabase
@@ -30,6 +31,7 @@ export const useCreateUser = () => {
         .single();
 
       if (existingProfile) {
+        console.log('Usuario ya existe:', existingProfile);
         toast.error('Ya existe un usuario con este email');
         return false;
       }
@@ -52,6 +54,8 @@ export const useCreateUser = () => {
         return false;
       }
 
+      console.log('Invitación creada:', invitation);
+
       // Crear el usuario usando signup normal
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -63,6 +67,8 @@ export const useCreateUser = () => {
           emailRedirectTo: `${window.location.origin}/`
         }
       });
+
+      console.log('Resultado del signup:', { authData, authError });
 
       if (authError) {
         console.error('Error creating user:', authError);
@@ -78,12 +84,15 @@ export const useCreateUser = () => {
       }
 
       if (!authData.user) {
+        console.error('No user returned from signUp');
         toast.error('Error al crear usuario');
         return false;
       }
 
+      console.log('Usuario creado en auth:', authData.user);
+
       // Marcar la invitación como aceptada
-      await supabase
+      const { error: inviteUpdateError } = await supabase
         .from('franchisee_invitations')
         .update({ 
           status: 'accepted',
@@ -91,19 +100,57 @@ export const useCreateUser = () => {
         })
         .eq('id', invitation.id);
 
-      // Actualizar el perfil con el rol de franchisee
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          role: 'franchisee',
-          full_name: fullName 
-        })
-        .eq('id', authData.user.id);
+      if (inviteUpdateError) {
+        console.error('Error updating invitation:', inviteUpdateError);
+      } else {
+        console.log('Invitación marcada como aceptada');
+      }
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
-        toast.error('Usuario creado pero error al asignar rol');
-        return false;
+      // Dar tiempo para que el trigger de profiles funcione
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Verificar si el perfil se creó automáticamente
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      console.log('Perfil después del signup:', profileCheck);
+
+      // Actualizar el perfil con el rol de franchisee si existe
+      if (profileCheck) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            role: 'franchisee',
+            full_name: fullName 
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          toast.error('Usuario creado pero error al asignar rol');
+          return false;
+        }
+        console.log('Perfil actualizado con rol franchisee');
+      } else {
+        // Si no existe el perfil, crearlo manualmente
+        const { error: profileCreateError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: email,
+            full_name: fullName,
+            role: 'franchisee'
+          });
+
+        if (profileCreateError) {
+          console.error('Error creating profile manually:', profileCreateError);
+          toast.error('Usuario creado pero error al crear perfil');
+          return false;
+        }
+        console.log('Perfil creado manualmente');
       }
 
       // Actualizar el franquiciado con el nuevo user_id
@@ -117,6 +164,8 @@ export const useCreateUser = () => {
         toast.error('Usuario creado pero error al vincular con franquiciado');
         return false;
       }
+
+      console.log('Franquiciado vinculado con usuario');
 
       toast.success(`Usuario creado exitosamente para ${fullName}. Se ha enviado un email de confirmación.`);
       return true;
