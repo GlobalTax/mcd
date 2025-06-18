@@ -20,6 +20,7 @@ export const useUserDataFetcher = ({
   const fetchUserData = async (userId: string) => {
     try {
       console.log('fetchUserData - Starting fetch for user:', userId);
+      console.log('fetchUserData - About to query profiles table');
       
       // Fetch user profile with better error handling
       const { data: profile, error: profileError } = await supabase
@@ -28,13 +29,14 @@ export const useUserDataFetcher = ({
         .eq('id', userId)
         .maybeSingle();
 
+      console.log('fetchUserData - Profile query completed');
       console.log('fetchUserData - Profile query result:', { profile, profileError });
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        console.error('fetchUserData - Profile error details:', profileError);
         // If profile doesn't exist, clear user data but don't show error
         if (profileError.code === 'PGRST116') {
-          console.log('Profile not found, user needs to complete registration');
+          console.log('fetchUserData - Profile not found, user needs to complete registration');
           clearUserData();
           return;
         }
@@ -44,7 +46,7 @@ export const useUserDataFetcher = ({
       }
 
       if (!profile) {
-        console.log('No profile found for user');
+        console.log('fetchUserData - No profile found for user');
         clearUserData();
         return;
       }
@@ -73,7 +75,7 @@ export const useUserDataFetcher = ({
       
       console.log('fetchUserData - User data fetch completed successfully');
     } catch (error) {
-      console.error('Error in fetchUserData:', error);
+      console.error('fetchUserData - Unexpected error in fetchUserData:', error);
       // Clear user data on any unexpected error
       clearUserData();
     }
@@ -82,6 +84,7 @@ export const useUserDataFetcher = ({
   const fetchFranchiseeData = async (userId: string, profile: any) => {
     try {
       console.log('fetchFranchiseeData - Starting for user:', userId);
+      console.log('fetchFranchiseeData - About to query franchisees table');
       
       // Fetch franchisee data
       const { data: franchiseeData, error: franchiseeError } = await supabase
@@ -90,14 +93,16 @@ export const useUserDataFetcher = ({
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('fetchFranchiseeData - Franchisee query completed');
       console.log('fetchFranchiseeData - Franchisee query result:', { franchiseeData, franchiseeError });
 
       if (franchiseeError) {
-        console.error('Error fetching franchisee:', franchiseeError);
+        console.error('fetchFranchiseeData - Franchisee error details:', franchiseeError);
         // Si no existe el franquiciado, crear uno
         if (franchiseeError.code === 'PGRST116') {
-          console.log('No franchisee found, creating one for user:', profile.full_name);
+          console.log('fetchFranchiseeData - No franchisee found, creating one for user:', profile.full_name);
           
+          console.log('fetchFranchiseeData - About to insert new franchisee');
           const { data: newFranchisee, error: createError } = await supabase
             .from('franchisees')
             .insert({
@@ -107,8 +112,11 @@ export const useUserDataFetcher = ({
             .select()
             .single();
 
+          console.log('fetchFranchiseeData - Insert franchisee completed');
+          console.log('fetchFranchiseeData - Insert result:', { newFranchisee, createError });
+
           if (createError) {
-            console.error('Error creating franchisee:', createError);
+            console.error('fetchFranchiseeData - Error creating franchisee:', createError);
             toast.error('Error al crear perfil de franquiciado');
             return;
           }
@@ -123,18 +131,20 @@ export const useUserDataFetcher = ({
       if (franchiseeData) {
         console.log('fetchFranchiseeData - Setting franchisee:', franchiseeData);
         setFranchisee(franchiseeData as Franchisee);
+        console.log('fetchFranchiseeData - About to fetch restaurants for franchisee:', franchiseeData.id);
         await fetchRestaurantsData(franchiseeData.id);
       }
       
       console.log('fetchFranchiseeData - Franchisee data fetch completed');
     } catch (error) {
-      console.error('Error in fetchFranchiseeData:', error);
+      console.error('fetchFranchiseeData - Unexpected error in fetchFranchiseeData:', error);
     }
   };
 
   const fetchRestaurantsData = async (franchiseeId: string) => {
     try {
       console.log('fetchRestaurantsData - Starting for franchisee:', franchiseeId);
+      console.log('fetchRestaurantsData - About to query franchisee_restaurants table');
       
       // Buscar restaurantes vinculados a través de franchisee_restaurants
       const { data: restaurantsData, error: restaurantsError } = await supabase
@@ -146,10 +156,11 @@ export const useUserDataFetcher = ({
         .eq('franchisee_id', franchiseeId)
         .eq('status', 'active');
 
+      console.log('fetchRestaurantsData - Restaurants query completed');
       console.log('fetchRestaurantsData - Restaurants query result:', { restaurantsData, restaurantsError });
 
       if (restaurantsError) {
-        console.error('Error fetching restaurants:', restaurantsError);
+        console.error('fetchRestaurantsData - Error fetching restaurants:', restaurantsError);
       } else {
         console.log('fetchRestaurantsData - Restaurants found:', restaurantsData);
         
@@ -175,13 +186,14 @@ export const useUserDataFetcher = ({
             updated_at: item.base_restaurant.updated_at
           })) || [];
         
+        console.log('fetchRestaurantsData - About to set restaurants:', transformedRestaurants.length);
         setRestaurants(transformedRestaurants);
         console.log('fetchRestaurantsData - Restaurants set:', transformedRestaurants.length);
       }
       
       console.log('fetchRestaurantsData - Restaurant data fetch completed');
     } catch (error) {
-      console.error('Error in fetchRestaurantsData:', error);
+      console.error('fetchRestaurantsData - Unexpected error in fetchRestaurantsData:', error);
     }
   };
 
