@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AnnualBudgetGrid } from '@/components/budget/AnnualBudgetGrid';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
@@ -8,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Building, Calendar, Plus, Download, FileText } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/navigation/AppSidebar';
-import ProfitLossDashboard from '@/components/profitloss/ProfitLossDashboard';
 import { BalanceSheetStatement } from '@/components/profitloss/BalanceSheetStatement';
 import { CashFlowStatement } from '@/components/profitloss/CashFlowStatement';
 
@@ -115,34 +115,49 @@ export default function AnnualBudgetPage() {
 
             {/* Financial Statement Tabs */}
             {selectedRestaurant ? (
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="budget" className="text-sm font-medium">
-                    Profit & Loss
-                  </TabsTrigger>
-                  <TabsTrigger value="balance-sheet" className="text-sm font-medium">
-                    Balance Sheet
-                  </TabsTrigger>
-                  <TabsTrigger value="cash-flow" className="text-sm font-medium">
-                    Cash Flow Statement
-                  </TabsTrigger>
-                </TabsList>
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <div className="border-b border-gray-200 px-6 pt-6">
+                    <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                      <TabsTrigger 
+                        value="budget" 
+                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                      >
+                        Profit & Loss
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="balance-sheet" 
+                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                      >
+                        Balance Sheet
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="cash-flow" 
+                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                      >
+                        Cash Flow Statement
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
 
-                <TabsContent value="budget" className="space-y-6">
-                  <AnnualBudgetGrid
-                    restaurantId={selectedRestaurant}
-                    year={selectedYear}
-                  />
-                </TabsContent>
+                  <div className="p-6">
+                    <TabsContent value="budget" className="space-y-6 m-0">
+                      <AnnualBudgetGrid
+                        restaurantId={selectedRestaurant}
+                        year={selectedYear}
+                      />
+                    </TabsContent>
 
-                <TabsContent value="balance-sheet" className="space-y-6">
-                  <BalanceSheetStatement restaurantId={selectedRestaurant} year={selectedYear} />
-                </TabsContent>
+                    <TabsContent value="balance-sheet" className="space-y-6 m-0">
+                      <BalanceSheetStatement restaurantId={selectedRestaurant} year={selectedYear} />
+                    </TabsContent>
 
-                <TabsContent value="cash-flow" className="space-y-6">
-                  <CashFlowStatement restaurantId={selectedRestaurant} year={selectedYear} />
-                </TabsContent>
-              </Tabs>
+                    <TabsContent value="cash-flow" className="space-y-6 m-0">
+                      <CashFlowStatement restaurantId={selectedRestaurant} year={selectedYear} />
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </div>
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
