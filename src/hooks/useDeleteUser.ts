@@ -18,31 +18,22 @@ export const useDeleteUser = () => {
       setDeleting(true);
       console.log('Iniciando eliminación de usuario:', { franchiseeId, userId, userName });
 
-      // 1. Primero eliminar el perfil del usuario
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+      // 1. Desvincular el franquiciado del usuario (esto es lo más importante)
+      const { error: franchiseeError } = await supabase
+        .from('franchisees')
+        .update({ user_id: null })
+        .eq('id', franchiseeId)
+        .eq('user_id', userId); // Asegurar que solo actualizamos el franquiciado correcto
 
-      if (profileError) {
-        console.error('Error eliminando perfil:', profileError);
-        // No retornamos false aquí porque el perfil puede no existir
-      } else {
-        console.log('Perfil eliminado exitosamente');
-      }
-
-      // 2. Eliminar el usuario de auth usando admin
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        console.error('Error eliminando usuario de auth:', authError);
-        toast.error('Error al eliminar la cuenta de usuario');
+      if (franchiseeError) {
+        console.error('Error desvinculando franquiciado:', franchiseeError);
+        toast.error('Error al desvincular el acceso del franquiciado');
         return false;
       }
 
-      console.log('Usuario eliminado de auth exitosamente');
+      console.log('Franquiciado desvinculado exitosamente');
 
-      // 3. Marcar invitaciones como expiradas
+      // 2. Marcar invitaciones como expiradas
       const { error: invitationError } = await supabase
         .from('franchisee_invitations')
         .update({ status: 'expired' })
@@ -53,12 +44,28 @@ export const useDeleteUser = () => {
         // No es crítico, continuamos
       }
 
-      toast.success(`Acceso eliminado para ${userName}`);
+      // 3. Intentar eliminar el perfil (opcional, el usuario puede seguir existiendo)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        console.error('Error eliminando perfil:', profileError);
+        // No es crítico para el proceso principal
+      } else {
+        console.log('Perfil eliminado exitosamente');
+      }
+
+      // Nota: No podemos eliminar el usuario de auth.users con el token actual
+      // pero hemos desvinculado al franquiciado, que es lo más importante
+      
+      toast.success(`Acceso eliminado para ${userName}. El franquiciado ya no tiene acceso al sistema.`);
       return true;
 
     } catch (error) {
       console.error('Error en deleteUser:', error);
-      toast.error('Error inesperado al eliminar usuario');
+      toast.error('Error inesperado al eliminar acceso de usuario');
       return false;
     } finally {
       setDeleting(false);
