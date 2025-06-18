@@ -22,7 +22,14 @@ export const useFranchiseeInvitations = (franchiseeId?: string) => {
         .order('invited_at', { ascending: false });
 
       if (error) throw error;
-      setInvitations(data || []);
+      
+      // Type assertion para asegurar que el status es del tipo correcto
+      const typedData = (data || []).map(invitation => ({
+        ...invitation,
+        status: invitation.status as 'pending' | 'accepted' | 'expired'
+      }));
+      
+      setInvitations(typedData);
     } catch (err) {
       console.error('Error fetching invitations:', err);
       toast.error('Error al cargar las invitaciones');

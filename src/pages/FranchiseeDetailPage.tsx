@@ -172,7 +172,10 @@ export default function FranchiseeDetailPage() {
         </CardHeader>
         <CardContent>
           {restaurants.length > 0 ? (
-            <FranchiseeRestaurantsTable restaurants={restaurants} />
+            <FranchiseeRestaurantsTable 
+              franchiseeId={franchisee.id} 
+              restaurants={restaurants} 
+            />
           ) : (
             <p className="text-gray-500 text-center py-8">No hay restaurantes asignados</p>
           )}
