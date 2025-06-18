@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +48,12 @@ const AuthPage = () => {
     setIsLoading(true);
     
     console.log('AuthPage - Starting sign in process');
-    await signIn(email, password);
+    const result = await signIn(email, password);
+    
+    // Solo mostrar error si hay uno, el éxito se maneja en useAuth
+    if (result?.error) {
+      console.log('AuthPage - Sign in error:', result.error);
+    }
     
     setIsLoading(false);
   };

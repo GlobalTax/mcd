@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,16 +108,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('fetchUserData - Setting franchisee:', franchiseeData);
           setFranchisee(franchiseeData as Franchisee);
 
-          // Fetch restaurants (keeping compatibility with old structure)
+          // Buscar restaurantes vinculados a través de franchisee_restaurants
           const { data: restaurantsData, error: restaurantsError } = await supabase
-            .from('restaurants')
-            .select('*')
-            .eq('franchisee_id', franchiseeData.id);
+            .from('franchisee_restaurants')
+            .select(`
+              *,
+              base_restaurant:base_restaurants(*)
+            `)
+            .eq('franchisee_id', franchiseeData.id)
+            .eq('status', 'active');
 
           if (restaurantsError) {
             console.error('Error fetching restaurants:', restaurantsError);
           } else {
-            console.log('fetchUserData - Old restaurants found:', restaurantsData);
+            console.log('fetchUserData - Restaurants found:', restaurantsData);
             setRestaurants(restaurantsData as Restaurant[]);
           }
         }
@@ -145,16 +150,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('useAuth - Auth state change:', event, session?.user?.id);
         console.log('useAuth - Full session:', session);
         setSession(session);
         
         if (session?.user) {
           console.log('useAuth - User found in session, fetching user data');
-          setTimeout(() => {
-            fetchUserData(session.user.id);
-          }, 0);
+          await fetchUserData(session.user.id);
         } else {
           console.log('useAuth - No session, clearing user data');
           clearUserData();
@@ -164,12 +167,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('useAuth - Initial session check:', session?.user?.id);
       console.log('useAuth - Initial session full:', session);
       setSession(session);
       if (session?.user) {
-        fetchUserData(session.user.id);
+        await fetchUserData(session.user.id);
       }
       setLoading(false);
     });
@@ -181,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('signIn - Attempting login for:', email);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -191,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.error(error.message);
         return { error: error.message };
       } else {
-        console.log('signIn - Success');
+        console.log('signIn - Success, user data:', data.user);
         toast.success('Sesión iniciada correctamente');
         return {};
       }
