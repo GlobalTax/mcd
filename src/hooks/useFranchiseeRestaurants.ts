@@ -63,7 +63,10 @@ export const useFranchiseeRestaurants = () => {
             company_tax_id,
             opening_date,
             property_type,
-            autonomous_community
+            autonomous_community,
+            created_at,
+            updated_at,
+            created_by
           )
         `)
         .eq('franchisee_id', franchisee.id);
