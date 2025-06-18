@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
-  requiredRole?: 'admin' | 'franchisee' | 'manager' | 'advisor' | 'asistente' | 'superadmin';
+  requiredRole?: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente' | 'superadmin';
 }
 
 const ProtectedRoute = ({ children, allowedRoles, requiredRole }: ProtectedRouteProps) => {
@@ -39,11 +39,11 @@ const ProtectedRoute = ({ children, allowedRoles, requiredRole }: ProtectedRoute
     }
   }
 
-  // Check if user has required role - para advisor permitir también admin y superadmin
+  // Check if user has required role - para asesor permitir también admin y superadmin
   if (requiredRole) {
-    if (requiredRole === 'advisor') {
-      // Si se requiere advisor, permitir advisor, admin y superadmin
-      if (!['advisor', 'admin', 'superadmin'].includes(user.role)) {
+    if (requiredRole === 'asesor') {
+      // Si se requiere asesor, permitir asesor, admin y superadmin
+      if (!['asesor', 'admin', 'superadmin'].includes(user.role)) {
         return (
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">

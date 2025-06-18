@@ -29,7 +29,7 @@ const AdvisorPage = () => {
     );
   }
 
-  if (!user || !['advisor', 'admin', 'superadmin'].includes(user.role)) {
+  if (!user || !['asesor', 'admin', 'superadmin'].includes(user.role)) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -42,6 +42,7 @@ const AdvisorPage = () => {
     switch (role) {
       case 'superadmin': return 'Super Admin';
       case 'admin': return 'Admin';
+      case 'asesor': return 'Asesor';
       default: return 'Asesor';
     }
   };

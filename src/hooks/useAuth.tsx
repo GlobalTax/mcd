@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,12 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('fetchUserData - Profile fetched:', profile);
 
-      // Map database role "asesor" to TypeScript type "advisor"
-      const mappedRole = profile.role === 'asesor' ? 'advisor' : profile.role;
-      
+      // Usar el rol directamente de la base de datos sin mapear
       const userData = {
         ...profile,
-        role: mappedRole
+        role: profile.role // Mantener el rol original de la base de datos
       } as User;
 
       console.log('fetchUserData - Setting user with role:', userData.role);

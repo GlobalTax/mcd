@@ -66,7 +66,7 @@ function App() {
               <Route
                 path="/advisor"
                 element={
-                  <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
+                  <ProtectedRoute allowedRoles={['asesor', 'admin', 'superadmin']}>
                     <AdvisorPage />
                   </ProtectedRoute>
                 }
@@ -74,7 +74,7 @@ function App() {
               <Route
                 path="/advisor/franchisee/:franchiseeId"
                 element={
-                  <ProtectedRoute allowedRoles={['advisor', 'admin', 'superadmin']}>
+                  <ProtectedRoute allowedRoles={['asesor', 'admin', 'superadmin']}>
                     <FranchiseeDetailPage />
                   </ProtectedRoute>
                 }

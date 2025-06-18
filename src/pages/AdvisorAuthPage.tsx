@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,8 @@ const AdvisorAuthPage = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      if (user.role === 'advisor') {
+      // Verificar si el usuario tiene permisos de asesor (asesor, admin o superadmin)
+      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
         navigate('/advisor');
       } else {
         toast.error('No tienes permisos de asesor');
@@ -40,7 +40,7 @@ const AdvisorAuthPage = () => {
     
     const { error } = await signIn(email, password);
     
-    if (!error && user && user.role !== 'advisor') {
+    if (!error && user && !['asesor', 'admin', 'superadmin'].includes(user.role)) {
       toast.error('Esta cuenta no tiene permisos de asesor');
     }
     

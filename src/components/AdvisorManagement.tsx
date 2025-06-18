@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,10 +35,10 @@ const AdvisorManagement = () => {
         return;
       }
 
-      // Map database roles to TypeScript types
+      // Mantener los roles como están en la base de datos
       const typedAdvisors = (data || []).map(advisorData => ({
         ...advisorData,
-        role: advisorData.role === 'asesor' ? 'advisor' : advisorData.role as 'admin' | 'advisor' | 'superadmin'
+        role: advisorData.role as 'admin' | 'asesor' | 'superadmin'
       }));
 
       setAdvisors(typedAdvisors);
@@ -80,7 +81,7 @@ const AdvisorManagement = () => {
         return 'bg-red-100 text-red-800';
       case 'admin':
         return 'bg-blue-100 text-blue-800';
-      case 'advisor':
+      case 'asesor':
         return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -93,7 +94,7 @@ const AdvisorManagement = () => {
         return 'Super Admin';
       case 'admin':
         return 'Admin';
-      case 'advisor':
+      case 'asesor':
         return 'Asesor';
       default:
         return role;
@@ -102,11 +103,11 @@ const AdvisorManagement = () => {
 
   const canDeleteAdvisor = (advisorRole: string) => {
     if (user?.role === 'superadmin') return true;
-    if (user?.role === 'admin' && advisorRole === 'advisor') return true;
+    if (user?.role === 'admin' && advisorRole === 'asesor') return true;
     return false;
   };
 
-  if (!user || (user.role !== 'superadmin' && user.role !== 'admin' && user.role !== 'advisor')) {
+  if (!user || !['superadmin', 'admin', 'asesor'].includes(user.role)) {
     return (
       <Card>
         <CardContent className="p-6">
