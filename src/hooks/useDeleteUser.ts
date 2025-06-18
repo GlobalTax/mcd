@@ -18,21 +18,7 @@ export const useDeleteUser = () => {
       setDeleting(true);
       console.log('Iniciando eliminación de usuario:', { franchiseeId, userId, userName });
 
-      // 1. Desvincular el franquiciado del usuario
-      const { error: franchiseeError } = await supabase
-        .from('franchisees')
-        .update({ user_id: null })
-        .eq('id', franchiseeId);
-
-      if (franchiseeError) {
-        console.error('Error desvinculando franquiciado:', franchiseeError);
-        toast.error('Error al desvincular franquiciado');
-        return false;
-      }
-
-      console.log('Franquiciado desvinculado exitosamente');
-
-      // 2. Eliminar el perfil del usuario
+      // 1. Primero eliminar el perfil del usuario
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
@@ -45,23 +31,22 @@ export const useDeleteUser = () => {
         console.log('Perfil eliminado exitosamente');
       }
 
-      // 3. Eliminar el usuario de auth usando admin
+      // 2. Eliminar el usuario de auth usando admin
       const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
       if (authError) {
         console.error('Error eliminando usuario de auth:', authError);
-        toast.error('Usuario desvinculado pero error al eliminar cuenta');
-        return true; // Consideramos exitoso porque ya desvinculamos
+        toast.error('Error al eliminar la cuenta de usuario');
+        return false;
       }
 
       console.log('Usuario eliminado de auth exitosamente');
 
-      // 4. Marcar invitaciones como expiradas
+      // 3. Marcar invitaciones como expiradas
       const { error: invitationError } = await supabase
         .from('franchisee_invitations')
         .update({ status: 'expired' })
-        .eq('franchisee_id', franchiseeId)
-        .eq('email', (await supabase.from('profiles').select('email').eq('id', userId).single())?.data?.email);
+        .eq('franchisee_id', franchiseeId);
 
       if (invitationError) {
         console.error('Error actualizando invitaciones:', invitationError);
