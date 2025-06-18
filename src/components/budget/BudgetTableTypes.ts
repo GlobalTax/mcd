@@ -5,6 +5,7 @@ export interface BudgetTableProps {
   data: BudgetData[];
   actualData?: any[];
   onCellChange: (id: string, field: string, value: number) => void;
+  onActualChange?: (id: string, field: string, value: number) => void;
   viewMode?: 'budget' | 'comparison' | 'actuals';
   showOnlySummary?: boolean;
 }
@@ -12,6 +13,7 @@ export interface BudgetTableProps {
 export interface EditingCell {
   rowId: string;
   field: string;
+  isActual?: boolean;
 }
 
 export interface Month {
