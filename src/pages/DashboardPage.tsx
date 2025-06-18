@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
-import { InvitationPanel } from '@/components/InvitationPanel';
 import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
 import { DashboardSummary } from '@/components/dashboard/DashboardSummary';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -90,8 +88,6 @@ const DashboardPage = () => {
           </header>
 
           <main className="flex-1 p-6">
-            <InvitationPanel />
-
             {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
               <DashboardSummary 
                 totalRestaurants={totalRestaurants} 
