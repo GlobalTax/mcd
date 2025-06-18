@@ -117,6 +117,85 @@ export const useActualData = () => {
     }
   }, [user]);
 
+  const updateActualData = useCallback(async (data: {
+    restaurant_id: string;
+    year: number;
+    category: string;
+    subcategory: string;
+    [key: string]: any;
+  }) => {
+    if (!user) return;
+
+    try {
+      // Convertir el campo de mes a número
+      const monthFields = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+      const monthField = Object.keys(data).find(key => monthFields.includes(key));
+      
+      if (!monthField) {
+        throw new Error('No month field found');
+      }
+
+      const monthNumber = getMonthNumber(monthField);
+      if (!monthNumber) {
+        throw new Error('Invalid month field');
+      }
+
+      // Buscar registro existente
+      const { data: existingData, error: fetchError } = await supabase
+        .from('profit_loss_data')
+        .select('*')
+        .eq('restaurant_id', data.restaurant_id)
+        .eq('year', data.year)
+        .eq('month', monthNumber)
+        .maybeSingle();
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      // Mapear la categoría y subcategoría a los campos de la base de datos
+      const fieldMapping = getFieldMapping(data.category, data.subcategory);
+      if (!fieldMapping) {
+        throw new Error(`No field mapping found for ${data.category} - ${data.subcategory}`);
+      }
+
+      const updateData = {
+        [fieldMapping]: data[monthField]
+      };
+
+      if (existingData) {
+        // Actualizar registro existente
+        const { error: updateError } = await supabase
+          .from('profit_loss_data')
+          .update(updateData)
+          .eq('id', existingData.id);
+
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        // Crear nuevo registro
+        const { error: insertError } = await supabase
+          .from('profit_loss_data')
+          .insert({
+            restaurant_id: data.restaurant_id,
+            year: data.year,
+            month: monthNumber,
+            ...updateData,
+            created_by: user.id
+          });
+
+        if (insertError) {
+          throw insertError;
+        }
+      }
+
+    } catch (err) {
+      console.error('Error updating actual data:', err);
+      throw err;
+    }
+  }, [user]);
+
   const getMonthKey = (month: number): string | null => {
     const monthMap: { [key: number]: string } = {
       1: 'jan', 2: 'feb', 3: 'mar', 4: 'apr', 5: 'may', 6: 'jun',
@@ -125,10 +204,42 @@ export const useActualData = () => {
     return monthMap[month] || null;
   };
 
+  const getMonthNumber = (monthKey: string): number | null => {
+    const monthMap: { [key: string]: number } = {
+      'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+      'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    };
+    return monthMap[monthKey] || null;
+  };
+
+  const getFieldMapping = (category: string, subcategory: string): string | null => {
+    const mappings: { [key: string]: string } = {
+      'Ingresos por Ventas-Ventas Netas': 'net_sales',
+      'Ingresos por Ventas-Otros Ingresos': 'other_revenue',
+      'Costos de Ventas-Costo de Alimentos': 'food_cost',
+      'Costos de Ventas-Costo de Papel': 'paper_cost',
+      'Gastos de Personal-Trabajo de Gestión': 'management_labor',
+      'Gastos de Personal-Trabajo de Equipo': 'crew_labor',
+      'Gastos de Personal-Beneficios': 'benefits',
+      'Gastos Operativos-Alquiler': 'rent',
+      'Gastos Operativos-Servicios Públicos': 'utilities',
+      'Gastos Operativos-Mantenimiento': 'maintenance',
+      'Gastos Operativos-Publicidad': 'advertising',
+      'Gastos Operativos-Seguro': 'insurance',
+      'Gastos Operativos-Suministros': 'supplies',
+      'Gastos Operativos-Otros Gastos': 'other_expenses',
+      'Tarifas McDonald\'s-Tarifa de Franquicia': 'franchise_fee',
+      'Tarifas McDonald\'s-Tarifa de Publicidad': 'advertising_fee',
+      'Tarifas McDonald\'s-Porcentaje de Alquiler': 'rent_percentage'
+    };
+    return mappings[`${category}-${subcategory}`] || null;
+  };
+
   return {
     actualData,
     loading,
     error,
-    fetchActualData
+    fetchActualData,
+    updateActualData
   };
 };

@@ -4,7 +4,7 @@ import { BudgetData } from '@/types/budgetTypes';
 export interface EditingCell {
   rowId: string;
   field: string;
-  isActual?: boolean; // Nuevo flag para distinguir si estamos editando presupuesto o real
+  isActual?: boolean; // Flag para distinguir si estamos editando presupuesto o real
 }
 
 export interface BudgetTableProps {
