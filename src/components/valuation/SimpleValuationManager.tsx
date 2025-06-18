@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 import { useRestaurantValuations } from '@/hooks/useRestaurantValuations';
-import { Building2, Save, FolderOpen, Plus } from 'lucide-react';
+import { Building2, Save, FolderOpen } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SimpleValuationManagerProps {
@@ -31,6 +31,9 @@ const SimpleValuationManager = ({
   const [isLoadValuationOpen, setIsLoadValuationOpen] = useState(false);
   const [currentValuationId, setCurrentValuationId] = useState<string | null>(null);
 
+  console.log('SimpleValuationManager - restaurants:', restaurants);
+  console.log('SimpleValuationManager - currentData:', currentData);
+
   const restaurantOptions = restaurants
     .filter(r => r.base_restaurant)
     .map(r => ({
@@ -39,18 +42,27 @@ const SimpleValuationManager = ({
       site_number: r.base_restaurant!.site_number
     }));
 
+  console.log('Restaurant options:', restaurantOptions);
+
   const handleRestaurantChange = (restaurantId: string) => {
     const restaurant = restaurantOptions.find(r => r.id === restaurantId);
     if (restaurant) {
+      console.log('Restaurant selected:', restaurant);
       setSelectedRestaurantId(restaurantId);
       setSelectedRestaurantName(restaurant.name);
       onRestaurantSelected(restaurantId, restaurant.name);
+      toast.success(`Restaurante seleccionado: ${restaurant.name}`);
     }
   };
 
   const handleSaveValuation = async () => {
     if (!selectedRestaurantId || !valuationName.trim()) {
       toast.error('Selecciona un restaurante e ingresa un nombre');
+      return;
+    }
+
+    if (!currentData || !currentData.inputs) {
+      toast.error('No hay datos para guardar');
       return;
     }
 
@@ -71,6 +83,8 @@ const SimpleValuationManager = ({
         projections: currentData.projections || null
       };
 
+      console.log('Saving valuation data:', valuationData);
+
       if (currentValuationId) {
         await updateValuation(currentValuationId, valuationData);
         toast.success('Valoración actualizada');
@@ -89,6 +103,7 @@ const SimpleValuationManager = ({
   };
 
   const handleLoadValuation = (valuation: any) => {
+    console.log('Loading valuation:', valuation);
     setCurrentValuationId(valuation.id);
     setSelectedRestaurantId(valuation.restaurant_id);
     setSelectedRestaurantName(valuation.restaurant_name);

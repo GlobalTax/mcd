@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { RestaurantValuation } from '@/types/restaurantValuation';
@@ -35,10 +36,15 @@ const DCFTable = () => {
   const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
   const [currentRestaurantName, setCurrentRestaurantName] = useState<string>('');
 
+  console.log('DCFTable - inputs:', inputs);
+  console.log('DCFTable - yearlyData:', yearlyData);
+  console.log('DCFTable - currentRestaurantId:', currentRestaurantId);
+
   // Calcular años restantes con máxima precisión
   useEffect(() => {
     if (inputs.changeDate && inputs.franchiseEndDate) {
       const remainingYears = calculateRemainingYears(inputs.changeDate, inputs.franchiseEndDate);
+      console.log('Calculated remaining years:', remainingYears);
       setInputs(prev => ({
         ...prev,
         remainingYears
@@ -50,6 +56,7 @@ const DCFTable = () => {
   useEffect(() => {
     if (inputs.remainingYears > 0) {
       const yearsCount = Math.ceil(inputs.remainingYears);
+      console.log('Creating yearly data for', yearsCount, 'years');
       const newYearlyData: YearlyData[] = [];
       
       for (let i = 0; i < yearsCount; i++) {
@@ -76,6 +83,7 @@ const DCFTable = () => {
   }, [inputs.remainingYears]);
 
   const handleInputChange = (key: keyof ValuationInputs, value: number | string) => {
+    console.log('Input change:', key, value);
     setInputs(prev => ({
       ...prev,
       [key]: value
@@ -83,22 +91,26 @@ const DCFTable = () => {
   };
 
   const handleYearlyDataChange = (yearIndex: number, field: keyof YearlyData, value: number) => {
+    console.log('Yearly data change:', yearIndex, field, value);
     setYearlyData(prev => {
       const newData = [...prev];
       newData[yearIndex] = {
         ...newData[yearIndex],
         [field]: value
       };
+      console.log('Updated yearly data:', newData);
       return newData;
     });
   };
 
   const handleRestaurantSelected = (restaurantId: string, restaurantName: string) => {
+    console.log('Restaurant selected:', restaurantId, restaurantName);
     setCurrentRestaurantId(restaurantId);
     setCurrentRestaurantName(restaurantName);
   };
 
   const handleValuationLoaded = (valuation: RestaurantValuation) => {
+    console.log('Loading valuation:', valuation);
     // Cargar datos de la valoración
     setInputs(prev => ({
       ...prev,
@@ -130,7 +142,12 @@ const DCFTable = () => {
 
   // Calcular proyecciones con la nueva fórmula de cashflow
   const calculateProjections = (): ProjectionData[] => {
-    if (yearlyData.length === 0) return [];
+    if (yearlyData.length === 0 || inputs.remainingYears === 0) {
+      console.log('No yearly data or remaining years');
+      return [];
+    }
+    
+    console.log('Calculating projections with:', { yearlyData, inputs });
     
     const projections: ProjectionData[] = [];
     let currentTime = 0;
@@ -173,6 +190,18 @@ const DCFTable = () => {
       const discountTime = currentTime + timeToNextYear;
       const presentValue = cfValue / Math.pow(1 + inputs.discountRate / 100, discountTime);
       
+      console.log(`Year ${i+1} projection:`, {
+        salesValue,
+        pacAmount,
+        rentAmount,
+        serviceFees,
+        miscellAmount,
+        cashflow,
+        cfLibre,
+        cfValue,
+        presentValue
+      });
+      
       projections.push({
         year: parseFloat((currentTime + timeToNextYear).toFixed(4)),
         cfValue,
@@ -184,11 +213,14 @@ const DCFTable = () => {
       currentTime += timeToNextYear;
     }
     
+    console.log('Final projections:', projections);
     return projections;
   };
 
   const projections = calculateProjections();
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
+
+  console.log('Total price calculated:', totalPrice);
 
   const currentValuationData = {
     inputs,
@@ -244,10 +276,12 @@ const DCFTable = () => {
               />
             </div>
 
-            <ProjectionSummary 
-              projections={projections}
-              totalPrice={totalPrice}
-            />
+            {projections.length > 0 && (
+              <ProjectionSummary 
+                projections={projections}
+                totalPrice={totalPrice}
+              />
+            )}
           </>
         )}
       </div>
