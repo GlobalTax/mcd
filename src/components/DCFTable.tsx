@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
+import { RestaurantValuation } from '@/types/restaurantValuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
+import RestaurantValuationManager from './valuation/RestaurantValuationManager';
 import FranchiseInfo from './valuation/FranchiseInfo';
 import BaseYearTable from './valuation/BaseYearTable';
 import ProjectionTable from './valuation/ProjectionTable';
@@ -30,6 +32,7 @@ const DCFTable = () => {
 
   const [yearlyData, setYearlyData] = useState<YearlyData[]>([]);
   const [tableStyles, setTableStyles] = useState<TableStyles>(defaultStyles);
+  const [showValuationForm, setShowValuationForm] = useState(true);
 
   // Calcular años restantes con máxima precisión
   useEffect(() => {
@@ -168,6 +171,37 @@ const DCFTable = () => {
   const projections = calculateProjections();
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
 
+  const handleLoadValuation = (valuation: RestaurantValuation) => {
+    // Cargar datos de la valoración guardada
+    setInputs(prev => ({
+      ...prev,
+      inflationRate: valuation.inflation_rate,
+      discountRate: valuation.discount_rate,
+      growthRate: valuation.growth_rate,
+      changeDate: valuation.change_date || '',
+      franchiseEndDate: valuation.franchise_end_date || '',
+      remainingYears: valuation.remaining_years || 0
+    }));
+
+    if (valuation.yearly_data && Array.isArray(valuation.yearly_data)) {
+      setYearlyData(valuation.yearly_data);
+    }
+
+    setShowValuationForm(false);
+  };
+
+  const handleSaveSuccess = () => {
+    // Callback cuando se guarda exitosamente
+    console.log('Valoración guardada exitosamente');
+  };
+
+  const currentValuationData = {
+    inputs,
+    yearlyData,
+    projections,
+    totalPrice
+  };
+
   return (
     <div className="bg-white min-h-screen" style={{ fontFamily: tableStyles.fontFamily }}>
       <div className="space-y-6 p-6 max-w-full mx-auto">
@@ -176,39 +210,63 @@ const DCFTable = () => {
           onStylesChange={setTableStyles}
         />
 
-        <FranchiseInfo 
-          inputs={inputs} 
-          onInputChange={handleInputChange}
-        />
-
-        <BaseYearTable 
-          inputs={inputs} 
-          onInputChange={handleInputChange}
-        />
-
-        <ProjectionTable 
-          inputs={inputs}
-          yearlyData={yearlyData}
-          onYearlyDataChange={handleYearlyDataChange}
-          tableStyles={tableStyles}
-        />
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ValuationParameters 
-            inputs={inputs} 
-            onInputChange={handleInputChange}
+        {showValuationForm && (
+          <RestaurantValuationManager
+            currentValuationData={currentValuationData}
+            onLoadValuation={handleLoadValuation}
+            onSaveSuccess={handleSaveSuccess}
           />
+        )}
 
-          <ValuationResult 
-            totalPrice={totalPrice}
-            remainingYears={inputs.remainingYears}
-          />
-        </div>
+        {!showValuationForm && (
+          <>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Valoración DCF</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowValuationForm(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Gestionar Valoraciones
+                </button>
+              </div>
+            </div>
 
-        <ProjectionSummary 
-          projections={projections}
-          totalPrice={totalPrice}
-        />
+            <FranchiseInfo 
+              inputs={inputs} 
+              onInputChange={handleInputChange}
+            />
+
+            <BaseYearTable 
+              inputs={inputs} 
+              onInputChange={handleInputChange}
+            />
+
+            <ProjectionTable 
+              inputs={inputs}
+              yearlyData={yearlyData}
+              onYearlyDataChange={handleYearlyDataChange}
+              tableStyles={tableStyles}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ValuationParameters 
+                inputs={inputs} 
+                onInputChange={handleInputChange}
+              />
+
+              <ValuationResult 
+                totalPrice={totalPrice}
+                remainingYears={inputs.remainingYears}
+              />
+            </div>
+
+            <ProjectionSummary 
+              projections={projections}
+              totalPrice={totalPrice}
+            />
+          </>
+        )}
       </div>
     </div>
   );

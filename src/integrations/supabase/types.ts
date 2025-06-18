@@ -593,6 +593,66 @@ export type Database = {
           },
         ]
       }
+      restaurant_valuations: {
+        Row: {
+          change_date: string | null
+          created_at: string
+          created_by: string | null
+          discount_rate: number
+          franchise_end_date: string | null
+          growth_rate: number
+          id: string
+          inflation_rate: number
+          projections: Json | null
+          remaining_years: number | null
+          restaurant_id: string
+          restaurant_name: string
+          total_present_value: number | null
+          updated_at: string
+          valuation_date: string
+          valuation_name: string
+          yearly_data: Json
+        }
+        Insert: {
+          change_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_rate?: number
+          franchise_end_date?: string | null
+          growth_rate?: number
+          id?: string
+          inflation_rate?: number
+          projections?: Json | null
+          remaining_years?: number | null
+          restaurant_id: string
+          restaurant_name: string
+          total_present_value?: number | null
+          updated_at?: string
+          valuation_date?: string
+          valuation_name?: string
+          yearly_data?: Json
+        }
+        Update: {
+          change_date?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount_rate?: number
+          franchise_end_date?: string | null
+          growth_rate?: number
+          id?: string
+          inflation_rate?: number
+          projections?: Json | null
+          remaining_years?: number | null
+          restaurant_id?: string
+          restaurant_name?: string
+          total_present_value?: number | null
+          updated_at?: string
+          valuation_date?: string
+          valuation_name?: string
+          yearly_data?: Json
+        }
+        Relationships: []
+      }
       restaurants: {
         Row: {
           address: string
@@ -743,6 +803,65 @@ export type Database = {
             columns: ["franchisee_restaurant_id"]
             isOneToOne: false
             referencedRelation: "franchisee_restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      valuation_scenarios: {
+        Row: {
+          created_at: string
+          discount_rate_modifier: number | null
+          growth_rate_modifier: number | null
+          id: string
+          inflation_rate_modifier: number | null
+          projections: Json | null
+          scenario_description: string | null
+          scenario_name: string
+          total_present_value: number | null
+          updated_at: string
+          valuation_id: string
+          variance_from_base: number | null
+          variance_percentage: number | null
+          yearly_modifications: Json | null
+        }
+        Insert: {
+          created_at?: string
+          discount_rate_modifier?: number | null
+          growth_rate_modifier?: number | null
+          id?: string
+          inflation_rate_modifier?: number | null
+          projections?: Json | null
+          scenario_description?: string | null
+          scenario_name: string
+          total_present_value?: number | null
+          updated_at?: string
+          valuation_id: string
+          variance_from_base?: number | null
+          variance_percentage?: number | null
+          yearly_modifications?: Json | null
+        }
+        Update: {
+          created_at?: string
+          discount_rate_modifier?: number | null
+          growth_rate_modifier?: number | null
+          id?: string
+          inflation_rate_modifier?: number | null
+          projections?: Json | null
+          scenario_description?: string | null
+          scenario_name?: string
+          total_present_value?: number | null
+          updated_at?: string
+          valuation_id?: string
+          variance_from_base?: number | null
+          variance_percentage?: number | null
+          yearly_modifications?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "valuation_scenarios_valuation_id_fkey"
+            columns: ["valuation_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_valuations"
             referencedColumns: ["id"]
           },
         ]
