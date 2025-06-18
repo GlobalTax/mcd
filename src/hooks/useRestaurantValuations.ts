@@ -20,7 +20,15 @@ export const useRestaurantValuations = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setValuations(data || []);
+      
+      // Convert Supabase data to our types
+      const typedValuations: RestaurantValuation[] = (data || []).map(item => ({
+        ...item,
+        yearly_data: Array.isArray(item.yearly_data) ? item.yearly_data : [],
+        projections: item.projections || null
+      }));
+      
+      setValuations(typedValuations);
     } catch (error) {
       console.error('Error fetching valuations:', error);
       toast.error('Error al cargar las valoraciones');
@@ -38,8 +46,16 @@ export const useRestaurantValuations = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setScenarios(data || []);
-      return data || [];
+      
+      // Convert Supabase data to our types
+      const typedScenarios: ValuationScenario[] = (data || []).map(item => ({
+        ...item,
+        yearly_modifications: typeof item.yearly_modifications === 'object' ? item.yearly_modifications : {},
+        projections: item.projections || null
+      }));
+      
+      setScenarios(typedScenarios);
+      return typedScenarios;
     } catch (error) {
       console.error('Error fetching scenarios:', error);
       toast.error('Error al cargar los escenarios');
@@ -49,12 +65,27 @@ export const useRestaurantValuations = () => {
 
   const saveValuation = async (valuation: Omit<RestaurantValuation, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Convert our types to Supabase format
+      const supabaseData = {
+        restaurant_id: valuation.restaurant_id,
+        restaurant_name: valuation.restaurant_name,
+        valuation_name: valuation.valuation_name,
+        valuation_date: valuation.valuation_date,
+        change_date: valuation.change_date,
+        franchise_end_date: valuation.franchise_end_date,
+        remaining_years: valuation.remaining_years,
+        inflation_rate: valuation.inflation_rate,
+        discount_rate: valuation.discount_rate,
+        growth_rate: valuation.growth_rate,
+        yearly_data: valuation.yearly_data,
+        total_present_value: valuation.total_present_value,
+        projections: valuation.projections,
+        created_by: user?.id
+      };
+
       const { data, error } = await supabase
         .from('restaurant_valuations')
-        .insert({
-          ...valuation,
-          created_by: user?.id
-        })
+        .insert(supabaseData)
         .select()
         .single();
 
@@ -62,7 +93,15 @@ export const useRestaurantValuations = () => {
       
       toast.success('Valoración guardada correctamente');
       await fetchValuations();
-      return data;
+      
+      // Convert back to our type
+      const typedData: RestaurantValuation = {
+        ...data,
+        yearly_data: Array.isArray(data.yearly_data) ? data.yearly_data : [],
+        projections: data.projections || null
+      };
+      
+      return typedData;
     } catch (error) {
       console.error('Error saving valuation:', error);
       toast.error('Error al guardar la valoración');
@@ -72,9 +111,18 @@ export const useRestaurantValuations = () => {
 
   const updateValuation = async (id: string, updates: Partial<RestaurantValuation>) => {
     try {
+      // Convert updates to Supabase format
+      const supabaseUpdates: any = { ...updates };
+      if (updates.yearly_data) {
+        supabaseUpdates.yearly_data = updates.yearly_data;
+      }
+      if (updates.projections) {
+        supabaseUpdates.projections = updates.projections;
+      }
+
       const { error } = await supabase
         .from('restaurant_valuations')
-        .update(updates)
+        .update(supabaseUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -110,7 +158,10 @@ export const useRestaurantValuations = () => {
     try {
       const { data, error } = await supabase
         .from('valuation_scenarios')
-        .insert(scenario)
+        .insert({
+          ...scenario,
+          yearly_modifications: scenario.yearly_modifications || {}
+        })
         .select()
         .single();
 
@@ -118,7 +169,15 @@ export const useRestaurantValuations = () => {
       
       toast.success('Escenario guardado correctamente');
       await fetchScenarios(scenario.valuation_id);
-      return data;
+      
+      // Convert back to our type
+      const typedData: ValuationScenario = {
+        ...data,
+        yearly_modifications: typeof data.yearly_modifications === 'object' ? data.yearly_modifications : {},
+        projections: data.projections || null
+      };
+      
+      return typedData;
     } catch (error) {
       console.error('Error saving scenario:', error);
       toast.error('Error al guardar el escenario');
