@@ -7,7 +7,7 @@ import { ArrowLeft, Building, Mail, Phone, MapPin, User, Clock, Wifi, WifiOff } 
 import { useNavigate } from 'react-router-dom';
 import { useFranchiseeDetail } from '@/hooks/useFranchiseeDetail';
 import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
-import { FranchiseeInvitationPanel } from '@/components/franchisee/FranchiseeInvitationPanel';
+import { UserCreationPanel } from '@/components/admin/UserCreationPanel';
 import { FranchiseeAccessHistory } from '@/components/franchisee/FranchiseeAccessHistory';
 import { FranchiseeActivityHistory } from '@/components/franchisee/FranchiseeActivityHistory';
 import { format } from 'date-fns';
@@ -172,21 +172,14 @@ export default function FranchiseeDetailPage() {
         </CardContent>
       </Card>
 
-      {/* Grid con invitaciones y historial */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <FranchiseeInvitationPanel 
-          franchiseeId={franchisee.id} 
-          franchiseeEmail={franchisee.profiles?.email}
-          hasAccount={franchisee.hasAccount}
-          userId={franchisee.user_id}
-          fullName={franchisee.profiles?.full_name}
-          onUserDeleted={handleUserDeleted}
-        />
-        <FranchiseeAccessHistory franchiseeId={franchisee.id} />
-      </div>
+      {/* Panel de gestión de usuarios */}
+      <UserCreationPanel />
 
-      {/* Historial de actividad */}
-      <FranchiseeActivityHistory franchiseeId={franchisee.id} />
+      {/* Grid con historial */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FranchiseeAccessHistory franchiseeId={franchisee.id} />
+        <FranchiseeActivityHistory franchiseeId={franchisee.id} />
+      </div>
 
       {/* Tabla de restaurantes */}
       <Card>

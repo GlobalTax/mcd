@@ -1,38 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCreateUser } from '@/hooks/useCreateUser';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Users } from 'lucide-react';
+import { Trash2, Users, RefreshCw } from 'lucide-react';
+import { UserCreationPanel } from '@/components/admin/UserCreationPanel';
 import { toast } from 'sonner';
 import { User } from '@/types/auth';
 
-interface NewUser {
-  email: string;
-  password: string;
-  fullName: string;
-  role: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
-}
-
 const UserManagement = () => {
   const { user } = useAuth();
-  const { createUser, creating } = useCreateUser();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newUser, setNewUser] = useState<NewUser>({
-    email: '',
-    password: '',
-    fullName: '',
-    role: 'franchisee'
-  });
 
   useEffect(() => {
     fetchUsers();
@@ -67,35 +48,17 @@ const UserManagement = () => {
     }
   };
 
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newUser.email || !newUser.password || !newUser.fullName) {
-      toast.error('Todos los campos son obligatorios');
-      return;
-    }
-
-    const success = await createUser(
-      newUser.email,
-      newUser.password,
-      newUser.fullName,
-      newUser.role
-    );
-
-    if (success) {
-      setNewUser({ email: '', password: '', fullName: '', role: 'franchisee' });
-      setShowCreateForm(false);
-      fetchUsers();
-    }
-  };
-
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`¿Estás seguro de que quieres eliminar a ${userName}?`)) {
       return;
     }
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Eliminar perfil (esto también eliminará el usuario de auth por cascade)
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
 
       if (error) {
         console.error('Error deleting user:', error);
@@ -161,111 +124,27 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      <UserCreationPanel />
+      
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Gestión de Usuarios
+              Lista de Usuarios
             </CardTitle>
             <Button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="bg-red-600 hover:bg-red-700"
+              onClick={fetchUsers}
+              disabled={loading}
+              variant="outline"
+              size="sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Usuario
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Actualizar
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {showCreateForm && (
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Crear Nuevo Usuario</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateUser} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Nombre Completo</Label>
-                      <Input
-                        id="fullName"
-                        type="text"
-                        value={newUser.fullName}
-                        onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
-                        placeholder="Nombre completo"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={newUser.email}
-                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                        placeholder="usuario@ejemplo.com"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Contraseña</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={newUser.password}
-                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                        placeholder="Mínimo 6 caracteres"
-                        minLength={6}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Rol</Label>
-                      <Select
-                        value={newUser.role}
-                        onValueChange={(value: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente') => 
-                          setNewUser({ ...newUser, role: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                          <SelectItem value="manager">Gerente</SelectItem>
-                          <SelectItem value="franchisee">Franquiciado</SelectItem>
-                          <SelectItem value="asesor">Asesor</SelectItem>
-                          <SelectItem value="asistente">Asistente</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      type="submit"
-                      disabled={creating}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      {creating ? 'Creando...' : 'Crear Usuario'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowCreateForm(false)}
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
           {loading ? (
             <div className="text-center py-8">
               <p>Cargando usuarios...</p>
@@ -301,7 +180,7 @@ const UserManagement = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteUser(userItem.id)}
+                          onClick={() => handleDeleteUser(userItem.id, userItem.full_name || userItem.email)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
