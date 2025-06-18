@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ValuationInputs, YearlyData, ProjectionData } from '@/types/valuation';
 import { RestaurantValuation } from '@/types/restaurantValuation';
 import { calculateRemainingYears, formatNumber, formatCurrency } from '@/utils/valuationUtils';
-import RestaurantValuationManager from './valuation/RestaurantValuationManager';
+import SimpleValuationManager from './valuation/SimpleValuationManager';
 import FranchiseInfo from './valuation/FranchiseInfo';
 import BaseYearTable from './valuation/BaseYearTable';
 import ProjectionTable from './valuation/ProjectionTable';
@@ -32,7 +32,8 @@ const DCFTable = () => {
 
   const [yearlyData, setYearlyData] = useState<YearlyData[]>([]);
   const [tableStyles, setTableStyles] = useState<TableStyles>(defaultStyles);
-  const [showValuationForm, setShowValuationForm] = useState(true);
+  const [currentRestaurantId, setCurrentRestaurantId] = useState<string | null>(null);
+  const [currentRestaurantName, setCurrentRestaurantName] = useState<string>('');
 
   // Calcular años restantes con máxima precisión
   useEffect(() => {
@@ -90,6 +91,28 @@ const DCFTable = () => {
       };
       return newData;
     });
+  };
+
+  const handleRestaurantSelected = (restaurantId: string, restaurantName: string) => {
+    setCurrentRestaurantId(restaurantId);
+    setCurrentRestaurantName(restaurantName);
+  };
+
+  const handleValuationLoaded = (valuation: RestaurantValuation) => {
+    // Cargar datos de la valoración
+    setInputs(prev => ({
+      ...prev,
+      inflationRate: valuation.inflation_rate,
+      discountRate: valuation.discount_rate,
+      growthRate: valuation.growth_rate,
+      changeDate: valuation.change_date || '',
+      franchiseEndDate: valuation.franchise_end_date || '',
+      remainingYears: valuation.remaining_years || 0
+    }));
+
+    if (valuation.yearly_data && Array.isArray(valuation.yearly_data)) {
+      setYearlyData(valuation.yearly_data);
+    }
   };
 
   // Función para calcular MISCELL con crecimiento por inflación
@@ -161,39 +184,11 @@ const DCFTable = () => {
       currentTime += timeToNextYear;
     }
     
-    console.log('Proyecciones calculadas:', projections);
-    console.log('CF Libre por año:', projections.map(p => p.cfValue));
-    console.log('Valores presentes:', projections.map(p => p.presentValue));
-    
     return projections;
   };
 
   const projections = calculateProjections();
   const totalPrice = projections.reduce((sum, p) => sum + p.presentValue, 0);
-
-  const handleLoadValuation = (valuation: RestaurantValuation) => {
-    // Cargar datos de la valoración guardada
-    setInputs(prev => ({
-      ...prev,
-      inflationRate: valuation.inflation_rate,
-      discountRate: valuation.discount_rate,
-      growthRate: valuation.growth_rate,
-      changeDate: valuation.change_date || '',
-      franchiseEndDate: valuation.franchise_end_date || '',
-      remainingYears: valuation.remaining_years || 0
-    }));
-
-    if (valuation.yearly_data && Array.isArray(valuation.yearly_data)) {
-      setYearlyData(valuation.yearly_data);
-    }
-
-    setShowValuationForm(false);
-  };
-
-  const handleSaveSuccess = () => {
-    // Callback cuando se guarda exitosamente
-    console.log('Valoración guardada exitosamente');
-  };
 
   const currentValuationData = {
     inputs,
@@ -205,33 +200,21 @@ const DCFTable = () => {
   return (
     <div className="bg-white min-h-screen" style={{ fontFamily: tableStyles.fontFamily }}>
       <div className="space-y-6 p-6 max-w-full mx-auto">
+        <h2 className="text-2xl font-bold text-gray-900">Valoración DCF</h2>
+
         <TableStyleEditor 
           styles={tableStyles}
           onStylesChange={setTableStyles}
         />
 
-        {showValuationForm && (
-          <RestaurantValuationManager
-            currentValuationData={currentValuationData}
-            onLoadValuation={handleLoadValuation}
-            onSaveSuccess={handleSaveSuccess}
-          />
-        )}
+        <SimpleValuationManager
+          onRestaurantSelected={handleRestaurantSelected}
+          onValuationLoaded={handleValuationLoaded}
+          currentData={currentValuationData}
+        />
 
-        {!showValuationForm && (
+        {currentRestaurantId && (
           <>
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Valoración DCF</h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowValuationForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Gestionar Valoraciones
-                </button>
-              </div>
-            </div>
-
             <FranchiseInfo 
               inputs={inputs} 
               onInputChange={handleInputChange}
