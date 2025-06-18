@@ -12,6 +12,7 @@ import { useCreateUser } from '@/hooks/useCreateUser';
 import { useDeleteUser } from '@/hooks/useDeleteUser';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface FranchiseeInvitationPanelProps {
   franchiseeId: string;
@@ -101,7 +102,7 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
     if (window.confirm(`¿Estás seguro de que quieres eliminar el acceso para ${fullName}? Esta acción no se puede deshacer.`)) {
       const success = await deleteUser(franchiseeId, userId, fullName);
       if (success) {
-        onUserDeleted?.(); // Refrescar datos
+        onUserDeleted?.();
       }
     }
   };
@@ -285,36 +286,4 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       </CardContent>
     </Card>
   );
-
-  // Funciones auxiliares que se mantienen igual
-  function handleDeleteUser() {
-    if (!userId || !fullName) return;
-
-    if (window.confirm(`¿Estás seguro de que quieres eliminar el acceso para ${fullName}? Esta acción no se puede deshacer.`)) {
-      deleteUser(franchiseeId, userId, fullName).then(success => {
-        if (success) {
-          onUserDeleted?.();
-        }
-      });
-    }
-  }
-
-  function handleDeleteInvitation(invitationId: string, email: string) {
-    if (window.confirm(`¿Estás seguro de que quieres eliminar la invitación para ${email}?`)) {
-      deleteInvitation(invitationId);
-    }
-  }
-
-  function getStatusBadge(status: string) {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="text-yellow-600 border-yellow-600"><Clock className="w-3 h-3 mr-1" />Pendiente</Badge>;
-      case 'accepted':
-        return <Badge variant="outline" className="text-green-600 border-green-600"><CheckCircle className="w-3 h-3 mr-1" />Aceptada</Badge>;
-      case 'expired':
-        return <Badge variant="outline" className="text-red-600 border-red-600"><XCircle className="w-3 h-3 mr-1" />Expirada</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  }
 };
