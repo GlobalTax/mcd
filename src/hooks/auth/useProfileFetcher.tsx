@@ -13,9 +13,9 @@ export const useProfileFetcher = ({ setUser, clearUserData }: ProfileFetcherProp
     try {
       console.log('fetchUserProfile - About to query profiles table');
       
-      // Crear un timeout más corto para mejorar la experiencia
+      // Aumentar timeout a 15 segundos para aprovechar el nuevo plan
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout after 5 seconds')), 5000);
+        setTimeout(() => reject(new Error('Query timeout after 15 seconds')), 15000);
       });
       
       const profilePromise = supabase

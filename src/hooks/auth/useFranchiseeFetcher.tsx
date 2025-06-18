@@ -13,9 +13,9 @@ export const useFranchiseeFetcher = ({ setFranchisee }: FranchiseeFetcherProps) 
     try {
       console.log('fetchFranchiseeData - Starting for user:', userId);
       
-      // Timeout más corto para mejorar la experiencia
+      // Aumentar timeout a 10 segundos para aprovechar el nuevo plan
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Franchisee query timeout')), 3000);
+        setTimeout(() => reject(new Error('Franchisee query timeout')), 10000);
       });
       
       const franchiseePromise = supabase
