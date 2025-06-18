@@ -23,6 +23,9 @@ export interface Franchisee {
   created_at: string;
   updated_at: string;
   total_restaurants?: number;
+  hasAccount?: boolean;
+  isOnline?: boolean;
+  lastAccess?: string;
   profiles?: {
     email: string;
     full_name?: string;
