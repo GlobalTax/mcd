@@ -118,22 +118,22 @@ export default function AnnualBudgetPage() {
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <div className="border-b border-gray-200 px-6 pt-6">
-                    <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1 rounded-lg border border-gray-200">
+                    <TabsList className="grid w-full grid-cols-3 bg-transparent h-auto p-0 space-x-8">
                       <TabsTrigger 
                         value="budget" 
-                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                        className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none rounded-none px-0 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                       >
                         Profit & Loss
                       </TabsTrigger>
                       <TabsTrigger 
                         value="balance-sheet" 
-                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                        className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none rounded-none px-0 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                       >
                         Balance Sheet
                       </TabsTrigger>
                       <TabsTrigger 
                         value="cash-flow" 
-                        className="text-sm font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-gray-200 rounded-md px-4 py-2.5 transition-all"
+                        className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none rounded-none px-0 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                       >
                         Cash Flow Statement
                       </TabsTrigger>
