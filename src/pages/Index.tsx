@@ -1,13 +1,27 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, BarChart3, Shield, Store, ArrowRight, TrendingUp, Calculator } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('Index - User authenticated, redirecting based on role:', user.role);
+      // Redirigir usuarios autenticados según su rol
+      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
+        console.log('Index - Redirecting asesor/admin/superadmin to /advisor');
+        navigate('/advisor', { replace: true });
+      } else if (user.role === 'franchisee') {
+        console.log('Index - Redirecting franchisee to /dashboard');
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -43,10 +57,16 @@ const Index = () => {
                 <div className="flex items-center space-x-4">
                   <span className="text-sm text-gray-600">Hola, {user.full_name || user.email}</span>
                   <Button 
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => {
+                      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
+                        navigate('/advisor');
+                      } else {
+                        navigate('/dashboard');
+                      }
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white"
                   >
-                    Ir al Dashboard
+                    Ir al Panel
                   </Button>
                 </div>
               ) : (
