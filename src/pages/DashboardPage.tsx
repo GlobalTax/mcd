@@ -36,43 +36,60 @@ const DashboardPage = () => {
   const [localFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
   const { restaurants: franchiseeRestaurants, loading: restaurantsLoading } = useFranchiseeRestaurants();
 
-  const allLocalRestaurants = localFranchisees.flatMap(f => 
-    f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
-  );
+  console.log('DashboardPage - Current state:', {
+    user: user ? { id: user.id, role: user.role } : null,
+    franchisee: franchisee ? { id: franchisee.id, name: franchisee.franchisee_name } : null,
+    restaurantsCount: franchiseeRestaurants?.length || 0,
+    loading: restaurantsLoading
+  });
 
-  // Verificar si el franchisee es temporal
-  const isTemporaryFranchisee = franchisee?.id?.startsWith('temp-');
-  const hasSupabaseRestaurants = !isTemporaryFranchisee && franchiseeRestaurants.length > 0;
+  // Verificar que tenemos los datos mínimos necesarios
+  if (!user) {
+    console.log('DashboardPage - No user, redirecting to auth');
+    navigate('/auth');
+    return null;
+  }
+
+  const allLocalRestaurants = Array.isArray(localFranchisees) ? 
+    localFranchisees.flatMap(f => 
+      (f.restaurants || []).map(r => ({ ...r, franchiseeName: f.name }))
+    ) : [];
+
+  // Verificar si el franchisee es temporal de forma segura
+  const isTemporaryFranchisee = franchisee?.id?.startsWith('temp-') || false;
+  const hasSupabaseRestaurants = !isTemporaryFranchisee && Array.isArray(franchiseeRestaurants) && franchiseeRestaurants.length > 0;
   
+  // Construir displayRestaurants de forma segura
   const displayRestaurants: DisplayRestaurant[] = hasSupabaseRestaurants ? 
     franchiseeRestaurants.map(fr => ({
-      id: fr.id,
-      name: fr.base_restaurant?.restaurant_name,
-      restaurant_name: fr.base_restaurant?.restaurant_name,
-      location: `${fr.base_restaurant?.city}, ${fr.base_restaurant?.address}`,
-      city: fr.base_restaurant?.city,
-      address: fr.base_restaurant?.address,
-      siteNumber: fr.base_restaurant?.site_number,
-      site_number: fr.base_restaurant?.site_number,
-      franchiseeName: franchisee?.franchisee_name,
+      id: fr.id || 'unknown',
+      name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
+      restaurant_name: fr.base_restaurant?.restaurant_name || 'Restaurante sin nombre',
+      location: fr.base_restaurant ? `${fr.base_restaurant.city || 'Ciudad'}, ${fr.base_restaurant.address || 'Dirección'}` : 'Ubicación no disponible',
+      city: fr.base_restaurant?.city || 'Ciudad',
+      address: fr.base_restaurant?.address || 'Dirección',
+      siteNumber: fr.base_restaurant?.site_number || 'N/A',
+      site_number: fr.base_restaurant?.site_number || 'N/A',
+      franchiseeName: franchisee?.franchisee_name || 'Franquiciado',
       franchise_start_date: fr.franchise_start_date,
       franchise_end_date: fr.franchise_end_date,
-      restaurant_type: fr.base_restaurant?.restaurant_type,
-      status: fr.status,
-      lastYearRevenue: fr.last_year_revenue,
-      baseRent: fr.monthly_rent,
+      restaurant_type: fr.base_restaurant?.restaurant_type || 'traditional',
+      status: fr.status || 'active',
+      lastYearRevenue: fr.last_year_revenue || 0,
+      baseRent: fr.monthly_rent || 0,
       isOwnedByMcD: false,
     })) : 
     allLocalRestaurants;
   
   const totalRestaurants = displayRestaurants?.length || 0;
 
+  // Loading state mejorado
   if (restaurantsLoading && !isTemporaryFranchisee) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+          <p className="text-gray-600">Cargando datos del dashboard...</p>
         </div>
       </div>
     );
@@ -92,8 +109,8 @@ const DashboardPage = () => {
           </header>
 
           <main className="flex-1 p-6">
-            {/* Si hay datos reales de Supabase o datos temporales, mostrar dashboard */}
-            {(hasSupabaseRestaurants || isTemporaryFranchisee || (!restaurantsLoading && franchiseeRestaurants.length === 0)) ? (
+            {/* Mostrar dashboard con datos verificados */}
+            {(hasSupabaseRestaurants || isTemporaryFranchisee || (!restaurantsLoading && Array.isArray(franchiseeRestaurants))) ? (
               <DashboardSummary 
                 totalRestaurants={totalRestaurants} 
                 displayRestaurants={displayRestaurants}

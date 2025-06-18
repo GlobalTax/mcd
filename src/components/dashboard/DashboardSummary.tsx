@@ -15,12 +15,29 @@ export const DashboardSummary = ({
   displayRestaurants, 
   isTemporaryData = false 
 }: DashboardSummaryProps) => {
-  // Calcular métricas básicas
-  const activeRestaurants = displayRestaurants.filter(r => r.status === 'active' || !r.status).length;
-  const totalRevenue = displayRestaurants.reduce((sum, r) => sum + (r.lastYearRevenue || 0), 0);
+  console.log('DashboardSummary - Props:', {
+    totalRestaurants,
+    restaurantsCount: displayRestaurants?.length || 0,
+    isTemporaryData
+  });
+
+  // Verificar que displayRestaurants sea un array válido
+  const safeRestaurants = Array.isArray(displayRestaurants) ? displayRestaurants : [];
+  
+  // Calcular métricas básicas de forma segura
+  const activeRestaurants = safeRestaurants.filter(r => 
+    r?.status === 'active' || !r?.status
+  ).length;
+  
+  const totalRevenue = safeRestaurants.reduce((sum, r) => {
+    const revenue = r?.lastYearRevenue || 0;
+    return sum + (typeof revenue === 'number' ? revenue : 0);
+  }, 0);
+  
   const avgRevenue = totalRestaurants > 0 ? totalRevenue / totalRestaurants : 0;
 
   const handleRefresh = () => {
+    console.log('DashboardSummary - Refreshing page');
     window.location.reload();
   };
 
@@ -132,34 +149,43 @@ export const DashboardSummary = ({
             </div>
           ) : (
             <div className="space-y-4">
-              {displayRestaurants.map((restaurant, index) => (
-                <div key={restaurant.id || index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <h3 className="font-semibold">
-                      {restaurant.name || restaurant.restaurant_name || `Restaurante ${restaurant.siteNumber || restaurant.site_number || index + 1}`}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {restaurant.location || `${restaurant.city || 'Ciudad'}, ${restaurant.address || 'Dirección'}`}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Site: {restaurant.siteNumber || restaurant.site_number || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">
-                      €{(restaurant.lastYearRevenue || 0).toLocaleString()}
+              {safeRestaurants.map((restaurant, index) => {
+                // Verificar que el restaurant sea válido
+                if (!restaurant) {
+                  console.warn('DashboardSummary - Invalid restaurant at index:', index);
+                  return null;
+                }
+
+                const restaurantId = restaurant.id || `restaurant-${index}`;
+                const restaurantName = restaurant.name || restaurant.restaurant_name || `Restaurante ${restaurant.siteNumber || restaurant.site_number || index + 1}`;
+                const location = restaurant.location || `${restaurant.city || 'Ciudad'}, ${restaurant.address || 'Dirección'}`;
+                const siteNumber = restaurant.siteNumber || restaurant.site_number || 'N/A';
+                const revenue = restaurant.lastYearRevenue || 0;
+                const status = restaurant.status || 'active';
+
+                return (
+                  <div key={restaurantId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{restaurantName}</h3>
+                      <p className="text-sm text-muted-foreground">{location}</p>
+                      <p className="text-xs text-muted-foreground">Site: {siteNumber}</p>
                     </div>
-                    <div className="text-xs text-muted-foreground">Año anterior</div>
-                    <div className={`text-xs px-2 py-1 rounded-full ${
-                      restaurant.status === 'active' || !restaurant.status 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {restaurant.status === 'active' || !restaurant.status ? 'Activo' : 'Inactivo'}
+                    <div className="text-right">
+                      <div className="text-sm font-medium">
+                        €{(typeof revenue === 'number' ? revenue : 0).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Año anterior</div>
+                      <div className={`text-xs px-2 py-1 rounded-full ${
+                        status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {status === 'active' ? 'Activo' : 'Inactivo'}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

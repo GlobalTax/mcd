@@ -13,39 +13,43 @@ export const useFranchiseeRestaurants = () => {
 
   const fetchRestaurants = async () => {
     console.log('useFranchiseeRestaurants - fetchRestaurants started');
-    console.log('useFranchiseeRestaurants - User:', user);
-    console.log('useFranchiseeRestaurants - Franchisee:', franchisee);
+    console.log('useFranchiseeRestaurants - User:', user ? { id: user.id, role: user.role } : null);
+    console.log('useFranchiseeRestaurants - Franchisee:', franchisee ? { id: franchisee.id, name: franchisee.franchisee_name } : null);
     
-    if (!user) {
-      console.log('useFranchiseeRestaurants - No user found');
-      setLoading(false);
-      return;
-    }
-
-    if (user.role !== 'franchisee') {
-      console.log('useFranchiseeRestaurants - User is not franchisee, role:', user.role);
-      setError('Usuario no es franquiciado');
-      setLoading(false);
-      return;
-    }
-
-    if (!franchisee) {
-      console.log('useFranchiseeRestaurants - No franchisee data found for user');
-      setError('No se encontró información del franquiciado');
-      setLoading(false);
-      return;
-    }
-
-    // Si es un franchisee temporal (creado por timeout), no hacer consultas
-    if (franchisee.id.startsWith('temp-')) {
-      console.log('useFranchiseeRestaurants - Temporary franchisee detected, skipping database query');
-      setRestaurants([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
     try {
+      if (!user) {
+        console.log('useFranchiseeRestaurants - No user found');
+        setRestaurants([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      if (user.role !== 'franchisee') {
+        console.log('useFranchiseeRestaurants - User is not franchisee, role:', user.role);
+        setRestaurants([]);
+        setError('Usuario no es franquiciado');
+        setLoading(false);
+        return;
+      }
+
+      if (!franchisee) {
+        console.log('useFranchiseeRestaurants - No franchisee data found for user');
+        setRestaurants([]);
+        setError('No se encontró información del franquiciado');
+        setLoading(false);
+        return;
+      }
+
+      // Si es un franchisee temporal (creado por timeout), no hacer consultas
+      if (franchisee.id?.startsWith('temp-')) {
+        console.log('useFranchiseeRestaurants - Temporary franchisee detected, skipping database query');
+        setRestaurants([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -80,29 +84,32 @@ export const useFranchiseeRestaurants = () => {
         `)
         .eq('franchisee_id', franchisee.id);
 
-      console.log('useFranchiseeRestaurants - Query result:', { data, error });
+      console.log('useFranchiseeRestaurants - Query result:', { data: data?.length || 0, error });
 
       if (error) {
         console.error('Error fetching restaurants:', error);
         setError(`Error al cargar restaurantes: ${error.message}`);
+        setRestaurants([]);
         toast.error('Error al cargar restaurantes: ' + error.message);
         return;
       }
 
-      console.log('useFranchiseeRestaurants - Setting restaurants:', data);
-      setRestaurants(data || []);
+      const validRestaurants = Array.isArray(data) ? data : [];
+      console.log('useFranchiseeRestaurants - Setting restaurants:', validRestaurants.length);
+      setRestaurants(validRestaurants);
       
-      if (!data || data.length === 0) {
+      if (validRestaurants.length === 0) {
         console.log('useFranchiseeRestaurants - No restaurants found for franchisee');
         toast.info('No se encontraron restaurantes asignados');
       } else {
-        console.log(`useFranchiseeRestaurants - Found ${data.length} restaurants`);
-        toast.success(`Se cargaron ${data.length} restaurantes`);
+        console.log(`useFranchiseeRestaurants - Found ${validRestaurants.length} restaurants`);
+        toast.success(`Se cargaron ${validRestaurants.length} restaurantes`);
       }
     } catch (err) {
       console.error('Error in fetchRestaurants:', err);
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido al cargar los restaurantes';
       setError(errorMessage);
+      setRestaurants([]);
       toast.error(errorMessage);
     } finally {
       setLoading(false);
