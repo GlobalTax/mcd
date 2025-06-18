@@ -31,7 +31,9 @@ export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({
     try {
       setLoading(true);
       
-      // Obtener usuarios asociados al franquiciado
+      console.log('Fetching users for franchisee:', franchiseeId, franchiseeName);
+      
+      // Obtener el usuario directo del franquiciado
       const { data: franchiseeData, error: franchiseeError } = await supabase
         .from('franchisees')
         .select('user_id')
@@ -46,29 +48,29 @@ export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({
 
       let userIds: string[] = [];
       
-      // Si el franquiciado tiene un usuario asociado, incluirlo
+      // Incluir el usuario asociado directamente al franquiciado si existe
       if (franchiseeData?.user_id) {
         userIds.push(franchiseeData.user_id);
       }
 
-      // También buscar otros usuarios que puedan estar asociados al franquiciado por nombre
-      const { data: allProfiles, error: profilesError } = await supabase
+      // Buscar usuarios que podrían estar relacionados con este franquiciado
+      // por nombre o email similar
+      const { data: relatedProfiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
-        .or(`full_name.ilike.%${franchiseeName}%,email.ilike.%${franchiseeName}%`);
+        .or(`full_name.ilike.%${franchiseeName}%,email.ilike.%${franchiseeName.toLowerCase()}%`);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-      } else if (allProfiles) {
-        // Agregar estos usuarios a la lista
-        allProfiles.forEach(profile => {
+        console.error('Error fetching related profiles:', profilesError);
+      } else if (relatedProfiles) {
+        relatedProfiles.forEach(profile => {
           if (!userIds.includes(profile.id)) {
             userIds.push(profile.id);
           }
         });
       }
 
-      // Si tenemos IDs de usuarios, obtener sus perfiles completos
+      // Obtener perfiles completos de todos los usuarios identificados
       if (userIds.length > 0) {
         const { data: userProfiles, error: usersError } = await supabase
           .from('profiles')
@@ -87,8 +89,10 @@ export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({
           role: userData.role as 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente' | 'superadmin'
         }));
 
+        console.log('Found users for franchisee:', typedUsers);
         setUsers(typedUsers);
       } else {
+        console.log('No users found for franchisee');
         setUsers([]);
       }
     } catch (error) {
