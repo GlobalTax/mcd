@@ -83,11 +83,12 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       return;
     }
 
+    // Corregir: pasar 'franchisee' como rol, no franchiseeId
     const success = await createUser(
       userForm.email.trim(),
       userForm.password.trim(),
       userForm.fullName.trim(),
-      franchiseeId
+      'franchisee' // Corregido: usar el rol correcto en lugar de franchiseeId
     );
 
     if (success) {
