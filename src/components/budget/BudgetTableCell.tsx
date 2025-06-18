@@ -12,10 +12,11 @@ interface BudgetTableCellProps {
   rowId: string;
   field: string;
   editingCell: EditingCell | null;
-  onCellClick: (rowId: string, field: string, isCategory: boolean) => void;
+  onCellClick: (rowId: string, field: string, isCategory: boolean, isActual?: boolean) => void;
   onInputChange: (value: string) => void;
   onInputBlur: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
+  onActualChange: (rowId: string, field: string, value: number) => void;
 }
 
 export const BudgetTableCell: React.FC<BudgetTableCellProps> = ({
@@ -29,9 +30,16 @@ export const BudgetTableCell: React.FC<BudgetTableCellProps> = ({
   onCellClick,
   onInputChange,
   onInputBlur,
-  onKeyPress
+  onKeyPress,
+  onActualChange
 }) => {
-  const isEditing = editingCell?.rowId === rowId && editingCell?.field === field;
+  const isBudgetEditing = editingCell?.rowId === rowId && editingCell?.field === field && !editingCell?.isActual;
+  const isActualEditing = editingCell?.rowId === rowId && editingCell?.field === field && editingCell?.isActual;
+
+  const handleActualInputChange = (value: string) => {
+    const numValue = parseFloat(value) || 0;
+    onActualChange(rowId, field, numValue);
+  };
 
   if (isCategory) {
     return (
@@ -67,11 +75,11 @@ export const BudgetTableCell: React.FC<BudgetTableCellProps> = ({
 
   return (
     <div className={viewMode === 'comparison' ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
-      {/* Columna Presupuesto o única columna */}
+      {/* Columna Presupuesto */}
       {viewMode !== 'actuals' && (
         <div className={`cursor-pointer hover:bg-blue-50 p-2 rounded ${viewMode === 'comparison' ? '' : 'border-r border-gray-200'}`}
-             onClick={() => onCellClick(rowId, field, isCategory)}>
-          {isEditing ? (
+             onClick={() => onCellClick(rowId, field, isCategory, false)}>
+          {isBudgetEditing ? (
             <Input
               type="number"
               defaultValue={budgetValue}
@@ -90,22 +98,50 @@ export const BudgetTableCell: React.FC<BudgetTableCellProps> = ({
         </div>
       )}
       
-      {/* Solo mostrar reales */}
+      {/* Solo mostrar reales editables */}
       {viewMode === 'actuals' && (
-        <div className="p-2">
-          <span className="text-green-700 font-semibold text-sm block py-1">
-            {formatCurrency(actualValue)}
-          </span>
+        <div className={`cursor-pointer hover:bg-green-50 p-2 rounded`}
+             onClick={() => onCellClick(rowId, field, isCategory, true)}>
+          {isActualEditing ? (
+            <Input
+              type="number"
+              defaultValue={actualValue}
+              onChange={(e) => handleActualInputChange(e.target.value)}
+              onBlur={onInputBlur}
+              onKeyPress={onKeyPress}
+              className="w-full text-center text-sm h-8 border-green-300 focus:border-green-500"
+              autoFocus
+              step="100"
+            />
+          ) : (
+            <span className="text-green-700 font-semibold text-sm block py-1">
+              {formatCurrency(actualValue)}
+            </span>
+          )}
         </div>
       )}
       
-      {/* Comparativa: Real y Varianza */}
+      {/* Comparativa: Real editable y Varianza */}
       {viewMode === 'comparison' && (
         <>
-          <div className="p-2">
-            <span className={`font-semibold text-sm block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
-              {formatCurrency(actualValue)}
-            </span>
+          <div className={`cursor-pointer hover:bg-green-50 p-2 rounded`}
+               onClick={() => onCellClick(rowId, field, isCategory, true)}>
+            {isActualEditing ? (
+              <Input
+                type="number"
+                defaultValue={actualValue}
+                onChange={(e) => handleActualInputChange(e.target.value)}
+                onBlur={onInputBlur}
+                onKeyPress={onKeyPress}
+                className="w-full text-center text-sm h-8 border-green-300 focus:border-green-500"
+                autoFocus
+                step="100"
+              />
+            ) : (
+              <span className={`font-semibold text-sm block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
+                {formatCurrency(actualValue)}
+              </span>
+            )}
           </div>
           <div className="p-2">
             <span className={`font-semibold text-xs block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>

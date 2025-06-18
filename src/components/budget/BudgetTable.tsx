@@ -8,7 +8,8 @@ import { BudgetTableRowComponent } from './BudgetTableRow';
 export const BudgetTable: React.FC<BudgetTableProps> = ({ 
   data, 
   actualData = [], 
-  onCellChange, 
+  onCellChange,
+  onActualChange,
   viewMode = 'budget',
   showOnlySummary = false
 }) => {
@@ -19,15 +20,21 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
     ? data.filter(row => row.isCategory)
     : data;
 
-  const handleCellClick = (rowId: string, field: string, isCategory: boolean) => {
-    if (isCategory || viewMode === 'actuals') return;
-    setEditingCell({ rowId, field });
+  const handleCellClick = (rowId: string, field: string, isCategory: boolean, isActual: boolean = false) => {
+    if (isCategory) return;
+    setEditingCell({ rowId, field, isActual });
   };
 
   const handleInputChange = (value: string) => {
     const numValue = parseFloat(value) || 0;
-    if (editingCell) {
+    if (editingCell && !editingCell.isActual) {
       onCellChange(editingCell.rowId, editingCell.field, numValue);
+    }
+  };
+
+  const handleActualChange = (rowId: string, field: string, value: number) => {
+    if (onActualChange) {
+      onActualChange(rowId, field, value);
     }
   };
 
@@ -59,6 +66,7 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                 onInputChange={handleInputChange}
                 onInputBlur={handleInputBlur}
                 onKeyPress={handleKeyPress}
+                onActualChange={handleActualChange}
               />
             ))}
           </TableBody>

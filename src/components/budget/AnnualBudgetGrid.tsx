@@ -8,6 +8,7 @@ import { BudgetTable } from './BudgetTable';
 import { BudgetGridHeader } from './BudgetGridHeader';
 import { BudgetGridStatus } from './BudgetGridStatus';
 import { BudgetChangesBanner } from './BudgetChangesBanner';
+import { toast } from 'sonner';
 
 interface AnnualBudgetGridProps {
   restaurantId: string;
@@ -37,7 +38,8 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     actualData,
     loading: actualLoading,
     error: actualError,
-    fetchActualData
+    fetchActualData,
+    updateActualData
   } = useActualData();
 
   const selectedRestaurant = restaurants.find(r => r.id === restaurantId);
@@ -56,6 +58,30 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   const handleToggleSummary = () => {
     setShowOnlySummary(!showOnlySummary);
+  };
+
+  // Nueva función para manejar cambios en datos reales
+  const handleActualChange = async (rowId: string, field: string, value: number) => {
+    try {
+      // Buscar la fila correspondiente para obtener categoría y subcategoría
+      const row = rowData.find(r => r.id === rowId);
+      if (!row) return;
+
+      await updateActualData({
+        restaurant_id: restaurantId,
+        year,
+        category: row.category,
+        subcategory: row.subcategory || '',
+        [field]: value
+      });
+
+      // Recargar datos reales
+      fetchActualData(restaurantId, year);
+      toast.success('Dato real actualizado correctamente');
+    } catch (error) {
+      console.error('Error updating actual data:', error);
+      toast.error('Error al actualizar el dato real');
+    }
   };
 
   // Mostrar estados de carga o error
@@ -91,6 +117,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
           data={rowData} 
           actualData={actualData}
           onCellChange={handleCellChange}
+          onActualChange={handleActualChange}
           viewMode={viewMode}
           showOnlySummary={showOnlySummary}
         />

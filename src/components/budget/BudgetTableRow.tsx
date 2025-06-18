@@ -21,10 +21,11 @@ interface BudgetTableRowProps {
   actualData: any[];
   viewMode: 'budget' | 'comparison' | 'actuals';
   editingCell: EditingCell | null;
-  onCellClick: (rowId: string, field: string, isCategory: boolean) => void;
+  onCellClick: (rowId: string, field: string, isCategory: boolean, isActual?: boolean) => void;
   onInputChange: (value: string) => void;
   onInputBlur: () => void;
   onKeyPress: (e: React.KeyboardEvent) => void;
+  onActualChange: (rowId: string, field: string, value: number) => void;
 }
 
 export const BudgetTableRowComponent: React.FC<BudgetTableRowProps> = ({
@@ -36,7 +37,8 @@ export const BudgetTableRowComponent: React.FC<BudgetTableRowProps> = ({
   onCellClick,
   onInputChange,
   onInputBlur,
-  onKeyPress
+  onKeyPress,
+  onActualChange
 }) => {
   // Para categorías, calculamos los totales sumando las subcategorías
   const categoryTotalByMonth = row.isCategory ? 
@@ -88,6 +90,7 @@ export const BudgetTableRowComponent: React.FC<BudgetTableRowProps> = ({
               onInputChange={onInputChange}
               onInputBlur={onInputBlur}
               onKeyPress={onKeyPress}
+              onActualChange={onActualChange}
             />
           </TableCell>
         );
