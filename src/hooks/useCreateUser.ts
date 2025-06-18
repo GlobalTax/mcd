@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
+// Definir el tipo de rol permitido
+type UserRole = 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
+
 export const useCreateUser = () => {
   const { user } = useAuth();
   const [creating, setCreating] = useState(false);
@@ -12,7 +15,7 @@ export const useCreateUser = () => {
     email: string, 
     password: string, 
     fullName: string, 
-    role: 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente' = 'franchisee'
+    role: UserRole = 'franchisee'
   ) => {
     if (!user) {
       toast.error('No tienes permisos para crear usuarios');

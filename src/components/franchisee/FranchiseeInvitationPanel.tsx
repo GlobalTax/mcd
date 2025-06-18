@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,12 +82,14 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       return;
     }
 
-    // Corregir: pasar 'franchisee' como rol, no franchiseeId
+    // Usar explícitamente el tipo correcto para el rol
+    const userRole: 'franchisee' = 'franchisee';
+    
     const success = await createUser(
       userForm.email.trim(),
       userForm.password.trim(),
       userForm.fullName.trim(),
-      'franchisee' // Corregido: usar el rol correcto en lugar de franchiseeId
+      userRole
     );
 
     if (success) {
