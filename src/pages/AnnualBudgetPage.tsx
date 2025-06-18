@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AnnualBudgetGrid } from '@/components/budget/AnnualBudgetGrid';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
@@ -118,7 +117,7 @@ export default function AnnualBudgetPage() {
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <div className="border-b border-gray-200 px-6 pt-6">
-                    <TabsList className="grid w-full grid-cols-3 bg-transparent h-auto p-0 space-x-8">
+                    <TabsList className="inline-flex h-auto p-0 space-x-8 bg-transparent">
                       <TabsTrigger 
                         value="budget" 
                         className="bg-transparent border-0 border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent data-[state=active]:text-gray-900 data-[state=active]:shadow-none rounded-none px-0 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
