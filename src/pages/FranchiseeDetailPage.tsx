@@ -19,6 +19,7 @@ export default function FranchiseeDetailPage() {
   const navigate = useNavigate();
   const { franchisee, restaurants, loading, error } = useFranchiseeDetail(id);
 
+  // Mostrar mensaje de carga
   if (loading) {
     return (
       <div className="p-6">
@@ -36,6 +37,7 @@ export default function FranchiseeDetailPage() {
     );
   }
 
+  // Mostrar mensaje de error con más detalles
   if (error || !franchisee) {
     return (
       <div className="p-6">
@@ -46,8 +48,25 @@ export default function FranchiseeDetailPage() {
           </Button>
         </div>
         <div className="text-center py-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-600">{error || 'Franquiciado no encontrado'}</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error al cargar el franquiciado</h2>
+          <p className="text-gray-600 mb-4">
+            {error || 'Franquiciado no encontrado'}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            ID del franquiciado: {id || 'No proporcionado'}
+          </p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mr-2"
+          >
+            Reintentar
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/advisor')}
+          >
+            Volver al listado
+          </Button>
         </div>
       </div>
     );
