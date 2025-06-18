@@ -1,21 +1,57 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, TrendingUp, DollarSign, Calendar } from 'lucide-react';
+import { Building2, TrendingUp, DollarSign, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DashboardSummaryProps {
   totalRestaurants: number;
   displayRestaurants: any[];
+  isTemporaryData?: boolean;
 }
 
-export const DashboardSummary = ({ totalRestaurants, displayRestaurants }: DashboardSummaryProps) => {
+export const DashboardSummary = ({ 
+  totalRestaurants, 
+  displayRestaurants, 
+  isTemporaryData = false 
+}: DashboardSummaryProps) => {
   // Calcular métricas básicas
   const activeRestaurants = displayRestaurants.filter(r => r.status === 'active' || !r.status).length;
   const totalRevenue = displayRestaurants.reduce((sum, r) => sum + (r.lastYearRevenue || 0), 0);
   const avgRevenue = totalRestaurants > 0 ? totalRevenue / totalRestaurants : 0;
 
+  const handleRefresh = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6">
+      {/* Banner de advertencia para datos temporales */}
+      {isTemporaryData && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <div className="flex-1">
+                <h3 className="font-medium text-orange-900">Trabajando con datos temporales</h3>
+                <p className="text-sm text-orange-800">
+                  No se pudo conectar con la base de datos. Los datos mostrados son temporales.
+                </p>
+              </div>
+              <Button 
+                onClick={handleRefresh}
+                variant="outline" 
+                size="sm"
+                className="border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reconectar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Métricas principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -67,9 +103,11 @@ export const DashboardSummary = ({ totalRestaurants, displayRestaurants }: Dashb
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">Activo</div>
+            <div className={`text-2xl font-bold ${isTemporaryData ? 'text-orange-600' : 'text-green-600'}`}>
+              {isTemporaryData ? 'Temporal' : 'Activo'}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Todos los sistemas operativos
+              {isTemporaryData ? 'Datos sin conexión' : 'Todos los sistemas operativos'}
             </p>
           </CardContent>
         </Card>
@@ -85,7 +123,12 @@ export const DashboardSummary = ({ totalRestaurants, displayRestaurants }: Dashb
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No hay restaurantes asignados</p>
-              <p className="text-sm">Contacta con tu asesor para más información</p>
+              <p className="text-sm">
+                {isTemporaryData 
+                  ? 'Reconecta para ver tus restaurantes reales' 
+                  : 'Contacta con tu asesor para más información'
+                }
+              </p>
             </div>
           ) : (
             <div className="space-y-4">

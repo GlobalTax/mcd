@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ const SimpleValuationManager = ({
   onValuationLoaded, 
   currentData 
 }: SimpleValuationManagerProps) => {
-  const { user } = useAuth();
+  const { user, franchisee } = useAuth();
   const { restaurants, loading, error, refetch } = useFranchiseeRestaurants();
   const {
     selectedRestaurantId,
@@ -43,9 +42,13 @@ const SimpleValuationManager = ({
   const [isLoadValuationOpen, setIsLoadValuationOpen] = useState(false);
 
   console.log('SimpleValuationManager - User:', user);
+  console.log('SimpleValuationManager - Franchisee:', franchisee);
   console.log('SimpleValuationManager - Restaurants:', restaurants);
   console.log('SimpleValuationManager - Loading:', loading);
   console.log('SimpleValuationManager - Error:', error);
+
+  // Si el franchisee es temporal, mostrar mensaje especial
+  const isTemporaryFranchisee = franchisee?.id?.startsWith('temp-');
 
   const restaurantOptions = restaurants
     .filter(r => r.base_restaurant)
@@ -85,6 +88,29 @@ const SimpleValuationManager = ({
         <CardContent className="p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Cargando restaurantes...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isTemporaryFranchisee) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Building2 className="w-12 h-12 mx-auto mb-4 text-orange-400" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Datos temporales
+          </h3>
+          <p className="text-gray-600 mb-4">
+            No se pudo conectar con la base de datos. Trabajando con datos temporales.
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            Para acceder a tus restaurantes reales, verifica tu conexión a Internet y recarga la página.
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Recargar página
+          </Button>
         </CardContent>
       </Card>
     );

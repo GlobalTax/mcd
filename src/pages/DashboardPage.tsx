@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -39,7 +40,10 @@ const DashboardPage = () => {
     f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
   );
 
-  const hasSupabaseRestaurants = franchiseeRestaurants.length > 0;
+  // Verificar si el franchisee es temporal
+  const isTemporaryFranchisee = franchisee?.id?.startsWith('temp-');
+  const hasSupabaseRestaurants = !isTemporaryFranchisee && franchiseeRestaurants.length > 0;
+  
   const displayRestaurants: DisplayRestaurant[] = hasSupabaseRestaurants ? 
     franchiseeRestaurants.map(fr => ({
       id: fr.id,
@@ -63,7 +67,7 @@ const DashboardPage = () => {
   
   const totalRestaurants = displayRestaurants?.length || 0;
 
-  if (restaurantsLoading) {
+  if (restaurantsLoading && !isTemporaryFranchisee) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -88,10 +92,12 @@ const DashboardPage = () => {
           </header>
 
           <main className="flex-1 p-6">
-            {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
+            {/* Si hay datos reales de Supabase o datos temporales, mostrar dashboard */}
+            {(hasSupabaseRestaurants || isTemporaryFranchisee || (!restaurantsLoading && franchiseeRestaurants.length === 0)) ? (
               <DashboardSummary 
                 totalRestaurants={totalRestaurants} 
                 displayRestaurants={displayRestaurants}
+                isTemporaryData={isTemporaryFranchisee}
               />
             ) : (
               <WelcomeSection onNavigateToValuation={() => navigate('/valuation')} />

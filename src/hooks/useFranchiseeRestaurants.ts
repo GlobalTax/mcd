@@ -36,6 +36,15 @@ export const useFranchiseeRestaurants = () => {
       return;
     }
 
+    // Si es un franchisee temporal (creado por timeout), no hacer consultas
+    if (franchisee.id.startsWith('temp-')) {
+      console.log('useFranchiseeRestaurants - Temporary franchisee detected, skipping database query');
+      setRestaurants([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
