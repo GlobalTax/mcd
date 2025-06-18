@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Mail, Send, Clock, CheckCircle, XCircle, UserPlus } from 'lucide-react';
 import { useFranchiseeInvitations } from '@/hooks/useFranchiseeInvitations';
+import { useCreateUser } from '@/hooks/useCreateUser';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -19,18 +22,45 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
   franchiseeEmail
 }) => {
   const { invitations, loading, sendInvitation } = useFranchiseeInvitations(franchiseeId);
-  const [email, setEmail] = useState(franchiseeEmail || '');
+  const { createUser, creating } = useCreateUser();
+  
+  // Estados para invitación por email
+  const [inviteEmail, setInviteEmail] = useState(franchiseeEmail || '');
   const [sending, setSending] = useState(false);
 
+  // Estados para crear usuario
+  const [userForm, setUserForm] = useState({
+    email: franchiseeEmail || '',
+    fullName: '',
+    password: ''
+  });
+
   const handleSendInvitation = async () => {
-    if (!email.trim()) return;
+    if (!inviteEmail.trim()) return;
 
     setSending(true);
-    const success = await sendInvitation(email.trim());
+    const success = await sendInvitation(inviteEmail.trim());
     if (success) {
-      setEmail('');
+      setInviteEmail('');
     }
     setSending(false);
+  };
+
+  const handleCreateUser = async () => {
+    if (!userForm.email.trim() || !userForm.fullName.trim() || !userForm.password.trim()) {
+      return;
+    }
+
+    const success = await createUser(
+      userForm.email.trim(),
+      userForm.password.trim(),
+      userForm.fullName.trim(),
+      franchiseeId
+    );
+
+    if (success) {
+      setUserForm({ email: '', fullName: '', password: '' });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -50,32 +80,92 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center">
-          <Mail className="w-5 h-5 mr-2" />
-          Invitaciones al Portal
+          <UserPlus className="w-5 h-5 mr-2" />
+          Gestión de Acceso
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Email del franquiciado"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-          />
-          <Button 
-            onClick={handleSendInvitation}
-            disabled={!email.trim() || sending}
-            className="flex items-center"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            {sending ? 'Enviando...' : 'Enviar'}
-          </Button>
-        </div>
+      <CardContent>
+        <Tabs defaultValue="create" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="create">Crear Usuario</TabsTrigger>
+            <TabsTrigger value="invite">Enviar Invitación</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="create" className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="fullName">Nombre Completo</Label>
+                <Input
+                  id="fullName"
+                  placeholder="Nombre del franquiciado"
+                  value={userForm.fullName}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, fullName: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="createEmail">Email</Label>
+                <Input
+                  id="createEmail"
+                  placeholder="Email del franquiciado"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  type="email"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  placeholder="Contraseña temporal (mínimo 6 caracteres)"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
+                  type="password"
+                  minLength={6}
+                />
+              </div>
+              
+              <Button 
+                onClick={handleCreateUser}
+                disabled={!userForm.email.trim() || !userForm.fullName.trim() || !userForm.password.trim() || creating}
+                className="w-full flex items-center justify-center"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {creating ? 'Creando...' : 'Crear Usuario'}
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="invite" className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Email del franquiciado"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                type="email"
+              />
+              <Button 
+                onClick={handleSendInvitation}
+                disabled={!inviteEmail.trim() || sending}
+                className="flex items-center"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {sending ? 'Enviando...' : 'Enviar'}
+              </Button>
+            </div>
+            
+            <p className="text-sm text-gray-500">
+              <Mail className="w-4 h-4 inline mr-1" />
+              Se enviará un correo con instrucciones para crear su cuenta
+            </p>
+          </TabsContent>
+        </Tabs>
 
         {loading ? (
-          <p className="text-sm text-gray-500">Cargando invitaciones...</p>
+          <p className="text-sm text-gray-500 mt-4">Cargando historial...</p>
         ) : invitations.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 mt-6">
             <h4 className="font-medium text-sm">Historial de Invitaciones</h4>
             {invitations.map((invitation) => (
               <div key={invitation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -95,7 +185,7 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No se han enviado invitaciones</p>
+          <p className="text-sm text-gray-500 mt-4">No hay invitaciones enviadas</p>
         )}
       </CardContent>
     </Card>
