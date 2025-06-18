@@ -77,7 +77,7 @@ const UserManagement = () => {
     setCreating(true);
 
     try {
-      // Use database role directly (no mapping needed here since newUser.role is already the DB role)
+      // Use database role directly
       const dbRole = newUser.role;
       
       // Crear el usuario en Supabase Auth
@@ -87,7 +87,8 @@ const UserManagement = () => {
         user_metadata: {
           full_name: newUser.fullName,
           role: dbRole
-        }
+        },
+        email_confirm: true
       });
 
       if (error) {
@@ -97,24 +98,50 @@ const UserManagement = () => {
       }
 
       if (data.user) {
-        // Actualizar el perfil con el rol
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ 
-            role: dbRole,
-            full_name: newUser.fullName 
-          })
-          .eq('id', data.user.id);
+        // Usar la función RPC para crear el perfil con el rol correcto
+        const { error: profileError } = await supabase.rpc('create_franchisee_profile', {
+          user_id: data.user.id,
+          user_email: newUser.email,
+          user_full_name: newUser.fullName
+        });
 
         if (profileError) {
-          console.error('Error updating profile:', profileError);
-          toast.error('Usuario creado pero error al asignar rol');
+          console.error('Error creating profile with RPC:', profileError);
+          
+          // Como alternativa, intentar actualizar el perfil directamente
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ 
+              role: dbRole,
+              full_name: newUser.fullName 
+            })
+            .eq('id', data.user.id);
+
+          if (updateError) {
+            console.error('Error updating profile:', updateError);
+            toast.error('Usuario creado pero error al asignar rol');
+          } else {
+            toast.success('Usuario creado exitosamente');
+          }
         } else {
+          // Si se creó con la función RPC pero necesita actualizar el rol
+          if (dbRole !== 'franchisee') {
+            const { error: roleUpdateError } = await supabase
+              .from('profiles')
+              .update({ role: dbRole })
+              .eq('id', data.user.id);
+
+            if (roleUpdateError) {
+              console.error('Error updating role:', roleUpdateError);
+              toast.error('Usuario creado pero error al asignar rol específico');
+            }
+          }
           toast.success('Usuario creado exitosamente');
-          setNewUser({ email: '', password: '', fullName: '', role: 'franchisee' });
-          setShowCreateForm(false);
-          fetchUsers();
         }
+
+        setNewUser({ email: '', password: '', fullName: '', role: 'franchisee' });
+        setShowCreateForm(false);
+        fetchUsers();
       }
     } catch (error) {
       console.error('Error in handleCreateUser:', error);
@@ -181,7 +208,7 @@ const UserManagement = () => {
   };
 
   // Solo admins pueden gestionar usuarios
-  if (user?.role !== 'admin') {
+  if (!user || !['admin', 'advisor', 'asesor', 'superadmin'].includes(user.role)) {
     return (
       <Card>
         <CardContent className="p-6">

@@ -36,14 +36,14 @@ export const useCreateUser = () => {
         return false;
       }
 
-      // Crear el usuario usando admin.createUser para evitar problemas de autenticación
+      // Crear el usuario usando admin.createUser
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
         user_metadata: {
           full_name: fullName
         },
-        email_confirm: true // Confirmar email automáticamente
+        email_confirm: true
       });
 
       console.log('Resultado del admin.createUser:', { authData, authError });
@@ -62,77 +62,21 @@ export const useCreateUser = () => {
 
       console.log('Usuario creado en auth:', authData.user);
 
-      // Dar tiempo para que el trigger de profiles funcione
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Crear el perfil usando la función RPC mejorada
+      console.log('Creando perfil usando función RPC');
+      const { error: profileCreateError } = await supabase.rpc('create_franchisee_profile', {
+        user_id: authData.user.id,
+        user_email: email,
+        user_full_name: fullName
+      });
 
-      // Verificar si el perfil se creó automáticamente por el trigger
-      let profileExists = false;
-      for (let i = 0; i < 3; i++) {
-        const { data: profileCheck } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authData.user.id)
-          .maybeSingle();
-
-        if (profileCheck) {
-          profileExists = true;
-          console.log('Perfil encontrado:', profileCheck);
-          
-          // Asegurar que el perfil tiene el rol correcto
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: 'franchisee',
-              full_name: fullName 
-            })
-            .eq('id', authData.user.id);
-
-          if (updateError) {
-            console.error('Error updating profile role:', updateError);
-          } else {
-            console.log('Perfil actualizado con rol franchisee');
-          }
-          break;
-        }
-
-        // Esperar un poco más si no existe
-        if (i < 2) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
+      if (profileCreateError) {
+        console.error('Error creating profile with RPC:', profileCreateError);
+        toast.error('Usuario creado pero error al crear perfil');
+        return false;
       }
 
-      // Si no existe el perfil, crearlo manualmente
-      if (!profileExists) {
-        console.log('Creando perfil manualmente usando función personalizada');
-        
-        // Usar la función RPC con un tipo más genérico para evitar errores de tipos
-        const { error: profileCreateError } = await (supabase as any).rpc('create_franchisee_profile', {
-          user_id: authData.user.id,
-          user_email: email,
-          user_full_name: fullName
-        });
-
-        if (profileCreateError) {
-          console.error('Error creating profile with RPC:', profileCreateError);
-          
-          // Como último recurso, intentar crear usando inserción directa
-          const { error: directError } = await supabase
-            .from('profiles')
-            .insert({
-              id: authData.user.id,
-              email: email,
-              full_name: fullName,
-              role: 'franchisee'
-            });
-
-          if (directError) {
-            console.error('Error creating profile directly:', directError);
-            toast.error('Usuario creado pero error al crear perfil');
-            return false;
-          }
-        }
-        console.log('Perfil creado exitosamente');
-      }
+      console.log('Perfil creado exitosamente');
 
       // Crear una invitación marcada como aceptada
       const { error: inviteError } = await supabase
