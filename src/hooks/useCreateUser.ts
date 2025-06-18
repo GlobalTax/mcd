@@ -4,8 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-// Definir el tipo de rol permitido
-type UserRole = 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
+// Definir el tipo de rol permitido que coincida exactamente con la base de datos
+export type UserRole = 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
 
 export const useCreateUser = () => {
   const { user } = useAuth();

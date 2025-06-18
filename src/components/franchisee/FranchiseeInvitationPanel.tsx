@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Mail, Send, Clock, CheckCircle, XCircle, UserPlus, Trash2 } from 'lucide-react';
 import { useFranchiseeInvitations } from '@/hooks/useFranchiseeInvitations';
-import { useCreateUser } from '@/hooks/useCreateUser';
+import { useCreateUser, type UserRole } from '@/hooks/useCreateUser';
 import { useDeleteUser } from '@/hooks/useDeleteUser';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -82,14 +82,14 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       return;
     }
 
-    // Usar explícitamente el tipo correcto para el rol
-    const userRole: 'franchisee' = 'franchisee';
+    // Usar el tipo importado correctamente
+    const role: UserRole = 'franchisee';
     
     const success = await createUser(
       userForm.email.trim(),
       userForm.password.trim(),
       userForm.fullName.trim(),
-      userRole
+      role
     );
 
     if (success) {
