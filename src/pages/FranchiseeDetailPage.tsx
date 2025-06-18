@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTa
 import { UserCreationPanel } from '@/components/admin/UserCreationPanel';
 import { FranchiseeAccessHistory } from '@/components/franchisee/FranchiseeAccessHistory';
 import { FranchiseeActivityHistory } from '@/components/franchisee/FranchiseeActivityHistory';
+import { FranchiseeUsers } from '@/components/franchisee/FranchiseeUsers';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -174,6 +176,12 @@ export default function FranchiseeDetailPage() {
 
       {/* Panel de gestión de usuarios */}
       <UserCreationPanel />
+
+      {/* Lista de usuarios asociados */}
+      <FranchiseeUsers 
+        franchiseeId={franchisee.id} 
+        franchiseeName={franchisee.franchisee_name}
+      />
 
       {/* Grid con historial */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
