@@ -1,0 +1,167 @@
+
+import { supabase } from '@/integrations/supabase/client';
+import { User, Franchisee, Restaurant } from '@/types/auth';
+import { toast } from 'sonner';
+
+interface UserDataFetcherProps {
+  setUser: (user: User | null) => void;
+  setFranchisee: (franchisee: Franchisee | null) => void;
+  setRestaurants: (restaurants: Restaurant[]) => void;
+  clearUserData: () => void;
+}
+
+export const useUserDataFetcher = ({
+  setUser,
+  setFranchisee,
+  setRestaurants,
+  clearUserData
+}: UserDataFetcherProps) => {
+  
+  const fetchUserData = async (userId: string) => {
+    try {
+      console.log('fetchUserData - Starting fetch for user:', userId);
+      
+      // Fetch user profile with better error handling
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      console.log('fetchUserData - Profile query result:', { profile, profileError });
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+        // If profile doesn't exist, clear user data but don't show error
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, user needs to complete registration');
+          clearUserData();
+          return;
+        }
+        return;
+      }
+
+      if (!profile) {
+        console.log('No profile found for user');
+        clearUserData();
+        return;
+      }
+
+      console.log('fetchUserData - Profile fetched:', profile);
+
+      // Usar el rol directamente de la base de datos sin mapear
+      const userData = {
+        ...profile,
+        role: profile.role // Mantener el rol original de la base de datos
+      } as User;
+
+      console.log('fetchUserData - Setting user with role:', userData.role);
+      setUser(userData);
+
+      // Only fetch franchisee data if user is a franchisee
+      if (profile.role === 'franchisee') {
+        await fetchFranchiseeData(userId, profile);
+      } else {
+        console.log('fetchUserData - User is not franchisee, role:', profile.role);
+        // Clear franchisee data for non-franchisee users
+        setFranchisee(null);
+        setRestaurants([]);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserData:', error);
+      // Clear user data on any unexpected error
+      clearUserData();
+    }
+  };
+
+  const fetchFranchiseeData = async (userId: string, profile: any) => {
+    console.log('fetchUserData - User is franchisee, fetching franchisee data');
+    
+    // Fetch franchisee data
+    const { data: franchiseeData, error: franchiseeError } = await supabase
+      .from('franchisees')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    console.log('fetchUserData - Franchisee query result:', { franchiseeData, franchiseeError });
+
+    if (franchiseeError) {
+      console.error('Error fetching franchisee:', franchiseeError);
+      // Si no existe el franquiciado, crear uno
+      if (franchiseeError.code === 'PGRST116') {
+        console.log('No franchisee found, creating one for user:', profile.full_name);
+        
+        const { data: newFranchisee, error: createError } = await supabase
+          .from('franchisees')
+          .insert({
+            user_id: userId,
+            franchisee_name: profile.full_name || profile.email
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating franchisee:', createError);
+          toast.error('Error al crear perfil de franquiciado');
+          return;
+        }
+
+        console.log('fetchUserData - New franchisee created:', newFranchisee);
+        setFranchisee(newFranchisee as Franchisee);
+        toast.success('Perfil de franquiciado creado correctamente');
+      }
+      return;
+    }
+
+    if (franchiseeData) {
+      console.log('fetchUserData - Setting franchisee:', franchiseeData);
+      setFranchisee(franchiseeData as Franchisee);
+      await fetchRestaurantsData(franchiseeData.id);
+    }
+  };
+
+  const fetchRestaurantsData = async (franchiseeId: string) => {
+    // Buscar restaurantes vinculados a través de franchisee_restaurants
+    const { data: restaurantsData, error: restaurantsError } = await supabase
+      .from('franchisee_restaurants')
+      .select(`
+        *,
+        base_restaurant:base_restaurants(*)
+      `)
+      .eq('franchisee_id', franchiseeId)
+      .eq('status', 'active');
+
+    if (restaurantsError) {
+      console.error('Error fetching restaurants:', restaurantsError);
+    } else {
+      console.log('fetchUserData - Restaurants found:', restaurantsData);
+      
+      // Transform the data to match Restaurant type
+      const transformedRestaurants: Restaurant[] = restaurantsData
+        ?.filter(item => item.base_restaurant)
+        .map(item => ({
+          id: item.base_restaurant.id,
+          franchisee_id: item.franchisee_id,
+          site_number: item.base_restaurant.site_number,
+          restaurant_name: item.base_restaurant.restaurant_name,
+          address: item.base_restaurant.address,
+          city: item.base_restaurant.city,
+          state: item.base_restaurant.state,
+          postal_code: item.base_restaurant.postal_code,
+          country: item.base_restaurant.country,
+          opening_date: item.base_restaurant.opening_date,
+          restaurant_type: item.base_restaurant.restaurant_type as 'traditional' | 'mccafe' | 'drive_thru' | 'express',
+          status: item.status as 'active' | 'inactive' | 'pending' | 'closed',
+          square_meters: item.base_restaurant.square_meters,
+          seating_capacity: item.base_restaurant.seating_capacity,
+          created_at: item.base_restaurant.created_at,
+          updated_at: item.base_restaurant.updated_at
+        })) || [];
+      
+      setRestaurants(transformedRestaurants);
+    }
+  };
+
+  return { fetchUserData };
+};

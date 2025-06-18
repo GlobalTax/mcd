@@ -1,171 +1,39 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+
+import React, { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Franchisee, Restaurant, AuthContextType } from '@/types/auth';
-import { toast } from 'sonner';
+import { AuthContext } from './auth/AuthContext';
+import { useAuthState } from './auth/useAuthState';
+import { useUserDataFetcher } from './auth/useUserDataFetcher';
+import { useAuthActions } from './auth/useAuthActions';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export { useAuth } from './auth/AuthContext';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [franchisee, setFranchisee] = useState<Franchisee | null>(null);
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    user,
+    setUser,
+    session,
+    setSession,
+    franchisee,
+    setFranchisee,
+    restaurants,
+    setRestaurants,
+    loading,
+    setLoading,
+    clearUserData
+  } = useAuthState();
 
-  const fetchUserData = async (userId: string) => {
-    try {
-      console.log('fetchUserData - Starting fetch for user:', userId);
-      
-      // Fetch user profile with better error handling
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+  const { fetchUserData } = useUserDataFetcher({
+    setUser,
+    setFranchisee,
+    setRestaurants,
+    clearUserData
+  });
 
-      console.log('fetchUserData - Profile query result:', { profile, profileError });
-
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        // If profile doesn't exist, clear user data but don't show error
-        if (profileError.code === 'PGRST116') {
-          console.log('Profile not found, user needs to complete registration');
-          clearUserData();
-          return;
-        }
-        return;
-      }
-
-      if (!profile) {
-        console.log('No profile found for user');
-        clearUserData();
-        return;
-      }
-
-      console.log('fetchUserData - Profile fetched:', profile);
-
-      // Usar el rol directamente de la base de datos sin mapear
-      const userData = {
-        ...profile,
-        role: profile.role // Mantener el rol original de la base de datos
-      } as User;
-
-      console.log('fetchUserData - Setting user with role:', userData.role);
-      setUser(userData);
-
-      // Only fetch franchisee data if user is a franchisee
-      if (profile.role === 'franchisee') {
-        console.log('fetchUserData - User is franchisee, fetching franchisee data');
-        
-        // Fetch franchisee data
-        const { data: franchiseeData, error: franchiseeError } = await supabase
-          .from('franchisees')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        console.log('fetchUserData - Franchisee query result:', { franchiseeData, franchiseeError });
-
-        if (franchiseeError) {
-          console.error('Error fetching franchisee:', franchiseeError);
-          // Si no existe el franquiciado, crear uno
-          if (franchiseeError.code === 'PGRST116') {
-            console.log('No franchisee found, creating one for user:', profile.full_name);
-            
-            const { data: newFranchisee, error: createError } = await supabase
-              .from('franchisees')
-              .insert({
-                user_id: userId,
-                franchisee_name: profile.full_name || profile.email
-              })
-              .select()
-              .single();
-
-            if (createError) {
-              console.error('Error creating franchisee:', createError);
-              toast.error('Error al crear perfil de franquiciado');
-              return;
-            }
-
-            console.log('fetchUserData - New franchisee created:', newFranchisee);
-            setFranchisee(newFranchisee as Franchisee);
-            toast.success('Perfil de franquiciado creado correctamente');
-          }
-          return;
-        }
-
-        if (franchiseeData) {
-          console.log('fetchUserData - Setting franchisee:', franchiseeData);
-          setFranchisee(franchiseeData as Franchisee);
-
-          // Buscar restaurantes vinculados a través de franchisee_restaurants
-          const { data: restaurantsData, error: restaurantsError } = await supabase
-            .from('franchisee_restaurants')
-            .select(`
-              *,
-              base_restaurant:base_restaurants(*)
-            `)
-            .eq('franchisee_id', franchiseeData.id)
-            .eq('status', 'active');
-
-          if (restaurantsError) {
-            console.error('Error fetching restaurants:', restaurantsError);
-          } else {
-            console.log('fetchUserData - Restaurants found:', restaurantsData);
-            
-            // Transform the data to match Restaurant type
-            const transformedRestaurants: Restaurant[] = restaurantsData
-              ?.filter(item => item.base_restaurant)
-              .map(item => ({
-                id: item.base_restaurant.id,
-                franchisee_id: item.franchisee_id,
-                site_number: item.base_restaurant.site_number,
-                restaurant_name: item.base_restaurant.restaurant_name,
-                address: item.base_restaurant.address,
-                city: item.base_restaurant.city,
-                state: item.base_restaurant.state,
-                postal_code: item.base_restaurant.postal_code,
-                country: item.base_restaurant.country,
-                opening_date: item.base_restaurant.opening_date,
-                restaurant_type: item.base_restaurant.restaurant_type as 'traditional' | 'mccafe' | 'drive_thru' | 'express',
-                status: item.status as 'active' | 'inactive' | 'pending' | 'closed',
-                square_meters: item.base_restaurant.square_meters,
-                seating_capacity: item.base_restaurant.seating_capacity,
-                created_at: item.base_restaurant.created_at,
-                updated_at: item.base_restaurant.updated_at
-              })) || [];
-            
-            setRestaurants(transformedRestaurants);
-          }
-        }
-      } else {
-        console.log('fetchUserData - User is not franchisee, role:', profile.role);
-        // Clear franchisee data for non-franchisee users
-        setFranchisee(null);
-        setRestaurants([]);
-      }
-    } catch (error) {
-      console.error('Error in fetchUserData:', error);
-      // Clear user data on any unexpected error
-      clearUserData();
-    }
-  };
-
-  const clearUserData = () => {
-    console.log('clearUserData - Clearing all user data');
-    setUser(null);
-    setFranchisee(null);
-    setRestaurants([]);
-  };
+  const { signIn, signUp, signOut } = useAuthActions({
+    clearUserData,
+    setSession
+  });
 
   useEffect(() => {
     console.log('useAuth - Setting up auth state listener');
@@ -201,89 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const signIn = async (email: string, password: string) => {
-    console.log('signIn - Attempting login for:', email);
-    
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error('signIn - Error:', error);
-        toast.error(error.message);
-        return { error: error.message };
-      } else {
-        console.log('signIn - Success, user data:', data.user);
-        toast.success('Sesión iniciada correctamente');
-        return {};
-      }
-    } catch (error) {
-      console.error('signIn - Unexpected error:', error);
-      toast.error('Error inesperado al iniciar sesión');
-      return { error: 'Error inesperado al iniciar sesión' };
-    }
-  };
-
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (error) {
-        toast.error(error.message);
-        return { error: error.message };
-      } else {
-        toast.success('Cuenta creada correctamente. Revisa tu email para confirmar tu cuenta.');
-        return {};
-      }
-    } catch (error) {
-      console.error('signUp - Unexpected error:', error);
-      toast.error('Error inesperado al crear cuenta');
-      return { error: 'Error inesperado al crear cuenta' };
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      console.log('signOut - Starting logout process');
-      
-      // Clear user data immediately to prevent UI delays
-      clearUserData();
-      setSession(null);
-      
-      // Then attempt to sign out from Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('signOut - Error:', error);
-        // Don't show error toast for session_not_found errors as they're harmless
-        if (!error.message.includes('Session not found')) {
-          toast.error(error.message);
-        }
-      } else {
-        console.log('signOut - Success');
-        toast.success('Sesión cerrada correctamente');
-      }
-    } catch (error) {
-      console.error('signOut - Unexpected error:', error);
-      // Still clear the local state even if there's an error
-      clearUserData();
-      setSession(null);
-    }
-  };
 
   console.log('useAuth - Current state:', { user, session: !!session, loading });
 
