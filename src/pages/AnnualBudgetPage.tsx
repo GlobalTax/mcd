@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AnnualBudgetGrid } from '@/components/budget/AnnualBudgetGrid';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
@@ -117,11 +116,8 @@ export default function AnnualBudgetPage() {
             {/* Financial Statement Tabs */}
             {selectedRestaurant ? (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="budget" className="text-sm font-medium">
-                    Presupuesto Anual
-                  </TabsTrigger>
-                  <TabsTrigger value="profit-loss" className="text-sm font-medium">
                     Profit & Loss
                   </TabsTrigger>
                   <TabsTrigger value="balance-sheet" className="text-sm font-medium">
@@ -137,10 +133,6 @@ export default function AnnualBudgetPage() {
                     restaurantId={selectedRestaurant}
                     year={selectedYear}
                   />
-                </TabsContent>
-
-                <TabsContent value="profit-loss" className="space-y-6">
-                  <ProfitLossDashboard restaurantId={selectedRestaurant} />
                 </TabsContent>
 
                 <TabsContent value="balance-sheet" className="space-y-6">
