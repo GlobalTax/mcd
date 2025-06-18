@@ -28,33 +28,13 @@ export const useCreateUser = () => {
         .from('profiles')
         .select('email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (existingProfile) {
         console.log('Usuario ya existe:', existingProfile);
         toast.error('Ya existe un usuario con este email');
         return false;
       }
-
-      // Crear una invitación especial que se auto-acepta
-      const { data: invitation, error: inviteError } = await supabase
-        .from('franchisee_invitations')
-        .insert({
-          franchisee_id: franchiseeId,
-          email,
-          invited_by: user.id,
-          status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (inviteError) {
-        console.error('Error creating invitation:', inviteError);
-        toast.error('Error al crear la invitación');
-        return false;
-      }
-
-      console.log('Invitación creada:', invitation);
 
       // Crear el usuario usando signup normal
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -63,8 +43,7 @@ export const useCreateUser = () => {
         options: {
           data: {
             full_name: fullName
-          },
-          emailRedirectTo: `${window.location.origin}/`
+          }
         }
       });
 
@@ -73,13 +52,6 @@ export const useCreateUser = () => {
       if (authError) {
         console.error('Error creating user:', authError);
         toast.error(`Error al crear usuario: ${authError.message}`);
-        
-        // Limpiar la invitación si falló la creación
-        await supabase
-          .from('franchisee_invitations')
-          .delete()
-          .eq('id', invitation.id);
-        
         return false;
       }
 
@@ -91,51 +63,51 @@ export const useCreateUser = () => {
 
       console.log('Usuario creado en auth:', authData.user);
 
-      // Marcar la invitación como aceptada
-      const { error: inviteUpdateError } = await supabase
+      // Crear una invitación marcada como aceptada
+      const { error: inviteError } = await supabase
         .from('franchisee_invitations')
-        .update({ 
+        .insert({
+          franchisee_id: franchiseeId,
+          email,
+          invited_by: user.id,
           status: 'accepted',
           accepted_at: new Date().toISOString()
-        })
-        .eq('id', invitation.id);
+        });
 
-      if (inviteUpdateError) {
-        console.error('Error updating invitation:', inviteUpdateError);
+      if (inviteError) {
+        console.error('Error creating invitation:', inviteError);
+        // No es crítico, continuamos
       } else {
-        console.log('Invitación marcada como aceptada');
+        console.log('Invitación creada y marcada como aceptada');
       }
 
       // Dar tiempo para que el trigger de profiles funcione
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       // Verificar si el perfil se creó automáticamente
-      const { data: profileCheck } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      console.log('Perfil después del signup:', profileCheck);
-
-      // Actualizar el perfil con el rol de franchisee si existe
-      if (profileCheck) {
-        const { error: profileError } = await supabase
+      let profileExists = false;
+      for (let i = 0; i < 3; i++) {
+        const { data: profileCheck } = await supabase
           .from('profiles')
-          .update({ 
-            role: 'franchisee',
-            full_name: fullName 
-          })
-          .eq('id', authData.user.id);
+          .select('*')
+          .eq('id', authData.user.id)
+          .maybeSingle();
 
-        if (profileError) {
-          console.error('Error updating profile:', profileError);
-          toast.error('Usuario creado pero error al asignar rol');
-          return false;
+        if (profileCheck) {
+          profileExists = true;
+          console.log('Perfil encontrado:', profileCheck);
+          break;
         }
-        console.log('Perfil actualizado con rol franchisee');
-      } else {
-        // Si no existe el perfil, crearlo manualmente
+
+        // Esperar un poco más si no existe
+        if (i < 2) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      // Si no existe el perfil, crearlo manualmente
+      if (!profileExists) {
+        console.log('Creando perfil manualmente');
         const { error: profileCreateError } = await supabase
           .from('profiles')
           .insert({
@@ -151,6 +123,22 @@ export const useCreateUser = () => {
           return false;
         }
         console.log('Perfil creado manualmente');
+      } else {
+        // Actualizar el perfil con el rol de franchisee
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            role: 'franchisee',
+            full_name: fullName 
+          })
+          .eq('id', authData.user.id);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          toast.error('Usuario creado pero error al asignar rol');
+          return false;
+        }
+        console.log('Perfil actualizado con rol franchisee');
       }
 
       // Actualizar el franquiciado con el nuevo user_id

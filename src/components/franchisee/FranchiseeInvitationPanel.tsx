@@ -46,7 +46,10 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
   });
 
   const handleSendInvitation = async () => {
-    if (!inviteEmail.trim()) return;
+    if (!inviteEmail.trim()) {
+      toast.error('Por favor, introduce un email válido');
+      return;
+    }
 
     setSending(true);
     const success = await sendInvitation(inviteEmail.trim());
@@ -57,7 +60,25 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
   };
 
   const handleCreateUser = async () => {
-    if (!userForm.email.trim() || !userForm.fullName.trim() || !userForm.password.trim()) {
+    console.log('Intentando crear usuario con datos:', userForm);
+    
+    if (!userForm.email.trim()) {
+      toast.error('El email es obligatorio');
+      return;
+    }
+    
+    if (!userForm.fullName.trim()) {
+      toast.error('El nombre completo es obligatorio');
+      return;
+    }
+    
+    if (!userForm.password.trim()) {
+      toast.error('La contraseña es obligatoria');
+      return;
+    }
+
+    if (userForm.password.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
       return;
     }
 
@@ -148,28 +169,30 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
             <TabsContent value="create" className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="fullName">Nombre Completo</Label>
+                  <Label htmlFor="fullName">Nombre Completo *</Label>
                   <Input
                     id="fullName"
                     placeholder="Nombre del franquiciado"
                     value={userForm.fullName}
                     onChange={(e) => setUserForm(prev => ({ ...prev, fullName: e.target.value }))}
+                    required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="createEmail">Email</Label>
+                  <Label htmlFor="createEmail">Email *</Label>
                   <Input
                     id="createEmail"
                     placeholder="Email del franquiciado"
                     value={userForm.email}
                     onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
                     type="email"
+                    required
                   />
                 </div>
                 
                 <div>
-                  <Label htmlFor="password">Contraseña</Label>
+                  <Label htmlFor="password">Contraseña *</Label>
                   <Input
                     id="password"
                     placeholder="Contraseña temporal (mínimo 6 caracteres)"
@@ -177,17 +200,24 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
                     onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}
                     type="password"
                     minLength={6}
+                    required
                   />
                 </div>
                 
                 <Button 
                   onClick={handleCreateUser}
-                  disabled={!userForm.email.trim() || !userForm.fullName.trim() || !userForm.password.trim() || creating}
+                  disabled={creating}
                   className="w-full flex items-center justify-center"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
                   {creating ? 'Creando...' : 'Crear Usuario'}
                 </Button>
+                
+                {creating && (
+                  <p className="text-sm text-gray-500 text-center">
+                    Creando usuario... Esto puede tardar unos segundos
+                  </p>
+                )}
               </div>
             </TabsContent>
             
@@ -255,4 +285,36 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       </CardContent>
     </Card>
   );
+
+  // Funciones auxiliares que se mantienen igual
+  function handleDeleteUser() {
+    if (!userId || !fullName) return;
+
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el acceso para ${fullName}? Esta acción no se puede deshacer.`)) {
+      deleteUser(franchiseeId, userId, fullName).then(success => {
+        if (success) {
+          onUserDeleted?.();
+        }
+      });
+    }
+  }
+
+  function handleDeleteInvitation(invitationId: string, email: string) {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar la invitación para ${email}?`)) {
+      deleteInvitation(invitationId);
+    }
+  }
+
+  function getStatusBadge(status: string) {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="text-yellow-600 border-yellow-600"><Clock className="w-3 h-3 mr-1" />Pendiente</Badge>;
+      case 'accepted':
+        return <Badge variant="outline" className="text-green-600 border-green-600"><CheckCircle className="w-3 h-3 mr-1" />Aceptada</Badge>;
+      case 'expired':
+        return <Badge variant="outline" className="text-red-600 border-red-600"><XCircle className="w-3 h-3 mr-1" />Expirada</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  }
 };
