@@ -1,214 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { Franchisee, Restaurant, RestaurantValuation } from '@/types/restaurant';
-import { FranchiseeSelector } from '@/components/FranchiseeSelector';
-import { RestaurantManager } from '@/components/RestaurantManager';
-import { RestaurantDataManager } from '@/components/RestaurantDataManager';
+
+import React from 'react';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { ValuationForm } from '@/components/ValuationForm';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Database } from 'lucide-react';
 
 export default function ValuationApp() {
-  const location = useLocation();
-  const [franchisees, setFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
-  const [selectedFranchisee, setSelectedFranchisee] = useState<Franchisee | null>(null);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'franchisees' | 'restaurants' | 'valuation' | 'dataManager'>('dataManager');
-
-  // Handle navigation from restaurant page
-  useEffect(() => {
-    if (location.state?.selectRestaurant) {
-      const restaurant = location.state.selectRestaurant as Restaurant;
-      const franchisee = franchisees.find(f => f.id === restaurant.franchiseeId);
-      if (franchisee) {
-        setSelectedFranchisee(franchisee);
-        setSelectedRestaurant(restaurant);
-        setCurrentView('valuation');
-      }
-      // Clear the state to prevent re-triggering
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state, franchisees]);
-
-  const handleAddFranchisee = (newFranchiseeData: Omit<Franchisee, 'id' | 'createdAt' | 'restaurants'>) => {
-    const newFranchisee: Franchisee = {
-      ...newFranchiseeData,
-      id: Date.now().toString(),
-      restaurants: [],
-      createdAt: new Date()
-    };
-    setFranchisees(prev => [...prev, newFranchisee]);
-  };
-
-  const handleSelectFranchisee = (franchisee: Franchisee) => {
-    setSelectedFranchisee(franchisee);
-    setCurrentView('restaurants');
-  };
-
-  const handleAddRestaurant = (newRestaurantData: Omit<Restaurant, 'id' | 'createdAt' | 'currentValuation' | 'valuationHistory'>) => {
-    const newRestaurant: Restaurant = {
-      ...newRestaurantData,
-      id: Date.now().toString(),
-      valuationHistory: [],
-      createdAt: new Date()
-    };
-
-    setFranchisees(prev => prev.map(f => 
-      f.id === newRestaurantData.franchiseeId 
-        ? { ...f, restaurants: [...f.restaurants, newRestaurant] }
-        : f
-    ));
-
-    // Actualizar el franquiciado seleccionado
-    if (selectedFranchisee?.id === newRestaurantData.franchiseeId) {
-      setSelectedFranchisee(prev => prev ? {
-        ...prev,
-        restaurants: [...prev.restaurants, newRestaurant]
-      } : null);
-    }
-  };
-
-  const handleSelectRestaurant = (restaurant: Restaurant) => {
-    setSelectedRestaurant(restaurant);
-    // Find the franchisee for this restaurant
-    const franchisee = franchisees.find(f => f.id === restaurant.franchiseeId);
-    if (franchisee) {
-      setSelectedFranchisee(franchisee);
-    }
-    setCurrentView('valuation');
-  };
-
-  const handleSaveValuation = (valuation: RestaurantValuation) => {
-    setFranchisees(prev => prev.map(f => ({
-      ...f,
-      restaurants: f.restaurants.map(r => 
-        r.id === valuation.restaurantId 
-          ? {
-              ...r,
-              currentValuation: valuation,
-              valuationHistory: [...r.valuationHistory, valuation]
-            }
-          : r
-      )
-    })));
-
-    // Actualizar estados locales
-    if (selectedFranchisee && selectedRestaurant) {
-      const updatedRestaurant = {
-        ...selectedRestaurant,
-        currentValuation: valuation,
-        valuationHistory: [...selectedRestaurant.valuationHistory, valuation]
-      };
-      
-      setSelectedRestaurant(updatedRestaurant);
-      setSelectedFranchisee(prev => prev ? {
-        ...prev,
-        restaurants: prev.restaurants.map(r => r.id === valuation.restaurantId ? updatedRestaurant : r)
-      } : null);
-    }
-
-    alert('Valoración guardada exitosamente!');
-  };
-
-  const handleBack = () => {
-    if (currentView === 'valuation') {
-      setCurrentView('dataManager');
-      setSelectedRestaurant(null);
-      setSelectedFranchisee(null);
-    } else if (currentView === 'restaurants') {
-      setCurrentView('franchisees');
-      setSelectedFranchisee(null);
-    } else if (currentView === 'franchisees') {
-      setCurrentView('dataManager');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Header moderno */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            {currentView !== 'dataManager' && (
-              <Button 
-                variant="ghost" 
-                onClick={handleBack} 
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Volver
-              </Button>
-            )}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6">
+            <SidebarTrigger className="-ml-1" />
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">M</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    McDonald's Valuation
-                  </h1>
-                  <p className="text-gray-600 font-medium">
-                    Herramienta Profesional de Valoración de Restaurantes
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-lg font-semibold text-gray-900">Valoración de Franquicias</h1>
+              <p className="text-sm text-gray-500">Herramienta de valoración DCF profesional</p>
             </div>
-          </div>
-          
-          {/* Breadcrumb moderno */}
-          <div className="flex items-center text-sm text-gray-500 bg-white px-4 py-3 rounded-lg border border-gray-200">
-            <span className="text-gray-700 font-medium">
-              {currentView === 'dataManager' ? 'Panel Central' : 
-               currentView === 'franchisees' ? 'Franquiciados' : 
-               selectedFranchisee ? selectedFranchisee.name : 'Panel Central'}
-            </span>
-            {selectedRestaurant && (
-              <>
-                <span className="mx-3 text-gray-300">/</span>
-                <span className="text-red-600 font-medium">{selectedRestaurant.name}</span>
-              </>
-            )}
-          </div>
-        </div>
+          </header>
 
-        {/* Content con fondo blanco */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          {currentView === 'dataManager' && (
-            <RestaurantDataManager
-              franchisees={franchisees}
-              onUpdateFranchisees={setFranchisees}
-              onSelectRestaurant={handleSelectRestaurant}
-            />
-          )}
-
-          {currentView === 'franchisees' && (
-            <FranchiseeSelector
-              franchisees={franchisees}
-              selectedFranchisee={selectedFranchisee}
-              onSelectFranchisee={handleSelectFranchisee}
-              onAddFranchisee={handleAddFranchisee}
-            />
-          )}
-
-          {currentView === 'restaurants' && selectedFranchisee && (
-            <RestaurantManager
-              franchisee={selectedFranchisee}
-              onAddRestaurant={handleAddRestaurant}
-              onSelectRestaurant={handleSelectRestaurant}
-              selectedRestaurant={selectedRestaurant}
-            />
-          )}
-
-          {currentView === 'valuation' && selectedRestaurant && (
-            <ValuationForm
-              restaurant={selectedRestaurant}
-              onSaveValuation={handleSaveValuation}
-            />
-          )}
-        </div>
+          <main className="flex-1 p-6">
+            <ValuationForm />
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

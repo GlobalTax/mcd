@@ -5,11 +5,10 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useNavigate } from 'react-router-dom';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 import { InvitationPanel } from '@/components/InvitationPanel';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardMetrics } from '@/components/dashboard/DashboardMetrics';
-import { QuickActions } from '@/components/dashboard/QuickActions';
 import { WelcomeSection } from '@/components/dashboard/WelcomeSection';
-import { RestaurantsSection } from '@/components/dashboard/RestaurantsSection';
+import { DashboardSummary } from '@/components/dashboard/DashboardSummary';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Franchisee } from '@/types/restaurant';
 
 type DisplayRestaurant = {
@@ -33,15 +32,10 @@ type DisplayRestaurant = {
 };
 
 const DashboardPage = () => {
-  const { user, franchisee, signOut } = useAuth();
+  const { user, franchisee } = useAuth();
   const navigate = useNavigate();
   const [localFranchisees] = useLocalStorage<Franchisee[]>('franchisees', []);
   const { restaurants: franchiseeRestaurants, loading: restaurantsLoading } = useFranchiseeRestaurants();
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
 
   const allLocalRestaurants = localFranchisees.flatMap(f => 
     f.restaurants.map(r => ({ ...r, franchiseeName: f.name }))
@@ -71,40 +65,45 @@ const DashboardPage = () => {
   
   const totalRestaurants = displayRestaurants?.length || 0;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardHeader 
-        userName={user?.full_name || user?.email}
-        onNavigateToSettings={() => navigate('/settings')}
-        onSignOut={handleSignOut}
-      />
-
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <InvitationPanel />
-
-        {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
-          <div className="space-y-8">
-            <DashboardMetrics totalRestaurants={totalRestaurants} />
-
-            <QuickActions 
-              displayRestaurants={displayRestaurants}
-              onNavigateToValuation={() => navigate('/valuation')}
-              onNavigateToAnnualBudget={() => navigate('/annual-budget')}
-              onNavigateToProfitLoss={(siteNumber) => navigate(`/restaurant/${siteNumber}/profitloss`)}
-            />
-
-            <RestaurantsSection 
-              franchiseeId={franchisee?.id || ''}
-              franchiseeRestaurants={franchiseeRestaurants}
-              hasSupabaseRestaurants={hasSupabaseRestaurants}
-              allLocalRestaurants={allLocalRestaurants}
-            />
-          </div>
-        ) : (
-          <WelcomeSection onNavigateToValuation={() => navigate('/valuation')} />
-        )}
+  if (restaurantsLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-500">Resumen de tu actividad</p>
+            </div>
+          </header>
+
+          <main className="flex-1 p-6">
+            <InvitationPanel />
+
+            {hasSupabaseRestaurants || (!restaurantsLoading && franchiseeRestaurants.length === 0) ? (
+              <DashboardSummary 
+                totalRestaurants={totalRestaurants} 
+                displayRestaurants={displayRestaurants}
+              />
+            ) : (
+              <WelcomeSection onNavigateToValuation={() => navigate('/valuation')} />
+            )}
+          </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 

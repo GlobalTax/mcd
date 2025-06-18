@@ -1,172 +1,83 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+
+import React from 'react';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/navigation/AppSidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Settings, User, Users, Building } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import UserManagement from '@/components/UserManagement';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import { User, Bell, Shield, Database } from 'lucide-react';
 
 const SettingsPage = () => {
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('profile');
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate('/dashboard')} 
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Volver al Dashboard
-            </Button>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6">
+            <SidebarTrigger className="-ml-1" />
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
-                  <Settings className="text-white w-6 h-6" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    Configuración
-                  </h1>
-                  <p className="text-gray-600 font-medium">
-                    Gestiona tu cuenta y configuración del sistema
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-lg font-semibold text-gray-900">Configuración</h1>
+              <p className="text-sm text-gray-500">Gestiona tu cuenta y preferencias</p>
             </div>
-          </div>
-        </div>
+          </header>
 
-        {/* Content */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b border-gray-200">
-              <TabsList className="h-auto p-0 bg-transparent">
-                <TabsTrigger 
-                  value="profile" 
-                  className="flex items-center gap-2 px-6 py-4 data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:border-b-2 data-[state=active]:border-red-600"
-                >
-                  <User className="w-4 h-4" />
-                  Mi Perfil
-                </TabsTrigger>
-                {user?.role === 'admin' && (
-                  <TabsTrigger 
-                    value="users" 
-                    className="flex items-center gap-2 px-6 py-4 data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:border-b-2 data-[state=active]:border-red-600"
-                  >
-                    <Users className="w-4 h-4" />
-                    Usuarios
-                  </TabsTrigger>
-                )}
-                <TabsTrigger 
-                  value="system" 
-                  className="flex items-center gap-2 px-6 py-4 data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:border-b-2 data-[state=active]:border-red-600"
-                >
-                  <Building className="w-4 h-4" />
-                  Sistema
-                </TabsTrigger>
-              </TabsList>
+          <main className="flex-1 p-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Perfil de usuario */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Perfil de Usuario
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" value={user?.email || ''} disabled />
+                  </div>
+                  <div>
+                    <Label htmlFor="name">Nombre completo</Label>
+                    <Input id="name" value={user?.full_name || ''} />
+                  </div>
+                  <Button>Guardar cambios</Button>
+                </CardContent>
+              </Card>
+
+              {/* Notificaciones */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5" />
+                    Notificaciones
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Alertas de presupuesto</div>
+                      <div className="text-sm text-gray-500">Recibir notificaciones sobre variaciones</div>
+                    </div>
+                    <Button variant="outline" size="sm">Activar</Button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Reportes mensuales</div>
+                      <div className="text-sm text-gray-500">Resumen mensual de actividad</div>
+                    </div>
+                    <Button variant="outline" size="sm">Activar</Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-
-            <div className="p-6">
-              <TabsContent value="profile" className="mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Información Personal</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Nombre</label>
-                        <p className="mt-1 text-gray-900">{user?.full_name || 'No especificado'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Email</label>
-                        <p className="mt-1 text-gray-900">{user?.email}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Rol</label>
-                        <p className="mt-1">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            user?.role === 'admin' ? 'bg-red-100 text-red-800' :
-                            user?.role === 'manager' ? 'bg-blue-100 text-blue-800' :
-                            user?.role === 'advisor' ? 'bg-purple-100 text-purple-800' :
-                            user?.role === 'asistente' ? 'bg-orange-100 text-orange-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {user?.role === 'admin' ? 'Administrador' :
-                             user?.role === 'manager' ? 'Gerente' :
-                             user?.role === 'advisor' ? 'Asesor' :
-                             user?.role === 'asistente' ? 'Asistente' :
-                             'Franquiciado'}
-                          </span>
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Teléfono</label>
-                        <p className="mt-1 text-gray-900">{user?.phone || 'No especificado'}</p>
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <Button 
-                        onClick={handleSignOut}
-                        variant="outline"
-                        className="text-red-600 border-red-200 hover:bg-red-50"
-                      >
-                        Cerrar Sesión
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {user?.role === 'admin' && (
-                <TabsContent value="users" className="mt-0">
-                  <UserManagement />
-                </TabsContent>
-              )}
-
-              <TabsContent value="system" className="mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Configuración del Sistema</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Versión</label>
-                          <p className="mt-1 text-gray-900">v1.0.0</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Última actualización</label>
-                          <p className="mt-1 text-gray-900">{new Date().toLocaleDateString('es-ES')}</p>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        Portal de gestión de franquiciados McDonald's
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
