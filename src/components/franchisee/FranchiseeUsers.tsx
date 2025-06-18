@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,17 +15,17 @@ interface FranchiseeUsersProps {
   franchiseeName: string;
 }
 
-export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({ 
+export interface FranchiseeUsersRef {
+  refresh: () => void;
+}
+
+export const FranchiseeUsers = forwardRef<FranchiseeUsersRef, FranchiseeUsersProps>(({ 
   franchiseeId, 
   franchiseeName 
-}) => {
+}, ref) => {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchFranchiseeUsers();
-  }, [franchiseeId]);
 
   const fetchFranchiseeUsers = async () => {
     try {
@@ -102,6 +102,14 @@ export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    refresh: fetchFranchiseeUsers
+  }));
+
+  useEffect(() => {
+    fetchFranchiseeUsers();
+  }, [franchiseeId]);
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!confirm(`¿Estás seguro de que quieres eliminar a ${userName}?`)) {
@@ -250,4 +258,6 @@ export const FranchiseeUsers: React.FC<FranchiseeUsersProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+FranchiseeUsers.displayName = 'FranchiseeUsers';

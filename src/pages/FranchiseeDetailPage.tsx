@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,7 +11,7 @@ import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTa
 import { UserCreationPanel } from '@/components/admin/UserCreationPanel';
 import { FranchiseeAccessHistory } from '@/components/franchisee/FranchiseeAccessHistory';
 import { FranchiseeActivityHistory } from '@/components/franchisee/FranchiseeActivityHistory';
-import { FranchiseeUsers } from '@/components/franchisee/FranchiseeUsers';
+import { FranchiseeUsers, FranchiseeUsersRef } from '@/components/franchisee/FranchiseeUsers';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -19,6 +19,7 @@ export default function FranchiseeDetailPage() {
   const { franchiseeId } = useParams<{ franchiseeId: string }>();
   const navigate = useNavigate();
   const { franchisee, restaurants, loading, error, refetch } = useFranchiseeDetail(franchiseeId);
+  const franchiseeUsersRef = useRef<FranchiseeUsersRef>(null);
 
   // Mostrar mensaje de carga
   if (loading) {
@@ -83,8 +84,9 @@ export default function FranchiseeDetailPage() {
     return <Badge variant="outline" className="text-gray-600 border-gray-300"><WifiOff className="w-3 h-3 mr-1" />Desconectado</Badge>;
   };
 
-  const handleUserDeleted = () => {
-    refetch(); // Refrescar los datos del franquiciado
+  const handleUserCreated = () => {
+    // Refrescar la lista de usuarios cuando se crea uno nuevo
+    franchiseeUsersRef.current?.refresh();
   };
 
   return (
@@ -175,10 +177,11 @@ export default function FranchiseeDetailPage() {
       </Card>
 
       {/* Panel de gestión de usuarios */}
-      <UserCreationPanel />
+      <UserCreationPanel onUserCreated={handleUserCreated} />
 
       {/* Lista de usuarios asociados */}
       <FranchiseeUsers 
+        ref={franchiseeUsersRef}
         franchiseeId={franchisee.id} 
         franchiseeName={franchisee.franchisee_name}
       />

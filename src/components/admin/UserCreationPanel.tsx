@@ -10,7 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserPlus, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export const UserCreationPanel = () => {
+interface UserCreationPanelProps {
+  onUserCreated?: () => void;
+}
+
+export const UserCreationPanel: React.FC<UserCreationPanelProps> = ({ onUserCreated }) => {
   const { user } = useAuth();
   const { createUser, creating } = useUserCreation();
   const [formData, setFormData] = useState({
@@ -42,6 +46,8 @@ export const UserCreationPanel = () => {
         password: '',
         role: ''
       });
+      // Notificar al componente padre que se creó un usuario
+      onUserCreated?.();
     }
   };
 
