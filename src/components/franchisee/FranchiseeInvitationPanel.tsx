@@ -30,7 +30,7 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
   fullName,
   onUserDeleted
 }) => {
-  const { invitations, loading, sendInvitation } = useFranchiseeInvitations(franchiseeId);
+  const { invitations, loading, sendInvitation, deleteInvitation } = useFranchiseeInvitations(franchiseeId);
   const { createUser, creating } = useCreateUser();
   const { deleteUser, deleting } = useDeleteUser();
   
@@ -82,6 +82,12 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
       if (success) {
         onUserDeleted?.(); // Refrescar datos
       }
+    }
+  };
+
+  const handleDeleteInvitation = async (invitationId: string, email: string) => {
+    if (window.confirm(`¿Estás seguro de que quieres eliminar la invitación para ${email}?`)) {
+      await deleteInvitation(invitationId);
     }
   };
 
@@ -218,7 +224,7 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
             <h4 className="font-medium text-sm">Historial de Invitaciones</h4>
             {invitations.map((invitation) => (
               <div key={invitation.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-sm">{invitation.email}</p>
                   <p className="text-xs text-gray-500">
                     Enviada el {format(new Date(invitation.invited_at), 'dd/MM/yyyy HH:mm', { locale: es })}
@@ -229,7 +235,17 @@ export const FranchiseeInvitationPanel: React.FC<FranchiseeInvitationPanelProps>
                     </p>
                   )}
                 </div>
-                {getStatusBadge(invitation.status)}
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(invitation.status)}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteInvitation(invitation.id, invitation.email)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

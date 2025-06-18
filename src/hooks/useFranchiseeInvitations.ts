@@ -62,6 +62,27 @@ export const useFranchiseeInvitations = (franchiseeId?: string) => {
     }
   };
 
+  const deleteInvitation = async (invitationId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('franchisee_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) throw error;
+      
+      toast.success('Invitación eliminada correctamente');
+      await fetchInvitations();
+      return true;
+    } catch (err) {
+      console.error('Error deleting invitation:', err);
+      toast.error('Error al eliminar la invitación');
+      return false;
+    }
+  };
+
   useEffect(() => {
     fetchInvitations();
   }, [franchiseeId, user?.id]);
@@ -70,6 +91,7 @@ export const useFranchiseeInvitations = (franchiseeId?: string) => {
     invitations,
     loading,
     sendInvitation,
+    deleteInvitation,
     refetch: fetchInvitations
   };
 };
