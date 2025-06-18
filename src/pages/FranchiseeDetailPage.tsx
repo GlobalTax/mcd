@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +14,9 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function FranchiseeDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { franchiseeId } = useParams<{ franchiseeId: string }>();
   const navigate = useNavigate();
-  const { franchisee, restaurants, loading, error } = useFranchiseeDetail(id);
+  const { franchisee, restaurants, loading, error } = useFranchiseeDetail(franchiseeId);
 
   // Mostrar mensaje de carga
   if (loading) {
@@ -53,7 +52,7 @@ export default function FranchiseeDetailPage() {
             {error || 'Franquiciado no encontrado'}
           </p>
           <p className="text-sm text-gray-500 mb-4">
-            ID del franquiciado: {id || 'No proporcionado'}
+            ID del franquiciado: {franchiseeId || 'No proporcionado'}
           </p>
           <Button 
             onClick={() => window.location.reload()} 
