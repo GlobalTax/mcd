@@ -44,18 +44,20 @@ export const useUserCreation = () => {
         return false;
       }
 
-      // Crear usuario usando la función de admin (sin confirmación de email)
-      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
+      // Crear usuario con signUp normal pero con datos adicionales
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        user_metadata: {
-          full_name: fullName
-        },
-        email_confirm: true // Confirmar email automáticamente
+        options: {
+          data: {
+            full_name: fullName,
+            role: role
+          }
+        }
       });
 
       if (signUpError) {
-        console.error('Error with admin.createUser:', signUpError);
+        console.error('Error with signUp:', signUpError);
         toast.error(`Error al crear usuario: ${signUpError.message}`);
         return false;
       }
@@ -65,22 +67,52 @@ export const useUserCreation = () => {
         return false;
       }
 
-      console.log('Usuario creado con admin:', signUpData.user);
+      console.log('Usuario creado:', signUpData.user);
 
-      // Crear perfil directamente
-      const { error: profileError } = await supabase
+      // Esperar un momento para que el trigger funcione
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Verificar si el perfil se creó automáticamente, si no, crearlo manualmente
+      const { data: profileData, error: profileCheckError } = await supabase
         .from('profiles')
-        .insert({
-          id: signUpData.user.id,
-          email: email,
-          full_name: fullName,
-          role: role
-        });
+        .select('id')
+        .eq('id', signUpData.user.id)
+        .maybeSingle();
 
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        toast.error('Usuario creado pero error al crear perfil: ' + profileError.message);
-        return false;
+      if (profileCheckError) {
+        console.error('Error checking profile:', profileCheckError);
+      }
+
+      if (!profileData) {
+        console.log('Perfil no encontrado, creando manualmente...');
+        // Crear perfil manualmente si el trigger no funcionó
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: signUpData.user.id,
+            email: email,
+            full_name: fullName,
+            role: role
+          });
+
+        if (profileError) {
+          console.error('Error creating profile manually:', profileError);
+          toast.error('Usuario creado pero error al crear perfil: ' + profileError.message);
+          return false;
+        }
+      } else {
+        console.log('Perfil encontrado, actualizando rol...');
+        // Actualizar el rol si el perfil ya existe pero con rol incorrecto
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ role: role, full_name: fullName })
+          .eq('id', signUpData.user.id);
+
+        if (updateError) {
+          console.error('Error updating profile role:', updateError);
+          toast.error('Usuario creado pero error al actualizar el rol');
+          return false;
+        }
       }
 
       // Si es franquiciado, manejar la asignación
