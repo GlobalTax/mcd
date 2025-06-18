@@ -40,6 +40,20 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
     { key: 'dec', label: 'Dic' }
   ];
 
+  // Función para calcular totales de categorías
+  const calculateCategoryTotals = (categoryName: string, field: string): number => {
+    return data
+      .filter(row => row.category === categoryName && !row.isCategory)
+      .reduce((sum, row) => sum + (getCellValue(row, field) || 0), 0);
+  };
+
+  // Función para calcular totales de categorías de datos reales  
+  const calculateCategoryActualTotals = (categoryName: string, field: string): number => {
+    return data
+      .filter(row => row.category === categoryName && !row.isCategory)
+      .reduce((sum, row) => sum + (getActualValue(row, field) || 0), 0);
+  };
+
   // Filtrar datos según el modo de resumen
   const filteredData = showOnlySummary 
     ? data.filter(row => row.isCategory)
@@ -168,9 +182,26 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
           </TableHeader>
           <TableBody>
             {filteredData.map((row) => {
-              const actualTotal = months.reduce((sum, month) => 
-                sum + getActualValue(row, month.key), 0
-              );
+              // Para categorías, calculamos los totales sumando las subcategorías
+              const categoryTotalByMonth = row.isCategory ? 
+                months.reduce((acc, month) => {
+                  acc[month.key] = calculateCategoryTotals(row.category, month.key);
+                  return acc;
+                }, {} as Record<string, number>) : {};
+
+              const categoryActualTotalByMonth = row.isCategory ? 
+                months.reduce((acc, month) => {
+                  acc[month.key] = calculateCategoryActualTotals(row.category, month.key);
+                  return acc;
+                }, {} as Record<string, number>) : {};
+
+              const actualTotal = row.isCategory ? 
+                months.reduce((sum, month) => sum + (categoryActualTotalByMonth[month.key] || 0), 0) :
+                months.reduce((sum, month) => sum + getActualValue(row, month.key), 0);
+
+              const budgetTotal = row.isCategory ?
+                months.reduce((sum, month) => sum + (categoryTotalByMonth[month.key] || 0), 0) :
+                row.total;
 
               return (
                 <TableRow key={row.id} className={`${row.isCategory ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'} border-b`}>
@@ -180,18 +211,40 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                     </div>
                   </TableCell>
                   {months.map(month => {
-                    const budgetValue = getCellValue(row, month.key);
-                    const actualValue = getActualValue(row, month.key);
+                    const budgetValue = row.isCategory ? 
+                      categoryTotalByMonth[month.key] : 
+                      getCellValue(row, month.key);
+                    const actualValue = row.isCategory ?
+                      categoryActualTotalByMonth[month.key] :
+                      getActualValue(row, month.key);
                     
                     return (
                       <TableCell key={month.key} className="text-center p-2 border-r">
                         {row.isCategory ? (
                           <div className={viewMode === 'comparison' ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
-                            <span className="text-gray-400 text-base py-2">-</span>
+                            {/* Presupuesto para categorías */}
+                            {viewMode !== 'actuals' && (
+                              <span className="text-blue-700 font-bold text-sm py-2">
+                                {formatCurrency(budgetValue)}
+                              </span>
+                            )}
+                            
+                            {/* Solo mostrar reales */}
+                            {viewMode === 'actuals' && (
+                              <span className="text-green-700 font-bold text-sm py-2">
+                                {formatCurrency(actualValue)}
+                              </span>
+                            )}
+                            
+                            {/* Comparativa: Real y Varianza para categorías */}
                             {viewMode === 'comparison' && (
                               <>
-                                <span className="text-gray-400 text-base py-2">-</span>
-                                <span className="text-gray-400 text-base py-2">-</span>
+                                <span className={`font-bold text-sm py-2 ${getVarianceColor(budgetValue, actualValue)}`}>
+                                  {formatCurrency(actualValue)}
+                                </span>
+                                <span className={`font-bold text-xs py-2 ${getVarianceColor(budgetValue, actualValue)}`}>
+                                  {getVariancePercentage(budgetValue, actualValue)}
+                                </span>
                               </>
                             )}
                           </div>
@@ -254,7 +307,7 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                       {/* Total Presupuesto o única columna */}
                       {viewMode !== 'actuals' && (
                         <div className="text-blue-700 font-bold text-base py-2">
-                          {formatCurrency(row.total)}
+                          {formatCurrency(budgetTotal)}
                         </div>
                       )}
                       
@@ -268,11 +321,11 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                       {/* Comparativa: Total Real y Varianza */}
                       {viewMode === 'comparison' && (
                         <>
-                          <div className={`font-bold text-base py-2 ${getVarianceColor(row.total, actualTotal)}`}>
+                          <div className={`font-bold text-base py-2 ${getVarianceColor(budgetTotal, actualTotal)}`}>
                             {formatCurrency(actualTotal)}
                           </div>
-                          <div className={`font-bold text-sm py-2 ${getVarianceColor(row.total, actualTotal)}`}>
-                            {getVariancePercentage(row.total, actualTotal)}
+                          <div className={`font-bold text-sm py-2 ${getVarianceColor(budgetTotal, actualTotal)}`}>
+                            {getVariancePercentage(budgetTotal, actualTotal)}
                           </div>
                         </>
                       )}
