@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-export type UserRole = 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente';
+export type UserRole = 'admin' | 'franchisee' | 'manager' | 'asesor' | 'asistente' | 'superadmin';
 
 export const useUserCreation = () => {
   const { user } = useAuth();
@@ -32,7 +32,7 @@ export const useUserCreation = () => {
       setCreating(true);
       console.log('Creando usuario:', { email, fullName, role, existingFranchiseeId });
 
-      // Verificar si ya existe
+      // Verificar si ya existe un perfil con este email
       const { data: existingProfile } = await supabase
         .from('profiles')
         .select('email')
@@ -44,31 +44,30 @@ export const useUserCreation = () => {
         return false;
       }
 
-      // Crear usuario con signUp
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      // Crear usuario usando la función de admin (sin confirmación de email)
+      const { data: signUpData, error: signUpError } = await supabase.auth.admin.createUser({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName
-          }
-        }
+        user_metadata: {
+          full_name: fullName
+        },
+        email_confirm: true // Confirmar email automáticamente
       });
 
       if (signUpError) {
-        console.error('Error with signUp:', signUpError);
+        console.error('Error with admin.createUser:', signUpError);
         toast.error(`Error al crear usuario: ${signUpError.message}`);
         return false;
       }
 
       if (!signUpData.user) {
-        toast.error('Error al crear usuario');
+        toast.error('Error al crear usuario - no se recibió el usuario');
         return false;
       }
 
-      console.log('Usuario creado:', signUpData.user);
+      console.log('Usuario creado con admin:', signUpData.user);
 
-      // Crear perfil
+      // Crear perfil directamente
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -80,7 +79,7 @@ export const useUserCreation = () => {
 
       if (profileError) {
         console.error('Error creating profile:', profileError);
-        toast.error('Usuario creado pero error al crear perfil');
+        toast.error('Usuario creado pero error al crear perfil: ' + profileError.message);
         return false;
       }
 
