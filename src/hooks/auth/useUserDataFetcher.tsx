@@ -22,12 +22,14 @@ export const useUserDataFetcher = ({
       console.log('fetchUserData - Starting fetch for user:', userId);
       
       // Fetch user profile with extended timeout (30 seconds)
+      console.log('fetchUserData - About to query profiles table');
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
+      console.log('fetchUserData - Profile query completed');
       console.log('fetchUserData - Profile query result:', { profile, profileError });
 
       if (profileError) {
@@ -50,6 +52,7 @@ export const useUserDataFetcher = ({
       }
 
       console.log('fetchUserData - Profile fetched successfully:', profile);
+      console.log('fetchUserData - Profile role:', profile.role);
 
       // Use the role directly from the database
       const userData = {
@@ -57,8 +60,9 @@ export const useUserDataFetcher = ({
         role: profile.role
       } as User;
 
-      console.log('fetchUserData - Setting user with role:', userData.role);
+      console.log('fetchUserData - About to set user with role:', userData.role);
       setUser(userData);
+      console.log('fetchUserData - User set successfully');
 
       // Only fetch franchisee data if user is a franchisee
       if (profile.role === 'franchisee') {
@@ -84,12 +88,14 @@ export const useUserDataFetcher = ({
       console.log('fetchFranchiseeData - Starting for user:', userId);
       
       // Fetch franchisee data
+      console.log('fetchFranchiseeData - About to query franchisees table');
       const { data: franchiseeData, error: franchiseeError } = await supabase
         .from('franchisees')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('fetchFranchiseeData - Franchisee query completed');
       console.log('fetchFranchiseeData - Franchisee query result:', { franchiseeData, franchiseeError });
 
       if (franchiseeError) {
@@ -98,6 +104,7 @@ export const useUserDataFetcher = ({
         if (franchiseeError.code === 'PGRST116') {
           console.log('fetchFranchiseeData - No franchisee found, creating one for user:', profile.full_name);
           
+          console.log('fetchFranchiseeData - About to create new franchisee');
           const { data: newFranchisee, error: createError } = await supabase
             .from('franchisees')
             .insert({
@@ -107,6 +114,7 @@ export const useUserDataFetcher = ({
             .select()
             .single();
 
+          console.log('fetchFranchiseeData - Create franchisee completed');
           console.log('fetchFranchiseeData - Insert result:', { newFranchisee, createError });
 
           if (createError) {
@@ -140,6 +148,7 @@ export const useUserDataFetcher = ({
       console.log('fetchRestaurantsData - Starting for franchisee:', franchiseeId);
       
       // Search for restaurants linked through franchisee_restaurants
+      console.log('fetchRestaurantsData - About to query franchisee_restaurants table');
       const { data: restaurantsData, error: restaurantsError } = await supabase
         .from('franchisee_restaurants')
         .select(`
@@ -149,6 +158,7 @@ export const useUserDataFetcher = ({
         .eq('franchisee_id', franchiseeId)
         .eq('status', 'active');
 
+      console.log('fetchRestaurantsData - Restaurants query completed');
       console.log('fetchRestaurantsData - Restaurants query result:', { restaurantsData, restaurantsError });
 
       if (restaurantsError) {
