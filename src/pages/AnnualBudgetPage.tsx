@@ -162,7 +162,7 @@ export default function AnnualBudgetPage() {
                     Elige un restaurante de la lista para comenzar a trabajar con sus estados financieros.
                   </p>
                 </CardContent>
-              )}
+              </Card>
             )}
           </main>
         </SidebarInset>
