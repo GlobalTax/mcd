@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 
 export const UserCreationPanel = () => {
   const { user } = useAuth();
-  const { createUser, loading } = useUserCreation();
+  const { createUser, creating } = useUserCreation();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -28,7 +28,13 @@ export const UserCreationPanel = () => {
       return;
     }
 
-    const success = await createUser(formData);
+    const success = await createUser(
+      formData.email,
+      formData.password,
+      formData.fullName,
+      formData.role as any
+    );
+    
     if (success) {
       setFormData({
         fullName: '',
@@ -132,9 +138,9 @@ export const UserCreationPanel = () => {
           <Button 
             type="submit" 
             className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={loading}
+            disabled={creating}
           >
-            {loading ? (
+            {creating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Creando usuario...
