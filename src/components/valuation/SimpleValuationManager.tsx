@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useFranchiseeRestaurants } from '@/hooks/useFranchiseeRestaurants';
 import { useRestaurantValuations } from '@/hooks/useRestaurantValuations';
-import { Building2, Save, FolderOpen } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Building2, Save, FolderOpen, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SimpleValuationManagerProps {
@@ -21,7 +22,8 @@ const SimpleValuationManager = ({
   onValuationLoaded, 
   currentData 
 }: SimpleValuationManagerProps) => {
-  const { restaurants, loading } = useFranchiseeRestaurants();
+  const { user } = useAuth();
+  const { restaurants, loading, error, refetch } = useFranchiseeRestaurants();
   const { valuations, saveValuation, updateValuation } = useRestaurantValuations();
   
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('');
@@ -31,8 +33,10 @@ const SimpleValuationManager = ({
   const [isLoadValuationOpen, setIsLoadValuationOpen] = useState(false);
   const [currentValuationId, setCurrentValuationId] = useState<string | null>(null);
 
-  console.log('SimpleValuationManager - restaurants:', restaurants);
-  console.log('SimpleValuationManager - currentData:', currentData);
+  console.log('SimpleValuationManager - User:', user);
+  console.log('SimpleValuationManager - Restaurants:', restaurants);
+  console.log('SimpleValuationManager - Loading:', loading);
+  console.log('SimpleValuationManager - Error:', error);
 
   const restaurantOptions = restaurants
     .filter(r => r.base_restaurant)
@@ -128,19 +132,59 @@ const SimpleValuationManager = ({
     );
   }
 
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <Button onClick={refetch}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (restaurants.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No hay restaurantes disponibles
+          </h3>
+          <p className="text-gray-600 mb-4">
+            No tienes restaurantes asignados para realizar valoraciones.
+          </p>
+          <Button onClick={refetch}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Buscar restaurantes
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="w-5 h-5" />
-          Gestión de Valoraciones
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5" />
+            Gestión de Valoraciones
+          </CardTitle>
+          <Button onClick={refetch} variant="outline" size="sm">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Actualizar
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Selector de restaurante */}
         <div>
           <label className="block text-sm font-medium mb-2">
-            Seleccionar Restaurante
+            Seleccionar Restaurante ({restaurantOptions.length} disponibles)
           </label>
           <Select value={selectedRestaurantId} onValueChange={handleRestaurantChange}>
             <SelectTrigger>
