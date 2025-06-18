@@ -47,7 +47,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (session?.user) {
           console.log('useAuth - User found in session, fetching user data');
-          await fetchUserData(session.user.id);
+          try {
+            await fetchUserData(session.user.id);
+            console.log('useAuth - User data fetch completed, setting loading to false');
+          } catch (error) {
+            console.error('useAuth - Error fetching user data:', error);
+          }
         } else {
           console.log('useAuth - No session, clearing user data');
           clearUserData();
@@ -62,7 +67,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('useAuth - Initial session full:', session);
       setSession(session);
       if (session?.user) {
-        await fetchUserData(session.user.id);
+        try {
+          await fetchUserData(session.user.id);
+          console.log('useAuth - Initial user data fetch completed');
+        } catch (error) {
+          console.error('useAuth - Error in initial user data fetch:', error);
+        }
       }
       setLoading(false);
     });
@@ -70,7 +80,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  console.log('useAuth - Current state:', { user, session: !!session, loading });
+  console.log('useAuth - Current state:', { 
+    user: user ? { id: user.id, role: user.role } : null, 
+    session: !!session, 
+    loading 
+  });
 
   const value = {
     user,

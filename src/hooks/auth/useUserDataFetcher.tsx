@@ -38,6 +38,8 @@ export const useUserDataFetcher = ({
           clearUserData();
           return;
         }
+        console.log('fetchUserData - Profile error, clearing user data');
+        clearUserData();
         return;
       }
 
@@ -47,7 +49,7 @@ export const useUserDataFetcher = ({
         return;
       }
 
-      console.log('fetchUserData - Profile fetched:', profile);
+      console.log('fetchUserData - Profile fetched successfully:', profile);
 
       // Usar el rol directamente de la base de datos sin mapear
       const userData = {
@@ -60,6 +62,7 @@ export const useUserDataFetcher = ({
 
       // Only fetch franchisee data if user is a franchisee
       if (profile.role === 'franchisee') {
+        console.log('fetchUserData - User is franchisee, fetching franchisee data');
         await fetchFranchiseeData(userId, profile);
       } else {
         console.log('fetchUserData - User is not franchisee, role:', profile.role);
@@ -67,6 +70,8 @@ export const useUserDataFetcher = ({
         setFranchisee(null);
         setRestaurants([]);
       }
+      
+      console.log('fetchUserData - User data fetch completed successfully');
     } catch (error) {
       console.error('Error in fetchUserData:', error);
       // Clear user data on any unexpected error
@@ -75,91 +80,108 @@ export const useUserDataFetcher = ({
   };
 
   const fetchFranchiseeData = async (userId: string, profile: any) => {
-    console.log('fetchUserData - User is franchisee, fetching franchisee data');
-    
-    // Fetch franchisee data
-    const { data: franchiseeData, error: franchiseeError } = await supabase
-      .from('franchisees')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    try {
+      console.log('fetchFranchiseeData - Starting for user:', userId);
+      
+      // Fetch franchisee data
+      const { data: franchiseeData, error: franchiseeError } = await supabase
+        .from('franchisees')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    console.log('fetchUserData - Franchisee query result:', { franchiseeData, franchiseeError });
+      console.log('fetchFranchiseeData - Franchisee query result:', { franchiseeData, franchiseeError });
 
-    if (franchiseeError) {
-      console.error('Error fetching franchisee:', franchiseeError);
-      // Si no existe el franquiciado, crear uno
-      if (franchiseeError.code === 'PGRST116') {
-        console.log('No franchisee found, creating one for user:', profile.full_name);
-        
-        const { data: newFranchisee, error: createError } = await supabase
-          .from('franchisees')
-          .insert({
-            user_id: userId,
-            franchisee_name: profile.full_name || profile.email
-          })
-          .select()
-          .single();
+      if (franchiseeError) {
+        console.error('Error fetching franchisee:', franchiseeError);
+        // Si no existe el franquiciado, crear uno
+        if (franchiseeError.code === 'PGRST116') {
+          console.log('No franchisee found, creating one for user:', profile.full_name);
+          
+          const { data: newFranchisee, error: createError } = await supabase
+            .from('franchisees')
+            .insert({
+              user_id: userId,
+              franchisee_name: profile.full_name || profile.email
+            })
+            .select()
+            .single();
 
-        if (createError) {
-          console.error('Error creating franchisee:', createError);
-          toast.error('Error al crear perfil de franquiciado');
-          return;
+          if (createError) {
+            console.error('Error creating franchisee:', createError);
+            toast.error('Error al crear perfil de franquiciado');
+            return;
+          }
+
+          console.log('fetchFranchiseeData - New franchisee created:', newFranchisee);
+          setFranchisee(newFranchisee as Franchisee);
+          toast.success('Perfil de franquiciado creado correctamente');
         }
-
-        console.log('fetchUserData - New franchisee created:', newFranchisee);
-        setFranchisee(newFranchisee as Franchisee);
-        toast.success('Perfil de franquiciado creado correctamente');
+        return;
       }
-      return;
-    }
 
-    if (franchiseeData) {
-      console.log('fetchUserData - Setting franchisee:', franchiseeData);
-      setFranchisee(franchiseeData as Franchisee);
-      await fetchRestaurantsData(franchiseeData.id);
+      if (franchiseeData) {
+        console.log('fetchFranchiseeData - Setting franchisee:', franchiseeData);
+        setFranchisee(franchiseeData as Franchisee);
+        await fetchRestaurantsData(franchiseeData.id);
+      }
+      
+      console.log('fetchFranchiseeData - Franchisee data fetch completed');
+    } catch (error) {
+      console.error('Error in fetchFranchiseeData:', error);
     }
   };
 
   const fetchRestaurantsData = async (franchiseeId: string) => {
-    // Buscar restaurantes vinculados a través de franchisee_restaurants
-    const { data: restaurantsData, error: restaurantsError } = await supabase
-      .from('franchisee_restaurants')
-      .select(`
-        *,
-        base_restaurant:base_restaurants(*)
-      `)
-      .eq('franchisee_id', franchiseeId)
-      .eq('status', 'active');
+    try {
+      console.log('fetchRestaurantsData - Starting for franchisee:', franchiseeId);
+      
+      // Buscar restaurantes vinculados a través de franchisee_restaurants
+      const { data: restaurantsData, error: restaurantsError } = await supabase
+        .from('franchisee_restaurants')
+        .select(`
+          *,
+          base_restaurant:base_restaurants(*)
+        `)
+        .eq('franchisee_id', franchiseeId)
+        .eq('status', 'active');
 
-    if (restaurantsError) {
-      console.error('Error fetching restaurants:', restaurantsError);
-    } else {
-      console.log('fetchUserData - Restaurants found:', restaurantsData);
+      console.log('fetchRestaurantsData - Restaurants query result:', { restaurantsData, restaurantsError });
+
+      if (restaurantsError) {
+        console.error('Error fetching restaurants:', restaurantsError);
+      } else {
+        console.log('fetchRestaurantsData - Restaurants found:', restaurantsData);
+        
+        // Transform the data to match Restaurant type
+        const transformedRestaurants: Restaurant[] = restaurantsData
+          ?.filter(item => item.base_restaurant)
+          .map(item => ({
+            id: item.base_restaurant.id,
+            franchisee_id: item.franchisee_id,
+            site_number: item.base_restaurant.site_number,
+            restaurant_name: item.base_restaurant.restaurant_name,
+            address: item.base_restaurant.address,
+            city: item.base_restaurant.city,
+            state: item.base_restaurant.state,
+            postal_code: item.base_restaurant.postal_code,
+            country: item.base_restaurant.country,
+            opening_date: item.base_restaurant.opening_date,
+            restaurant_type: item.base_restaurant.restaurant_type as 'traditional' | 'mccafe' | 'drive_thru' | 'express',
+            status: item.status as 'active' | 'inactive' | 'pending' | 'closed',
+            square_meters: item.base_restaurant.square_meters,
+            seating_capacity: item.base_restaurant.seating_capacity,
+            created_at: item.base_restaurant.created_at,
+            updated_at: item.base_restaurant.updated_at
+          })) || [];
+        
+        setRestaurants(transformedRestaurants);
+        console.log('fetchRestaurantsData - Restaurants set:', transformedRestaurants.length);
+      }
       
-      // Transform the data to match Restaurant type
-      const transformedRestaurants: Restaurant[] = restaurantsData
-        ?.filter(item => item.base_restaurant)
-        .map(item => ({
-          id: item.base_restaurant.id,
-          franchisee_id: item.franchisee_id,
-          site_number: item.base_restaurant.site_number,
-          restaurant_name: item.base_restaurant.restaurant_name,
-          address: item.base_restaurant.address,
-          city: item.base_restaurant.city,
-          state: item.base_restaurant.state,
-          postal_code: item.base_restaurant.postal_code,
-          country: item.base_restaurant.country,
-          opening_date: item.base_restaurant.opening_date,
-          restaurant_type: item.base_restaurant.restaurant_type as 'traditional' | 'mccafe' | 'drive_thru' | 'express',
-          status: item.status as 'active' | 'inactive' | 'pending' | 'closed',
-          square_meters: item.base_restaurant.square_meters,
-          seating_capacity: item.base_restaurant.seating_capacity,
-          created_at: item.base_restaurant.created_at,
-          updated_at: item.base_restaurant.updated_at
-        })) || [];
-      
-      setRestaurants(transformedRestaurants);
+      console.log('fetchRestaurantsData - Restaurant data fetch completed');
+    } catch (error) {
+      console.error('Error in fetchRestaurantsData:', error);
     }
   };
 
