@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,8 @@ interface BudgetTableProps {
   data: BudgetData[];
   actualData?: any[];
   onCellChange: (id: string, field: string, value: number) => void;
-  showActuals?: boolean;
+  viewMode?: 'budget' | 'comparison' | 'actuals';
+  showOnlySummary?: boolean;
 }
 
 interface EditingCell {
@@ -20,7 +20,8 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
   data, 
   actualData = [], 
   onCellChange, 
-  showActuals = false 
+  viewMode = 'budget',
+  showOnlySummary = false
 }) => {
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
@@ -39,8 +40,13 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
     { key: 'dec', label: 'Dic' }
   ];
 
+  // Filtrar datos según el modo de resumen
+  const filteredData = showOnlySummary 
+    ? data.filter(row => row.isCategory)
+    : data;
+
   const handleCellClick = (rowId: string, field: string, isCategory: boolean) => {
-    if (isCategory) return;
+    if (isCategory || viewMode === 'actuals') return;
     setEditingCell({ rowId, field });
   };
 
@@ -93,6 +99,48 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
     return `${variance > 0 ? '+' : ''}${variance.toFixed(1)}%`;
   };
 
+  const getHeaderLabels = () => {
+    switch (viewMode) {
+      case 'comparison':
+        return {
+          monthSubheaders: (
+            <div className="grid grid-cols-3 gap-1 text-xs">
+              <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-1 rounded">Presup.</div>
+              <div className="text-green-700 font-semibold bg-green-50 py-1 px-1 rounded">Real</div>
+              <div className="text-orange-700 font-semibold bg-orange-50 py-1 px-1 rounded">Var.</div>
+            </div>
+          ),
+          totalSubheaders: (
+            <div className="grid grid-cols-3 gap-1 text-xs">
+              <div className="text-blue-700 font-semibold">Presup.</div>
+              <div className="text-green-700 font-semibold">Real</div>
+              <div className="text-orange-700 font-semibold">Var.</div>
+            </div>
+          )
+        };
+      case 'actuals':
+        return {
+          monthSubheaders: (
+            <div className="text-green-700 font-semibold bg-green-50 py-1 px-2 rounded text-sm">Reales</div>
+          ),
+          totalSubheaders: (
+            <div className="text-green-700 font-semibold text-sm">Reales</div>
+          )
+        };
+      default:
+        return {
+          monthSubheaders: (
+            <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-2 rounded text-sm">Presupuesto</div>
+          ),
+          totalSubheaders: (
+            <div className="text-blue-700 font-semibold text-sm">Presupuesto</div>
+          )
+        };
+    }
+  };
+
+  const headerLabels = getHeaderLabels();
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto border rounded-lg">
@@ -106,36 +154,20 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                 <TableHead key={month.key} className="text-center border-r min-w-[200px] p-3">
                   <div className="space-y-2">
                     <div className="font-bold text-gray-900 text-base">{month.label}</div>
-                    {showActuals ? (
-                      <div className="grid grid-cols-3 gap-1 text-xs">
-                        <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-1 rounded">Presup.</div>
-                        <div className="text-green-700 font-semibold bg-green-50 py-1 px-1 rounded">Real</div>
-                        <div className="text-orange-700 font-semibold bg-orange-50 py-1 px-1 rounded">Var.</div>
-                      </div>
-                    ) : (
-                      <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-2 rounded text-sm">Presupuesto</div>
-                    )}
+                    {headerLabels.monthSubheaders}
                   </div>
                 </TableHead>
               ))}
               <TableHead className="text-center min-w-[250px] bg-blue-100 font-bold border-l text-base p-3">
                 <div className="space-y-2">
                   <div className="text-gray-900">Total Anual</div>
-                  {showActuals ? (
-                    <div className="grid grid-cols-3 gap-1 text-xs">
-                      <div className="text-blue-700 font-semibold">Presup.</div>
-                      <div className="text-green-700 font-semibold">Real</div>
-                      <div className="text-orange-700 font-semibold">Var.</div>
-                    </div>
-                  ) : (
-                    <div className="text-blue-700 font-semibold text-sm">Presupuesto</div>
-                  )}
+                  {headerLabels.totalSubheaders}
                 </div>
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((row) => {
+            {filteredData.map((row) => {
               const actualTotal = months.reduce((sum, month) => 
                 sum + getActualValue(row, month.key), 0
               );
@@ -154,9 +186,9 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                     return (
                       <TableCell key={month.key} className="text-center p-2 border-r">
                         {row.isCategory ? (
-                          <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
+                          <div className={viewMode === 'comparison' ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
                             <span className="text-gray-400 text-base py-2">-</span>
-                            {showActuals && (
+                            {viewMode === 'comparison' && (
                               <>
                                 <span className="text-gray-400 text-base py-2">-</span>
                                 <span className="text-gray-400 text-base py-2">-</span>
@@ -164,38 +196,47 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                             )}
                           </div>
                         ) : (
-                          <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
-                            {/* Columna Presupuesto */}
-                            <div className={`cursor-pointer hover:bg-blue-50 p-2 rounded ${showActuals ? '' : 'border-r border-gray-200'}`}
-                                 onClick={() => handleCellClick(row.id, month.key, row.isCategory)}>
-                              {isEditing(row.id, month.key) ? (
-                                <Input
-                                  type="number"
-                                  defaultValue={budgetValue}
-                                  onChange={(e) => handleInputChange(e.target.value)}
-                                  onBlur={handleInputBlur}
-                                  onKeyPress={handleKeyPress}
-                                  className="w-full text-center text-sm h-8 border-blue-300 focus:border-blue-500"
-                                  autoFocus
-                                  step="100"
-                                />
-                              ) : (
-                                <span className="text-blue-700 font-semibold text-sm block py-1">
-                                  {formatCurrency(budgetValue)}
-                                </span>
-                              )}
-                            </div>
+                          <div className={viewMode === 'comparison' ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
+                            {/* Columna Presupuesto o única columna */}
+                            {viewMode !== 'actuals' && (
+                              <div className={`cursor-pointer hover:bg-blue-50 p-2 rounded ${viewMode === 'comparison' ? '' : 'border-r border-gray-200'}`}
+                                   onClick={() => handleCellClick(row.id, month.key, row.isCategory)}>
+                                {isEditing(row.id, month.key) ? (
+                                  <Input
+                                    type="number"
+                                    defaultValue={budgetValue}
+                                    onChange={(e) => handleInputChange(e.target.value)}
+                                    onBlur={handleInputBlur}
+                                    onKeyPress={handleKeyPress}
+                                    className="w-full text-center text-sm h-8 border-blue-300 focus:border-blue-500"
+                                    autoFocus
+                                    step="100"
+                                  />
+                                ) : (
+                                  <span className="text-blue-700 font-semibold text-sm block py-1">
+                                    {formatCurrency(budgetValue)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             
-                            {showActuals && (
+                            {/* Solo mostrar reales */}
+                            {viewMode === 'actuals' && (
+                              <div className="p-2">
+                                <span className="text-green-700 font-semibold text-sm block py-1">
+                                  {formatCurrency(actualValue)}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {/* Comparativa: Real y Varianza */}
+                            {viewMode === 'comparison' && (
                               <>
-                                {/* Columna Real */}
                                 <div className="p-2">
                                   <span className={`font-semibold text-sm block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
                                     {formatCurrency(actualValue)}
                                   </span>
                                 </div>
-                                
-                                {/* Columna Varianza */}
                                 <div className="p-2">
                                   <span className={`font-semibold text-xs block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
                                     {getVariancePercentage(budgetValue, actualValue)}
@@ -209,11 +250,23 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({
                     );
                   })}
                   <TableCell className="text-center bg-blue-50 font-bold border-l p-2">
-                    <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
-                      <div className="text-blue-700 font-bold text-base py-2">
-                        {formatCurrency(row.total)}
-                      </div>
-                      {showActuals && (
+                    <div className={viewMode === 'comparison' ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
+                      {/* Total Presupuesto o única columna */}
+                      {viewMode !== 'actuals' && (
+                        <div className="text-blue-700 font-bold text-base py-2">
+                          {formatCurrency(row.total)}
+                        </div>
+                      )}
+                      
+                      {/* Solo mostrar total real */}
+                      {viewMode === 'actuals' && (
+                        <div className="text-green-700 font-bold text-base py-2">
+                          {formatCurrency(actualTotal)}
+                        </div>
+                      )}
+                      
+                      {/* Comparativa: Total Real y Varianza */}
+                      {viewMode === 'comparison' && (
                         <>
                           <div className={`font-bold text-base py-2 ${getVarianceColor(row.total, actualTotal)}`}>
                             {formatCurrency(actualTotal)}

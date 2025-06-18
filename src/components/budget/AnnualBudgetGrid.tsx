@@ -18,7 +18,9 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   restaurantId,
   year
 }) => {
-  const [showActuals, setShowActuals] = useState(false);
+  const [viewMode, setViewMode] = useState<'budget' | 'comparison' | 'actuals'>('budget');
+  const [showOnlySummary, setShowOnlySummary] = useState(false);
+  
   const { restaurants } = useFranchiseeRestaurants();
   
   const {
@@ -48,8 +50,12 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
     }
   }, [restaurantId, year, fetchActualData]);
 
-  const handleToggleActuals = () => {
-    setShowActuals(!showActuals);
+  const handleToggleViewMode = (mode: 'budget' | 'comparison' | 'actuals') => {
+    setViewMode(mode);
+  };
+
+  const handleToggleSummary = () => {
+    setShowOnlySummary(!showOnlySummary);
   };
 
   // Mostrar estados de carga o error
@@ -73,17 +79,20 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
           budgetData={rowData}
           restaurantName={restaurantName}
           onSave={handleSave}
-          showActuals={showActuals}
-          onToggleActuals={handleToggleActuals}
+          viewMode={viewMode}
+          onToggleViewMode={handleToggleViewMode}
+          showOnlySummary={showOnlySummary}
+          onToggleSummary={handleToggleSummary}
         />
         <BudgetChangesBanner hasChanges={hasChanges} />
       </CardHeader>
       <CardContent className="p-0">
         <BudgetTable 
           data={rowData} 
-          actualData={showActuals ? actualData : []}
+          actualData={actualData}
           onCellChange={handleCellChange}
-          showActuals={showActuals}
+          viewMode={viewMode}
+          showOnlySummary={showOnlySummary}
         />
       </CardContent>
     </Card>

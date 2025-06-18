@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Save, Eye, EyeOff } from 'lucide-react';
+import { Save, Eye, EyeOff, BarChart3, TrendingUp } from 'lucide-react';
 import { BudgetData } from '@/types/budgetTypes';
 
 interface BudgetGridHeaderProps {
@@ -11,8 +11,10 @@ interface BudgetGridHeaderProps {
   budgetData: BudgetData[];
   restaurantName?: string;
   onSave: () => void;
-  showActuals?: boolean;
-  onToggleActuals?: () => void;
+  viewMode?: 'budget' | 'comparison' | 'actuals';
+  onToggleViewMode?: (mode: 'budget' | 'comparison' | 'actuals') => void;
+  showOnlySummary?: boolean;
+  onToggleSummary?: () => void;
 }
 
 export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
@@ -22,8 +24,10 @@ export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
   budgetData,
   restaurantName,
   onSave,
-  showActuals = false,
-  onToggleActuals
+  viewMode = 'budget',
+  onToggleViewMode,
+  showOnlySummary = false,
+  onToggleSummary
 }) => {
   const calculateTotal = () => {
     return budgetData.reduce((sum, row) => sum + (row.total || 0), 0);
@@ -56,14 +60,42 @@ export const BudgetGridHeader: React.FC<BudgetGridHeaderProps> = ({
 
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          {onToggleActuals && (
+          {onToggleViewMode && (
+            <>
+              <Button
+                onClick={() => onToggleViewMode('budget')}
+                variant={viewMode === 'budget' ? 'default' : 'outline'}
+                className="flex items-center gap-2"
+              >
+                <Eye className="w-4 h-4" />
+                Presupuesto
+              </Button>
+              <Button
+                onClick={() => onToggleViewMode('comparison')}
+                variant={viewMode === 'comparison' ? 'default' : 'outline'}
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Mostrar Comparativa
+              </Button>
+              <Button
+                onClick={() => onToggleViewMode('actuals')}
+                variant={viewMode === 'actuals' ? 'default' : 'outline'}
+                className="flex items-center gap-2"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Mostrar Reales
+              </Button>
+            </>
+          )}
+          {onToggleSummary && (
             <Button
-              onClick={onToggleActuals}
+              onClick={onToggleSummary}
               variant="outline"
               className="flex items-center gap-2"
             >
-              {showActuals ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              {showActuals ? 'Ocultar Reales' : 'Mostrar Reales'}
+              {showOnlySummary ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {showOnlySummary ? 'Mostrar Detalle' : 'Mostrar Resumen'}
             </Button>
           )}
         </div>
