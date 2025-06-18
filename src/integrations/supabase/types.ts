@@ -162,6 +162,135 @@ export type Database = {
         }
         Relationships: []
       }
+      franchisee_access_log: {
+        Row: {
+          franchisee_id: string
+          id: string
+          ip_address: string | null
+          login_time: string
+          logout_time: string | null
+          session_duration: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          franchisee_id: string
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          logout_time?: string | null
+          session_duration?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          franchisee_id?: string
+          id?: string
+          ip_address?: string | null
+          login_time?: string
+          logout_time?: string | null
+          session_duration?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisee_access_log_franchisee_id_fkey"
+            columns: ["franchisee_id"]
+            isOneToOne: false
+            referencedRelation: "franchisees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      franchisee_activity_log: {
+        Row: {
+          activity_description: string | null
+          activity_type: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          franchisee_id: string
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_description?: string | null
+          activity_type: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          franchisee_id: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_description?: string | null
+          activity_type?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          franchisee_id?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisee_activity_log_franchisee_id_fkey"
+            columns: ["franchisee_id"]
+            isOneToOne: false
+            referencedRelation: "franchisees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      franchisee_invitations: {
+        Row: {
+          accepted_at: string | null
+          email: string
+          expires_at: string
+          franchisee_id: string
+          id: string
+          invitation_token: string
+          invited_at: string
+          invited_by: string
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          email: string
+          expires_at?: string
+          franchisee_id: string
+          id?: string
+          invitation_token?: string
+          invited_at?: string
+          invited_by: string
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          email?: string
+          expires_at?: string
+          franchisee_id?: string
+          id?: string
+          invitation_token?: string
+          invited_at?: string
+          invited_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "franchisee_invitations_franchisee_id_fkey"
+            columns: ["franchisee_id"]
+            isOneToOne: false
+            referencedRelation: "franchisees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       franchisee_restaurants: {
         Row: {
           advertising_fee_percentage: number | null

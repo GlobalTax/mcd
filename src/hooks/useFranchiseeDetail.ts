@@ -6,9 +6,15 @@ import { Franchisee } from '@/types/auth';
 import { FranchiseeRestaurant } from '@/types/franchiseeRestaurant';
 import { toast } from 'sonner';
 
+interface FranchiseeWithStatus extends Franchisee {
+  hasAccount?: boolean;
+  lastAccess?: string;
+  isOnline?: boolean;
+}
+
 export const useFranchiseeDetail = (franchiseeId?: string) => {
   const { user } = useAuth();
-  const [franchisee, setFranchisee] = useState<Franchisee | null>(null);
+  const [franchisee, setFranchisee] = useState<FranchiseeWithStatus | null>(null);
   const [restaurants, setRestaurants] = useState<FranchiseeRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,8 +62,39 @@ export const useFranchiseeDetail = (franchiseeId?: string) => {
         return;
       }
 
+      // Verificar si el franquiciado tiene cuenta (está en profiles)
+      const hasAccount = !!franchiseeData.profiles;
+      
+      // Obtener último acceso
+      let lastAccess = null;
+      let isOnline = false;
+      
+      if (hasAccount) {
+        const { data: accessData } = await supabase
+          .from('franchisee_access_log')
+          .select('login_time, logout_time')
+          .eq('franchisee_id', franchiseeId)
+          .order('login_time', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (accessData) {
+          lastAccess = accessData.login_time;
+          // Consideramos online si no hay logout_time en la última sesión y fue hace menos de 30 minutos
+          if (!accessData.logout_time) {
+            const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+            isOnline = new Date(accessData.login_time) > thirtyMinutesAgo;
+          }
+        }
+      }
+
       console.log('fetchFranchiseeDetail - Franchisee data:', franchiseeData);
-      setFranchisee(franchiseeData);
+      setFranchisee({
+        ...franchiseeData,
+        hasAccount,
+        lastAccess,
+        isOnline
+      });
 
       // Buscar restaurantes usando el nombre del franquiciado en base_restaurants
       console.log('fetchFranchiseeDetail - Searching restaurants by franchisee_name:', franchiseeData.franchisee_name);

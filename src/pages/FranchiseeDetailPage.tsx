@@ -1,50 +1,36 @@
+
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Building, Mail, Phone, MapPin, Calendar } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import { ArrowLeft, Building, Mail, Phone, MapPin, User, Clock, Wifi, WifiOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useFranchiseeDetail } from '@/hooks/useFranchiseeDetail';
 import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
+import { FranchiseeInvitationPanel } from '@/components/franchisee/FranchiseeInvitationPanel';
+import { FranchiseeAccessHistory } from '@/components/franchisee/FranchiseeAccessHistory';
+import { FranchiseeActivityHistory } from '@/components/franchisee/FranchiseeActivityHistory';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
-const FranchiseeDetailPage = () => {
-  const { franchiseeId } = useParams<{ franchiseeId: string }>();
+export default function FranchiseeDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
-  const { franchisee, restaurants, loading, error } = useFranchiseeDetail(franchiseeId);
-
-  console.log('FranchiseeDetailPage - Render with:', { 
-    franchiseeId, 
-    franchisee: franchisee?.franchisee_name,
-    restaurantsCount: restaurants.length,
-    loading,
-    restaurants: restaurants.map(r => ({ id: r.id, name: r.base_restaurant?.restaurant_name }))
-  });
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user || !['advisor', 'admin', 'superadmin'].includes(user.role)) {
-    return <Navigate to="/auth" replace />;
-  }
+  const { franchisee, restaurants, loading, error } = useFranchiseeDetail(id);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Cargando detalles del franquiciado...</p>
-          </div>
+      <div className="p-6">
+        <div className="flex items-center space-x-2 text-gray-600 mb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/advisor')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-48 bg-gray-200 rounded"></div>
         </div>
       </div>
     );
@@ -52,124 +38,146 @@ const FranchiseeDetailPage = () => {
 
   if (error || !franchisee) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Error</h2>
-            <p className="text-gray-600 mb-4">{error || 'Franquiciado no encontrado'}</p>
-            <Button onClick={() => navigate('/advisor')} variant="outline">
-              Volver al Panel
-            </Button>
-          </div>
+      <div className="p-6">
+        <div className="flex items-center space-x-2 text-gray-600 mb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/advisor')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+        </div>
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error</h2>
+          <p className="text-gray-600">{error || 'Franquiciado no encontrado'}</p>
         </div>
       </div>
     );
   }
 
+  const getStatusBadge = () => {
+    if (!franchisee.hasAccount) {
+      return <Badge variant="outline" className="text-gray-600 border-gray-300">Sin cuenta</Badge>;
+    }
+    if (franchisee.isOnline) {
+      return <Badge variant="outline" className="text-green-600 border-green-300"><Wifi className="w-3 h-3 mr-1" />En línea</Badge>;
+    }
+    return <Badge variant="outline" className="text-gray-600 border-gray-300"><WifiOff className="w-3 h-3 mr-1" />Desconectado</Badge>;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Button
-              onClick={() => navigate('/advisor')}
-              variant="ghost"
-              className="mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver
-            </Button>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <Building className="text-white w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {franchisee.franchisee_name}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Detalles del Franquiciado
-                </p>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/advisor')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Volver
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{franchisee.franchisee_name}</h1>
+            <p className="text-gray-600">Detalle del franquiciado</p>
+          </div>
+        </div>
+        {getStatusBadge()}
+      </div>
+
+      {/* Información básica del franquiciado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <User className="w-5 h-5 mr-2" />
+            Información del Franquiciado
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              {franchisee.company_name && (
+                <div className="flex items-center space-x-2">
+                  <Building className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Empresa:</span>
+                  <span>{franchisee.company_name}</span>
+                </div>
+              )}
+              
+              {franchisee.profiles?.email && (
+                <div className="flex items-center space-x-2">
+                  <Mail className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Email:</span>
+                  <span>{franchisee.profiles.email}</span>
+                </div>
+              )}
+
+              {franchisee.profiles?.phone && (
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Teléfono:</span>
+                  <span>{franchisee.profiles.phone}</span>
+                </div>
+              )}
+
+              {franchisee.tax_id && (
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">CIF/NIF:</span>
+                  <span>{franchisee.tax_id}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              {(franchisee.city || franchisee.state) && (
+                <div className="flex items-center space-x-2">
+                  <MapPin className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Ubicación:</span>
+                  <span>{franchisee.city}{franchisee.state ? `, ${franchisee.state}` : ''}</span>
+                </div>
+              )}
+
+              {franchisee.hasAccount && franchisee.lastAccess && (
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">Último acceso:</span>
+                  <span>{format(new Date(franchisee.lastAccess), 'dd/MM/yyyy HH:mm', { locale: es })}</span>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2">
+                <Building className="w-4 h-4 text-gray-500" />
+                <span className="font-medium">Restaurantes:</span>
+                <Badge variant="outline">{restaurants.length}</Badge>
               </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
+
+      {/* Grid con invitaciones y historial */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <FranchiseeInvitationPanel 
+          franchiseeId={franchisee.id} 
+          franchiseeEmail={franchisee.profiles?.email}
+        />
+        <FranchiseeAccessHistory franchiseeId={franchisee.id} />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Información del Franquiciado */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="w-5 h-5" />
-                  Información del Franquiciado
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <h3 className="font-semibold text-lg">{franchisee.franchisee_name}</h3>
-                  {franchisee.company_name && (
-                    <p className="text-gray-600">{franchisee.company_name}</p>
-                  )}
-                </div>
+      {/* Historial de actividad */}
+      <FranchiseeActivityHistory franchiseeId={franchisee.id} />
 
-                {franchisee.tax_id && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-500">CIF/NIF:</span>
-                    <span className="text-sm">{franchisee.tax_id}</span>
-                  </div>
-                )}
-
-                {franchisee.profiles?.email && (
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">{franchisee.profiles.email}</span>
-                  </div>
-                )}
-
-                {franchisee.profiles?.phone && (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">{franchisee.profiles.phone}</span>
-                  </div>
-                )}
-
-                {(franchisee.address || franchisee.city) && (
-                  <div className="flex items-start space-x-2">
-                    <MapPin className="w-4 h-4 text-gray-500 mt-1" />
-                    <div className="text-sm">
-                      {franchisee.address && <div>{franchisee.address}</div>}
-                      {franchisee.city && (
-                        <div>{franchisee.city}{franchisee.state && `, ${franchisee.state}`}</div>
-                      )}
-                      {franchisee.postal_code && <div>{franchisee.postal_code}</div>}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-500">Fecha de registro:</span>
-                  <span className="text-sm">
-                    {new Date(franchisee.created_at).toLocaleDateString('es-ES')}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Restaurantes del Franquiciado */}
-          <div className="lg:col-span-2">
-            <FranchiseeRestaurantsTable 
-              franchiseeId={franchiseeId!}
-              restaurants={restaurants}
-            />
-          </div>
-        </div>
-      </div>
+      {/* Tabla de restaurantes */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Building className="w-5 h-5 mr-2" />
+            Restaurantes Asignados ({restaurants.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {restaurants.length > 0 ? (
+            <FranchiseeRestaurantsTable restaurants={restaurants} />
+          ) : (
+            <p className="text-gray-500 text-center py-8">No hay restaurantes asignados</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default FranchiseeDetailPage;
+}
