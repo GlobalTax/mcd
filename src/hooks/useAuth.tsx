@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,7 +121,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error fetching restaurants:', restaurantsError);
           } else {
             console.log('fetchUserData - Restaurants found:', restaurantsData);
-            setRestaurants(restaurantsData as Restaurant[]);
+            
+            // Transform the data to match Restaurant type
+            const transformedRestaurants: Restaurant[] = restaurantsData
+              ?.filter(item => item.base_restaurant)
+              .map(item => ({
+                id: item.base_restaurant.id,
+                franchisee_id: item.franchisee_id,
+                site_number: item.base_restaurant.site_number,
+                restaurant_name: item.base_restaurant.restaurant_name,
+                address: item.base_restaurant.address,
+                city: item.base_restaurant.city,
+                state: item.base_restaurant.state,
+                postal_code: item.base_restaurant.postal_code,
+                country: item.base_restaurant.country,
+                opening_date: item.base_restaurant.opening_date,
+                restaurant_type: item.base_restaurant.restaurant_type as 'traditional' | 'mccafe' | 'drive_thru' | 'express',
+                status: item.status as 'active' | 'inactive' | 'pending' | 'closed',
+                square_meters: item.base_restaurant.square_meters,
+                seating_capacity: item.base_restaurant.seating_capacity,
+                created_at: item.base_restaurant.created_at,
+                updated_at: item.base_restaurant.updated_at
+              })) || [];
+            
+            setRestaurants(transformedRestaurants);
           }
         }
       } else {
