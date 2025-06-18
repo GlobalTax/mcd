@@ -20,28 +20,14 @@ export const useUserDataFetcher = ({
   const fetchUserData = async (userId: string) => {
     try {
       console.log('fetchUserData - Starting fetch for user:', userId);
-      console.log('fetchUserData - About to query profiles table');
       
-      // Añadir timeout para evitar consultas colgadas
-      const profileQuery = supabase
+      // Fetch user profile with extended timeout (30 seconds)
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      console.log('fetchUserData - Profile query created, executing...');
-      
-      // Implementar timeout
-      const timeout = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile query timeout')), 10000)
-      );
-
-      const { data: profile, error: profileError } = await Promise.race([
-        profileQuery,
-        timeout
-      ]) as any;
-
-      console.log('fetchUserData - Profile query completed');
       console.log('fetchUserData - Profile query result:', { profile, profileError });
 
       if (profileError) {
@@ -65,10 +51,10 @@ export const useUserDataFetcher = ({
 
       console.log('fetchUserData - Profile fetched successfully:', profile);
 
-      // Usar el rol directamente de la base de datos sin mapear
+      // Use the role directly from the database
       const userData = {
         ...profile,
-        role: profile.role // Mantener el rol original de la base de datos
+        role: profile.role
       } as User;
 
       console.log('fetchUserData - Setting user with role:', userData.role);
@@ -96,7 +82,6 @@ export const useUserDataFetcher = ({
   const fetchFranchiseeData = async (userId: string, profile: any) => {
     try {
       console.log('fetchFranchiseeData - Starting for user:', userId);
-      console.log('fetchFranchiseeData - About to query franchisees table');
       
       // Fetch franchisee data
       const { data: franchiseeData, error: franchiseeError } = await supabase
@@ -105,16 +90,14 @@ export const useUserDataFetcher = ({
         .eq('user_id', userId)
         .maybeSingle();
 
-      console.log('fetchFranchiseeData - Franchisee query completed');
       console.log('fetchFranchiseeData - Franchisee query result:', { franchiseeData, franchiseeError });
 
       if (franchiseeError) {
         console.error('fetchFranchiseeData - Franchisee error details:', franchiseeError);
-        // Si no existe el franquiciado, crear uno
+        // If franchisee doesn't exist, create one
         if (franchiseeError.code === 'PGRST116') {
           console.log('fetchFranchiseeData - No franchisee found, creating one for user:', profile.full_name);
           
-          console.log('fetchFranchiseeData - About to insert new franchisee');
           const { data: newFranchisee, error: createError } = await supabase
             .from('franchisees')
             .insert({
@@ -124,7 +107,6 @@ export const useUserDataFetcher = ({
             .select()
             .single();
 
-          console.log('fetchFranchiseeData - Insert franchisee completed');
           console.log('fetchFranchiseeData - Insert result:', { newFranchisee, createError });
 
           if (createError) {
@@ -156,9 +138,8 @@ export const useUserDataFetcher = ({
   const fetchRestaurantsData = async (franchiseeId: string) => {
     try {
       console.log('fetchRestaurantsData - Starting for franchisee:', franchiseeId);
-      console.log('fetchRestaurantsData - About to query franchisee_restaurants table');
       
-      // Buscar restaurantes vinculados a través de franchisee_restaurants
+      // Search for restaurants linked through franchisee_restaurants
       const { data: restaurantsData, error: restaurantsError } = await supabase
         .from('franchisee_restaurants')
         .select(`
@@ -168,7 +149,6 @@ export const useUserDataFetcher = ({
         .eq('franchisee_id', franchiseeId)
         .eq('status', 'active');
 
-      console.log('fetchRestaurantsData - Restaurants query completed');
       console.log('fetchRestaurantsData - Restaurants query result:', { restaurantsData, restaurantsError });
 
       if (restaurantsError) {

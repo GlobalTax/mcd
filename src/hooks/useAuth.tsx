@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContext } from './auth/AuthContext';
 import { useAuthState } from './auth/useAuthState';
@@ -35,38 +35,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession
   });
 
+  // Use ref to prevent duplicate calls
+  const authInitialized = useRef(false);
+  const currentUserId = useRef<string | null>(null);
+
   useEffect(() => {
+    if (authInitialized.current) return;
+    
     console.log('useAuth - Setting up auth state listener');
+    authInitialized.current = true;
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('useAuth - Auth state change:', event, session?.user?.id);
-        console.log('useAuth - Full session:', session);
         setSession(session);
         
-        if (session?.user) {
+        if (session?.user && currentUserId.current !== session.user.id) {
           console.log('useAuth - User found in session, fetching user data');
+          currentUserId.current = session.user.id;
           try {
             await fetchUserData(session.user.id);
-            console.log('useAuth - User data fetch completed, setting loading to false');
+            console.log('useAuth - User data fetch completed');
           } catch (error) {
             console.error('useAuth - Error fetching user data:', error);
           }
-        } else {
+        } else if (!session?.user) {
           console.log('useAuth - No session, clearing user data');
+          currentUserId.current = null;
           clearUserData();
         }
         setLoading(false);
       }
     );
 
-    // Check for existing session
+    // Check for existing session only once
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('useAuth - Initial session check:', session?.user?.id);
-      console.log('useAuth - Initial session full:', session);
       setSession(session);
-      if (session?.user) {
+      if (session?.user && currentUserId.current !== session.user.id) {
+        currentUserId.current = session.user.id;
         try {
           await fetchUserData(session.user.id);
           console.log('useAuth - Initial user data fetch completed');
@@ -77,7 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      authInitialized.current = false;
+    };
   }, []);
 
   console.log('useAuth - Current state:', { 
