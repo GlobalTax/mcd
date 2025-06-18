@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,9 +31,9 @@ const AuthPage = () => {
       console.log('AuthPage - User role:', user.role);
       console.log('AuthPage - Determining redirect...');
       
-      // Redirigir usuarios con roles de asesor al panel de asesor
-      if (['advisor', 'admin', 'superadmin'].includes(user.role)) {
-        console.log('AuthPage - Redirecting advisor/admin/superadmin to /advisor');
+      // Redirigir usuarios con roles de asesor, admin o superadmin al panel de asesor
+      if (['asesor', 'admin', 'superadmin'].includes(user.role)) {
+        console.log('AuthPage - Redirecting asesor/admin/superadmin to /advisor');
         navigate('/advisor', { replace: true });
       } else {
         console.log('AuthPage - Redirecting franchisee to /dashboard');
