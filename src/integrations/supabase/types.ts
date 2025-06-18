@@ -1000,6 +1000,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_franchisee_profile: {
+        Args: { user_id: string; user_email: string; user_full_name: string }
+        Returns: undefined
+      }
       manually_assign_restaurants_to_existing_franchisees: {
         Args: Record<PropertyKey, never>
         Returns: undefined

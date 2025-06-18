@@ -101,12 +101,12 @@ export const useCreateUser = () => {
         }
       }
 
-      // Si no existe el perfil, crearlo manualmente con admin access
+      // Si no existe el perfil, crearlo manualmente
       if (!profileExists) {
-        console.log('Creando perfil manualmente usando admin access');
+        console.log('Creando perfil manualmente usando función personalizada');
         
-        // Usar una función personalizada para crear el perfil con privilegios elevados
-        const { error: profileCreateError } = await supabase.rpc('create_franchisee_profile', {
+        // Usar la función RPC con un tipo más genérico para evitar errores de tipos
+        const { error: profileCreateError } = await (supabase as any).rpc('create_franchisee_profile', {
           user_id: authData.user.id,
           user_email: email,
           user_full_name: fullName
@@ -115,7 +115,7 @@ export const useCreateUser = () => {
         if (profileCreateError) {
           console.error('Error creating profile with RPC:', profileCreateError);
           
-          // Como último recurso, intentar crear usando el admin client
+          // Como último recurso, intentar crear usando inserción directa
           const { error: directError } = await supabase
             .from('profiles')
             .insert({
