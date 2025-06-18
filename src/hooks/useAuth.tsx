@@ -73,12 +73,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('user_id', userId)
           .maybeSingle();
 
+        console.log('fetchUserData - Franchisee query result:', { franchiseeData, franchiseeError });
+
         if (franchiseeError) {
           console.error('Error fetching franchisee:', franchiseeError);
+          // Si no existe el franquiciado, crear uno
+          if (franchiseeError.code === 'PGRST116') {
+            console.log('No franchisee found, creating one for user:', profile.full_name);
+            
+            const { data: newFranchisee, error: createError } = await supabase
+              .from('franchisees')
+              .insert({
+                user_id: userId,
+                franchisee_name: profile.full_name || profile.email
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error('Error creating franchisee:', createError);
+              toast.error('Error al crear perfil de franquiciado');
+              return;
+            }
+
+            console.log('fetchUserData - New franchisee created:', newFranchisee);
+            setFranchisee(newFranchisee as Franchisee);
+            toast.success('Perfil de franquiciado creado correctamente');
+          }
           return;
         }
 
         if (franchiseeData) {
+          console.log('fetchUserData - Setting franchisee:', franchiseeData);
           setFranchisee(franchiseeData as Franchisee);
 
           // Fetch restaurants (keeping compatibility with old structure)
@@ -90,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (restaurantsError) {
             console.error('Error fetching restaurants:', restaurantsError);
           } else {
+            console.log('fetchUserData - Old restaurants found:', restaurantsData);
             setRestaurants(restaurantsData as Restaurant[]);
           }
         }
