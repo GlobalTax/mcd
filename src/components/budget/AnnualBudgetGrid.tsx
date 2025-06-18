@@ -22,6 +22,7 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
   year
 }) => {
   const [showComparison, setShowComparison] = useState(false);
+  const [showActuals, setShowActuals] = useState(false);
   const { restaurants } = useFranchiseeRestaurants();
   
   const {
@@ -53,6 +54,10 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
 
   const handleShowComparison = () => {
     setShowComparison(!showComparison);
+  };
+
+  const handleToggleActuals = () => {
+    setShowActuals(!showActuals);
   };
 
   // Mostrar estados de carga o error
@@ -119,14 +124,18 @@ export const AnnualBudgetGrid: React.FC<AnnualBudgetGridProps> = ({
           restaurantName={restaurantName}
           onSave={handleSave}
           onShowComparison={handleShowComparison}
+          showComparison={showComparison}
+          showActuals={showActuals}
+          onToggleActuals={handleToggleActuals}
         />
         <BudgetChangesBanner hasChanges={hasChanges} />
       </CardHeader>
       <CardContent className="p-0">
         <BudgetTable 
           data={rowData} 
-          actualData={actualData}
+          actualData={showActuals ? actualData : []}
           onCellChange={handleCellChange}
+          showActuals={showActuals}
         />
       </CardContent>
     </Card>

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Download, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Download, TrendingUp, TrendingDown, Eye, EyeOff } from 'lucide-react';
 import { useProfitLossData, useProfitLossCalculations } from '@/hooks/useProfitLossData';
 import { ProfitLossTable } from './ProfitLossTable';
 import { ProfitLossCharts } from './ProfitLossCharts';
@@ -18,6 +18,7 @@ const ProfitLossDashboard = ({ restaurantId }: ProfitLossDashboardProps) => {
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'charts'>('table');
+  const [showOnlyTotals, setShowOnlyTotals] = useState(false);
 
   const { profitLossData, isLoading, error } = useProfitLossData(restaurantId, selectedYear);
   const { calculateMetrics, formatCurrency, formatPercentage } = useProfitLossCalculations();
@@ -160,6 +161,17 @@ const ProfitLossDashboard = ({ restaurantId }: ProfitLossDashboardProps) => {
           >
             Gráficos
           </Button>
+          
+          {viewMode === 'table' && (
+            <Button 
+              variant="outline"
+              onClick={() => setShowOnlyTotals(!showOnlyTotals)}
+              className="flex items-center gap-2"
+            >
+              {showOnlyTotals ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {showOnlyTotals ? 'Mostrar Detalle' : 'Solo Totales'}
+            </Button>
+          )}
         </div>
         
         <Button variant="outline">
@@ -170,7 +182,7 @@ const ProfitLossDashboard = ({ restaurantId }: ProfitLossDashboardProps) => {
 
       {/* Contenido principal */}
       {viewMode === 'table' ? (
-        <ProfitLossTable data={profitLossData} />
+        <ProfitLossTable data={profitLossData} showOnlyTotals={showOnlyTotals} />
       ) : (
         <ProfitLossCharts data={profitLossData} />
       )}

@@ -8,6 +8,7 @@ interface BudgetTableProps {
   data: BudgetData[];
   actualData?: any[];
   onCellChange: (id: string, field: string, value: number) => void;
+  showActuals?: boolean;
 }
 
 interface EditingCell {
@@ -15,7 +16,12 @@ interface EditingCell {
   field: string;
 }
 
-export const BudgetTable: React.FC<BudgetTableProps> = ({ data, actualData = [], onCellChange }) => {
+export const BudgetTable: React.FC<BudgetTableProps> = ({ 
+  data, 
+  actualData = [], 
+  onCellChange, 
+  showActuals = false 
+}) => {
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
 
   const months = [
@@ -81,6 +87,12 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, actualData = [],
     return variance > 0 ? 'text-green-600' : 'text-red-600';
   };
 
+  const getVariancePercentage = (budget: number, actual: number): string => {
+    if (budget === 0) return actual === 0 ? '0%' : '∞%';
+    const variance = ((actual - budget) / Math.abs(budget)) * 100;
+    return `${variance > 0 ? '+' : ''}${variance.toFixed(1)}%`;
+  };
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto border rounded-lg">
@@ -94,20 +106,30 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, actualData = [],
                 <TableHead key={month.key} className="text-center border-r min-w-[200px] p-3">
                   <div className="space-y-2">
                     <div className="font-bold text-gray-900 text-base">{month.label}</div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-2 rounded">Presup.</div>
-                      <div className="text-green-700 font-semibold bg-green-50 py-1 px-2 rounded">Real</div>
-                    </div>
+                    {showActuals ? (
+                      <div className="grid grid-cols-3 gap-1 text-xs">
+                        <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-1 rounded">Presup.</div>
+                        <div className="text-green-700 font-semibold bg-green-50 py-1 px-1 rounded">Real</div>
+                        <div className="text-orange-700 font-semibold bg-orange-50 py-1 px-1 rounded">Var.</div>
+                      </div>
+                    ) : (
+                      <div className="text-blue-700 font-semibold bg-blue-50 py-1 px-2 rounded text-sm">Presupuesto</div>
+                    )}
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="text-center min-w-[200px] bg-blue-100 font-bold border-l text-base p-3">
+              <TableHead className="text-center min-w-[250px] bg-blue-100 font-bold border-l text-base p-3">
                 <div className="space-y-2">
                   <div className="text-gray-900">Total Anual</div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-blue-700 font-semibold">Presup.</div>
-                    <div className="text-green-700 font-semibold">Real</div>
-                  </div>
+                  {showActuals ? (
+                    <div className="grid grid-cols-3 gap-1 text-xs">
+                      <div className="text-blue-700 font-semibold">Presup.</div>
+                      <div className="text-green-700 font-semibold">Real</div>
+                      <div className="text-orange-700 font-semibold">Var.</div>
+                    </div>
+                  ) : (
+                    <div className="text-blue-700 font-semibold text-sm">Presupuesto</div>
+                  )}
                 </div>
               </TableHead>
             </TableRow>
@@ -132,14 +154,19 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, actualData = [],
                     return (
                       <TableCell key={month.key} className="text-center p-2 border-r">
                         {row.isCategory ? (
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
                             <span className="text-gray-400 text-base py-2">-</span>
-                            <span className="text-gray-400 text-base py-2">-</span>
+                            {showActuals && (
+                              <>
+                                <span className="text-gray-400 text-base py-2">-</span>
+                                <span className="text-gray-400 text-base py-2">-</span>
+                              </>
+                            )}
                           </div>
                         ) : (
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
                             {/* Columna Presupuesto */}
-                            <div className={`cursor-pointer hover:bg-blue-50 p-2 rounded border-r border-gray-200`}
+                            <div className={`cursor-pointer hover:bg-blue-50 p-2 rounded ${showActuals ? '' : 'border-r border-gray-200'}`}
                                  onClick={() => handleCellClick(row.id, month.key, row.isCategory)}>
                               {isEditing(row.id, month.key) ? (
                                 <Input
@@ -159,25 +186,43 @@ export const BudgetTable: React.FC<BudgetTableProps> = ({ data, actualData = [],
                               )}
                             </div>
                             
-                            {/* Columna Real */}
-                            <div className="p-2">
-                              <span className={`font-semibold text-sm block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
-                                {formatCurrency(actualValue)}
-                              </span>
-                            </div>
+                            {showActuals && (
+                              <>
+                                {/* Columna Real */}
+                                <div className="p-2">
+                                  <span className={`font-semibold text-sm block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
+                                    {formatCurrency(actualValue)}
+                                  </span>
+                                </div>
+                                
+                                {/* Columna Varianza */}
+                                <div className="p-2">
+                                  <span className={`font-semibold text-xs block py-1 ${getVarianceColor(budgetValue, actualValue)}`}>
+                                    {getVariancePercentage(budgetValue, actualValue)}
+                                  </span>
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
                       </TableCell>
                     );
                   })}
                   <TableCell className="text-center bg-blue-50 font-bold border-l p-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className={showActuals ? "grid grid-cols-3 gap-1" : "flex justify-center"}>
                       <div className="text-blue-700 font-bold text-base py-2">
                         {formatCurrency(row.total)}
                       </div>
-                      <div className={`font-bold text-base py-2 ${getVarianceColor(row.total, actualTotal)}`}>
-                        {formatCurrency(actualTotal)}
-                      </div>
+                      {showActuals && (
+                        <>
+                          <div className={`font-bold text-base py-2 ${getVarianceColor(row.total, actualTotal)}`}>
+                            {formatCurrency(actualTotal)}
+                          </div>
+                          <div className={`font-bold text-sm py-2 ${getVarianceColor(row.total, actualTotal)}`}>
+                            {getVariancePercentage(row.total, actualTotal)}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
