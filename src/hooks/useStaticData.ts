@@ -12,54 +12,61 @@ export const useStaticData = () => {
   const [isUsingCache, setIsUsingCache] = useState(false);
   
   const getFranchiseeData = async (userId: string): Promise<Franchisee> => {
-    console.log('getFranchiseeData - Starting with immediate fallback');
+    console.log('getFranchiseeData - Starting for user:', userId);
     
-    // Verificar cache primero
+    // Solo usar datos estáticos para usuarios demo/fallback
+    if (userId.startsWith('demo-') || userId.startsWith('fallback-')) {
+      console.log('getFranchiseeData - Using static data for demo/fallback user');
+      setIsUsingCache(true);
+      return STATIC_FRANCHISEE_DATA;
+    }
+    
+    // Verificar cache primero para usuarios reales
     const cacheKey = `franchisee-${userId}`;
     const cached = dataCache.get<Franchisee>(cacheKey);
     if (cached) {
       console.log('getFranchiseeData - Using cached data');
+      setIsUsingCache(false);
       return cached;
     }
     
-    // Retornar datos estáticos inmediatamente
-    console.log('getFranchiseeData - Using static fallback data');
-    setIsUsingCache(true);
-    
-    // Intentar cargar datos reales en background (sin bloquear)
-    setTimeout(async () => {
-      try {
-        console.log('getFranchiseeData - Attempting background load');
-        const { data, error } = await Promise.race([
-          supabase
-            .from('franchisees')
-            .select('*')
-            .eq('user_id', userId)
-            .maybeSingle(),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Background timeout')), 3000)
-          )
-        ]) as any;
-        
-        if (data && !error) {
-          console.log('getFranchiseeData - Background load successful');
-          dataCache.set(cacheKey, data, 60); // Cache por 1 hora
-          setIsUsingCache(false);
-        }
-      } catch (error) {
-        console.log('getFranchiseeData - Background load failed, keeping static data');
+    try {
+      console.log('getFranchiseeData - Attempting real data fetch');
+      const { data, error } = await Promise.race([
+        supabase
+          .from('franchisees')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Franchisee timeout')), 8000)
+        )
+      ]) as any;
+      
+      if (data && !error) {
+        console.log('getFranchiseeData - Real data loaded successfully');
+        dataCache.set(cacheKey, data, 60);
+        setIsUsingCache(false);
+        return data;
+      } else {
+        console.log('getFranchiseeData - No real data found, using static fallback');
+        setIsUsingCache(true);
+        return STATIC_FRANCHISEE_DATA;
       }
-    }, 100);
-    
-    return STATIC_FRANCHISEE_DATA;
+    } catch (error) {
+      console.log('getFranchiseeData - Error loading real data, using static fallback');
+      setIsUsingCache(true);
+      return STATIC_FRANCHISEE_DATA;
+    }
   };
   
   const getRestaurantsData = async (franchiseeId: string): Promise<RestaurantData[]> => {
-    console.log('getRestaurantsData - Starting with immediate fallback');
+    console.log('getRestaurantsData - Starting for franchisee:', franchiseeId);
     
-    // Si es franchisee estático, retornar datos estáticos
-    if (franchiseeId.startsWith('static-') || franchiseeId.startsWith('temp-')) {
-      console.log('getRestaurantsData - Using static restaurant data');
+    // Solo usar datos estáticos para IDs estáticos
+    if (franchiseeId.startsWith('static-') || franchiseeId.startsWith('temp-') || franchiseeId.startsWith('demo-') || franchiseeId.startsWith('fallback-')) {
+      console.log('getRestaurantsData - Using static restaurant data for fallback franchisee');
+      setIsUsingCache(true);
       return STATIC_RESTAURANTS_DATA;
     }
     
@@ -68,42 +75,41 @@ export const useStaticData = () => {
     const cached = dataCache.get<RestaurantData[]>(cacheKey);
     if (cached) {
       console.log('getRestaurantsData - Using cached restaurant data');
+      setIsUsingCache(false);
       return cached;
     }
     
-    // Retornar datos estáticos inmediatamente
-    console.log('getRestaurantsData - Using static restaurant fallback');
-    setIsUsingCache(true);
-    
-    // Cargar datos reales en background
-    setTimeout(async () => {
-      try {
-        console.log('getRestaurantsData - Attempting background load');
-        const { data, error } = await Promise.race([
-          supabase
-            .from('franchisee_restaurants')
-            .select(`
-              *,
-              base_restaurant:base_restaurants(*)
-            `)
-            .eq('franchisee_id', franchiseeId)
-            .eq('status', 'active'),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Background timeout')), 3000)
-          )
-        ]) as any;
-        
-        if (data && !error && data.length > 0) {
-          console.log('getRestaurantsData - Background load successful');
-          dataCache.set(cacheKey, data, 60);
-          setIsUsingCache(false);
-        }
-      } catch (error) {
-        console.log('getRestaurantsData - Background load failed, keeping static data');
+    try {
+      console.log('getRestaurantsData - Attempting real restaurants fetch');
+      const { data, error } = await Promise.race([
+        supabase
+          .from('franchisee_restaurants')
+          .select(`
+            *,
+            base_restaurant:base_restaurants(*)
+          `)
+          .eq('franchisee_id', franchiseeId)
+          .eq('status', 'active'),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Restaurants timeout')), 8000)
+        )
+      ]) as any;
+      
+      if (data && !error && data.length > 0) {
+        console.log('getRestaurantsData - Real restaurants loaded successfully');
+        dataCache.set(cacheKey, data, 60);
+        setIsUsingCache(false);
+        return data;
+      } else {
+        console.log('getRestaurantsData - No real restaurants found, using static fallback');
+        setIsUsingCache(true);
+        return STATIC_RESTAURANTS_DATA;
       }
-    }, 100);
-    
-    return STATIC_RESTAURANTS_DATA;
+    } catch (error) {
+      console.log('getRestaurantsData - Error loading real restaurants, using static fallback');
+      setIsUsingCache(true);
+      return STATIC_RESTAURANTS_DATA;
+    }
   };
   
   const clearCache = () => {

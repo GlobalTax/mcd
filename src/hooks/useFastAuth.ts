@@ -14,13 +14,13 @@ export const useFastAuth = () => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        console.log('useFastAuth - Starting fast initialization');
+        console.log('useFastAuth - Starting real data initialization');
         
-        // Verificar sesión actual (rápido)
+        // Verificar sesión actual
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          console.log('useFastAuth - Session found, creating user immediately');
+          console.log('useFastAuth - Session found, fetching real data');
           
           // Crear usuario inmediatamente con datos de sesión
           const userData: User = {
@@ -34,18 +34,73 @@ export const useFastAuth = () => {
           
           setUser(userData);
           
-          // Obtener datos del franquiciado (con fallback inmediato)
-          const franchiseeData = await getFranchiseeData(session.user.id);
-          setFranchisee(franchiseeData);
-          
-          // Obtener restaurantes (con fallback inmediato)
-          const restaurantData = await getRestaurantsData(franchiseeData.id);
-          setRestaurants(restaurantData);
-          
-          console.log('useFastAuth - Fast initialization completed');
+          try {
+            // Intentar obtener datos reales del franquiciado con timeout más largo
+            console.log('useFastAuth - Attempting to fetch real franchisee data');
+            const { data: franchiseeData, error: franchiseeError } = await Promise.race([
+              supabase
+                .from('franchisees')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .maybeSingle(),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Franchisee timeout')), 10000)
+              )
+            ]) as any;
+            
+            if (franchiseeData && !franchiseeError) {
+              console.log('useFastAuth - Real franchisee data loaded successfully');
+              setFranchisee(franchiseeData);
+              
+              try {
+                // Intentar obtener restaurantes reales
+                console.log('useFastAuth - Attempting to fetch real restaurants data');
+                const { data: restaurantsData, error: restaurantsError } = await Promise.race([
+                  supabase
+                    .from('franchisee_restaurants')
+                    .select(`
+                      *,
+                      base_restaurant:base_restaurants(*)
+                    `)
+                    .eq('franchisee_id', franchiseeData.id)
+                    .eq('status', 'active'),
+                  new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Restaurants timeout')), 10000)
+                  )
+                ]) as any;
+                
+                if (restaurantsData && !restaurantsError && restaurantsData.length > 0) {
+                  console.log('useFastAuth - Real restaurants data loaded successfully');
+                  setRestaurants(restaurantsData);
+                } else {
+                  console.log('useFastAuth - No real restaurants found, using fallback');
+                  const fallbackRestaurants = await getRestaurantsData(franchiseeData.id);
+                  setRestaurants(fallbackRestaurants);
+                }
+              } catch (error) {
+                console.log('useFastAuth - Error loading restaurants, using fallback');
+                const fallbackRestaurants = await getRestaurantsData(franchiseeData.id);
+                setRestaurants(fallbackRestaurants);
+              }
+            } else {
+              console.log('useFastAuth - No real franchisee found, using fallback');
+              const fallbackFranchisee = await getFranchiseeData(session.user.id);
+              setFranchisee(fallbackFranchisee);
+              
+              const fallbackRestaurants = await getRestaurantsData(fallbackFranchisee.id);
+              setRestaurants(fallbackRestaurants);
+            }
+          } catch (error) {
+            console.log('useFastAuth - Error loading franchisee, using fallback');
+            const fallbackFranchisee = await getFranchiseeData(session.user.id);
+            setFranchisee(fallbackFranchisee);
+            
+            const fallbackRestaurants = await getRestaurantsData(fallbackFranchisee.id);
+            setRestaurants(fallbackRestaurants);
+          }
         } else {
-          console.log('useFastAuth - No session found');
-          // Crear datos demo para usuarios sin sesión
+          console.log('useFastAuth - No session found, using demo data');
+          // Solo usar datos demo si no hay sesión
           const demoUser: User = {
             id: 'demo-user',
             email: 'demo@ejemplo.com',
@@ -65,9 +120,9 @@ export const useFastAuth = () => {
         }
         
       } catch (error) {
-        console.error('useFastAuth - Error in fast initialization:', error);
+        console.error('useFastAuth - Critical error, using complete fallback:', error);
         
-        // Fallback completo a datos estáticos
+        // Solo en caso de error crítico usar fallback completo
         const fallbackUser: User = {
           id: 'fallback-user',
           email: 'fallback@ejemplo.com',
