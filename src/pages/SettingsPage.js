@@ -1,0 +1,14 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/navigation/AppSidebar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/hooks/useAuth';
+import { User, Bell } from 'lucide-react';
+const SettingsPage = () => {
+    const { user } = useAuth();
+    return (_jsx(SidebarProvider, { children: _jsxs("div", { className: "min-h-screen flex w-full bg-gray-50", children: [_jsx(AppSidebar, {}), _jsxs(SidebarInset, { className: "flex-1", children: [_jsxs("header", { className: "flex h-16 shrink-0 items-center gap-2 border-b bg-white px-6", children: [_jsx(SidebarTrigger, { className: "-ml-1" }), _jsxs("div", { className: "flex-1", children: [_jsx("h1", { className: "text-lg font-semibold text-gray-900", children: "Configuraci\u00F3n" }), _jsx("p", { className: "text-sm text-gray-500", children: "Gestiona tu cuenta y preferencias" })] })] }), _jsx("main", { className: "flex-1 p-6 space-y-6", children: _jsxs("div", { className: "grid grid-cols-1 lg:grid-cols-2 gap-6", children: [_jsxs(Card, { children: [_jsx(CardHeader, { children: _jsxs(CardTitle, { className: "flex items-center gap-2", children: [_jsx(User, { className: "w-5 h-5" }), "Perfil de Usuario"] }) }), _jsxs(CardContent, { className: "space-y-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "email", children: "Email" }), _jsx(Input, { id: "email", value: user?.email || '', disabled: true })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "name", children: "Nombre completo" }), _jsx(Input, { id: "name", value: user?.full_name || '' })] }), _jsx(Button, { children: "Guardar cambios" })] })] }), _jsxs(Card, { children: [_jsx(CardHeader, { children: _jsxs(CardTitle, { className: "flex items-center gap-2", children: [_jsx(Bell, { className: "w-5 h-5" }), "Notificaciones"] }) }), _jsxs(CardContent, { className: "space-y-4", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("div", { className: "font-medium", children: "Alertas de presupuesto" }), _jsx("div", { className: "text-sm text-gray-500", children: "Recibir notificaciones sobre variaciones" })] }), _jsx(Button, { variant: "outline", size: "sm", children: "Activar" })] }), _jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("div", { className: "font-medium", children: "Reportes mensuales" }), _jsx("div", { className: "text-sm text-gray-500", children: "Resumen mensual de actividad" })] }), _jsx(Button, { variant: "outline", size: "sm", children: "Activar" })] })] })] })] }) })] })] }) }));
+};
+export default SettingsPage;

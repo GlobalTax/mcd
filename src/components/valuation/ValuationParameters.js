@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+const ValuationParameters = ({ inputs, onInputChange }) => {
+    return (_jsxs(Card, { children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Par\u00E1metros del Modelo" }) }), _jsx(CardContent, { children: _jsxs("div", { className: "space-y-3", children: [_jsxs("div", { className: "flex justify-between items-center", children: [_jsx("span", { className: "text-sm", children: "Inflaci\u00F3n:" }), _jsx(Input, { type: "number", step: "0.01", value: inputs.inflationRate, onChange: (e) => onInputChange('inflationRate', Number(e.target.value)), className: "w-20 text-right text-sm" })] }), _jsxs("div", { className: "flex justify-between items-center", children: [_jsx("span", { className: "text-sm", children: "Tasa de Descuento:" }), _jsx(Input, { type: "number", step: "0.01", value: inputs.discountRate, onChange: (e) => onInputChange('discountRate', Number(e.target.value)), className: "w-20 text-right text-sm" })] }), _jsxs("div", { className: "flex justify-between items-center", children: [_jsx("span", { className: "text-sm", children: "Crecimiento Ventas:" }), _jsx(Input, { type: "number", step: "0.01", value: inputs.growthRate, onChange: (e) => onInputChange('growthRate', Number(e.target.value)), className: "w-20 text-right text-sm" })] })] }) })] }));
+};
+export default ValuationParameters;

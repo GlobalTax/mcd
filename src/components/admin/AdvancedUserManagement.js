@@ -1,0 +1,248 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Users, UserPlus, Mail, Key, RefreshCw, Filter, Edit, Trash2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+const AdvancedUserManagement = () => {
+    const { user } = useAuth();
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({
+        role: 'all',
+        status: 'all',
+        search: ''
+    });
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    // Formulario para crear usuario
+    const [createForm, setCreateForm] = useState({
+        email: '',
+        phone: '',
+        password: '',
+        role: 'franchisee',
+        sendInvite: true
+    });
+    // Formulario para editar usuario
+    const [editForm, setEditForm] = useState({
+        email: '',
+        phone: '',
+        role: '',
+        status: ''
+    });
+    useEffect(() => {
+        loadUsers();
+    }, []);
+    const loadUsers = async () => {
+        setLoading(true);
+        try {
+            // Obtener usuarios usando la API de admin
+            const { data: { users: authUsers }, error } = await supabase.auth.admin.listUsers();
+            if (error)
+                throw error;
+            // Obtener perfiles de la base de datos
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('*');
+            if (profilesError)
+                throw profilesError;
+            // Combinar datos de auth y perfiles
+            const allowedRoles = ['admin', 'franchisee', 'manager', 'asesor', 'asistente', 'superadmin'];
+            const combinedUsers = authUsers.map(authUser => {
+                const profile = profiles?.find((p) => p.id === authUser.id);
+                // Validar y mapear el rol
+                let role = 'franchisee';
+                if (profile && typeof profile.role === 'string' && allowedRoles.includes(profile.role)) {
+                    role = profile.role;
+                }
+                // Validar y mapear el status
+                let status = 'pending';
+                if (authUser.email_confirmed_at)
+                    status = 'active';
+                // No hay campo status en profiles, así que solo usamos el de auth
+                return {
+                    id: authUser.id,
+                    email: authUser.email || '',
+                    phone: authUser.phone,
+                    role,
+                    status,
+                    last_sign_in: authUser.last_sign_in_at,
+                    created_at: authUser.created_at,
+                    email_confirmed_at: authUser.email_confirmed_at,
+                    phone_confirmed_at: authUser.phone_confirmed_at,
+                    user_metadata: authUser.user_metadata
+                };
+            });
+            setUsers(combinedUsers);
+        }
+        catch (error) {
+            console.error('Error loading users:', error);
+            toast.error('Error al cargar los usuarios');
+        }
+        finally {
+            setLoading(false);
+        }
+    };
+    const createUser = async () => {
+        try {
+            if (!createForm.email && !createForm.phone) {
+                toast.error('Debes proporcionar un email o teléfono');
+                return;
+            }
+            if (createForm.sendInvite) {
+                // Enviar invitación por email
+                const { error } = await supabase.auth.admin.inviteUserByEmail(createForm.email, {
+                    data: {
+                        role: createForm.role,
+                        password: createForm.password
+                    }
+                });
+                if (error)
+                    throw error;
+                toast.success('Invitación enviada correctamente');
+            }
+            else {
+                // Crear usuario directamente
+                const { error } = await supabase.auth.admin.createUser({
+                    email: createForm.email,
+                    phone: createForm.phone,
+                    password: createForm.password,
+                    email_confirm: true,
+                    user_metadata: {
+                        role: createForm.role
+                    }
+                });
+                if (error)
+                    throw error;
+                toast.success('Usuario creado correctamente');
+            }
+            setCreateForm({
+                email: '',
+                phone: '',
+                password: '',
+                role: 'franchisee',
+                sendInvite: true
+            });
+            setShowCreateModal(false);
+            loadUsers();
+        }
+        catch (error) {
+            console.error('Error creating user:', error);
+            toast.error('Error al crear el usuario');
+        }
+    };
+    const updateUser = async () => {
+        if (!selectedUser)
+            return;
+        try {
+            const updates = {};
+            if (editForm.email !== selectedUser.email) {
+                updates.email = editForm.email;
+            }
+            if (editForm.phone !== selectedUser.phone) {
+                updates.phone = editForm.phone;
+            }
+            if (Object.keys(updates).length > 0) {
+                const { error } = await supabase.auth.admin.updateUserById(selectedUser.id, updates);
+                if (error)
+                    throw error;
+            }
+            // Actualizar rol en la tabla profiles
+            if (editForm.role !== selectedUser.role) {
+                const { error } = await supabase
+                    .from('profiles')
+                    .update({ role: editForm.role })
+                    .eq('id', selectedUser.id);
+                if (error)
+                    throw error;
+            }
+            toast.success('Usuario actualizado correctamente');
+            setShowUserModal(false);
+            loadUsers();
+        }
+        catch (error) {
+            console.error('Error updating user:', error);
+            toast.error('Error al actualizar el usuario');
+        }
+    };
+    const deleteUser = async (userId) => {
+        try {
+            const { error } = await supabase.auth.admin.deleteUser(userId);
+            if (error)
+                throw error;
+            toast.success('Usuario eliminado correctamente');
+            loadUsers();
+        }
+        catch (error) {
+            console.error('Error deleting user:', error);
+            toast.error('Error al eliminar el usuario');
+        }
+    };
+    const sendPasswordReset = async (email) => {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email);
+            if (error)
+                throw error;
+            toast.success('Email de recuperación enviado');
+        }
+        catch (error) {
+            console.error('Error sending password reset:', error);
+            toast.error('Error al enviar el email de recuperación');
+        }
+    };
+    const sendMagicLink = async (email) => {
+        try {
+            const { error } = await supabase.auth.signInWithOtp({ email });
+            if (error)
+                throw error;
+            toast.success('Magic link enviado correctamente');
+        }
+        catch (error) {
+            console.error('Error sending magic link:', error);
+            toast.error('Error al enviar el magic link');
+        }
+    };
+    const filteredUsers = users.filter(user => {
+        if (filters.role !== 'all' && user.role !== filters.role)
+            return false;
+        if (filters.status !== 'all' && user.status !== filters.status)
+            return false;
+        if (filters.search && !user.email.toLowerCase().includes(filters.search.toLowerCase()))
+            return false;
+        return true;
+    });
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'active': return 'bg-green-100 text-green-800';
+            case 'pending': return 'bg-yellow-100 text-yellow-800';
+            case 'inactive': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+    const getRoleColor = (role) => {
+        switch (role) {
+            case 'admin': return 'bg-red-100 text-red-800';
+            case 'asesor': return 'bg-blue-100 text-blue-800';
+            case 'franchisee': return 'bg-green-100 text-green-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+    return (_jsxs("div", { className: "container mx-auto p-6 space-y-6", children: [_jsxs("div", { className: "flex items-center justify-between", children: [_jsxs("div", { children: [_jsx("h1", { className: "text-3xl font-bold text-gray-900", children: "Gesti\u00F3n Avanzada de Usuarios" }), _jsx("p", { className: "text-gray-600 mt-2", children: "Administra usuarios, roles y permisos del sistema" })] }), _jsxs("div", { className: "flex items-center space-x-2", children: [_jsxs(Button, { variant: "outline", onClick: loadUsers, children: [_jsx(RefreshCw, { className: "h-4 w-4 mr-2" }), "Actualizar"] }), _jsxs(Button, { onClick: () => setShowCreateModal(true), children: [_jsx(UserPlus, { className: "h-4 w-4 mr-2" }), "Nuevo Usuario"] })] })] }), _jsxs(Card, { children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Filtros" }) }), _jsx(CardContent, { children: _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-4 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { children: "Buscar" }), _jsx(Input, { placeholder: "Buscar por email...", value: filters.search, onChange: (e) => setFilters(prev => ({ ...prev, search: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Rol" }), _jsxs(Select, { value: filters.role, onValueChange: (value) => setFilters(prev => ({ ...prev, role: value })), children: [_jsx(SelectTrigger, { children: _jsx(SelectValue, {}) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "all", children: "Todos los roles" }), _jsx(SelectItem, { value: "admin", children: "Administrador" }), _jsx(SelectItem, { value: "asesor", children: "Asesor" }), _jsx(SelectItem, { value: "franchisee", children: "Franquiciado" })] })] })] }), _jsxs("div", { children: [_jsx(Label, { children: "Estado" }), _jsxs(Select, { value: filters.status, onValueChange: (value) => setFilters(prev => ({ ...prev, status: value })), children: [_jsx(SelectTrigger, { children: _jsx(SelectValue, {}) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "all", children: "Todos los estados" }), _jsx(SelectItem, { value: "active", children: "Activo" }), _jsx(SelectItem, { value: "pending", children: "Pendiente" }), _jsx(SelectItem, { value: "inactive", children: "Inactivo" })] })] })] }), _jsx("div", { className: "flex items-end", children: _jsxs(Button, { variant: "outline", className: "w-full", children: [_jsx(Filter, { className: "h-4 w-4 mr-2" }), "Aplicar Filtros"] }) })] }) })] }), _jsxs(Card, { children: [_jsx(CardHeader, { children: _jsxs(CardTitle, { children: ["Usuarios (", filteredUsers.length, ")"] }) }), _jsx(CardContent, { children: loading ? (_jsxs("div", { className: "flex items-center justify-center py-8", children: [_jsx("div", { className: "animate-spin rounded-full h-8 w-8 border-4 border-red-200 border-t-red-600" }), _jsx("span", { className: "ml-2", children: "Cargando usuarios..." })] })) : (_jsx("div", { className: "space-y-4", children: filteredUsers.map((user) => (_jsxs("div", { className: "flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors", children: [_jsxs("div", { className: "flex items-center space-x-4", children: [_jsx("div", { className: "flex-shrink-0", children: _jsx("div", { className: "w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center", children: _jsx(Users, { className: "h-5 w-5 text-gray-600" }) }) }), _jsxs("div", { className: "flex-1 min-w-0", children: [_jsxs("div", { className: "flex items-center space-x-2 mb-1", children: [_jsx("h3", { className: "font-medium text-gray-900", children: user.email }), _jsx(Badge, { className: getStatusColor(user.status), children: user.status === 'active' ? 'Activo' : user.status === 'pending' ? 'Pendiente' : 'Inactivo' }), _jsx(Badge, { className: getRoleColor(user.role), children: user.role === 'admin' ? 'Administrador' : user.role === 'asesor' ? 'Asesor' : 'Franquiciado' })] }), _jsxs("p", { className: "text-sm text-gray-600", children: ["Creado: ", new Date(user.created_at).toLocaleDateString('es-ES'), user.last_sign_in && ` | Último acceso: ${new Date(user.last_sign_in).toLocaleDateString('es-ES')}`] })] })] }), _jsxs("div", { className: "flex items-center space-x-1", children: [_jsx(Button, { variant: "ghost", size: "sm", onClick: () => {
+                                                    setSelectedUser(user);
+                                                    setEditForm({
+                                                        email: user.email,
+                                                        phone: user.phone || '',
+                                                        role: user.role,
+                                                        status: user.status
+                                                    });
+                                                    setShowUserModal(true);
+                                                }, title: "Editar usuario", children: _jsx(Edit, { className: "h-4 w-4" }) }), _jsx(Button, { variant: "ghost", size: "sm", onClick: () => sendPasswordReset(user.email), title: "Enviar recuperaci\u00F3n de contrase\u00F1a", children: _jsx(Key, { className: "h-4 w-4" }) }), _jsx(Button, { variant: "ghost", size: "sm", onClick: () => sendMagicLink(user.email), title: "Enviar magic link", children: _jsx(Mail, { className: "h-4 w-4" }) }), _jsx(Button, { variant: "ghost", size: "sm", onClick: () => deleteUser(user.id), title: "Eliminar usuario", children: _jsx(Trash2, { className: "h-4 w-4" }) })] })] }, user.id))) })) })] }), showCreateModal && (_jsx("div", { className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50", children: _jsxs(Card, { className: "w-full max-w-md", children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Crear Nuevo Usuario" }) }), _jsxs(CardContent, { children: [_jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx(Label, { children: "Email" }), _jsx(Input, { type: "email", placeholder: "usuario@ejemplo.com", value: createForm.email, onChange: (e) => setCreateForm(prev => ({ ...prev, email: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Tel\u00E9fono (opcional)" }), _jsx(Input, { type: "tel", placeholder: "+1234567890", value: createForm.phone, onChange: (e) => setCreateForm(prev => ({ ...prev, phone: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Contrase\u00F1a" }), _jsx(Input, { type: "password", placeholder: "Contrase\u00F1a segura", value: createForm.password, onChange: (e) => setCreateForm(prev => ({ ...prev, password: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Rol" }), _jsxs(Select, { value: createForm.role, onValueChange: (value) => setCreateForm(prev => ({ ...prev, role: value })), children: [_jsx(SelectTrigger, { children: _jsx(SelectValue, {}) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "franchisee", children: "Franquiciado" }), _jsx(SelectItem, { value: "asesor", children: "Asesor" }), _jsx(SelectItem, { value: "admin", children: "Administrador" })] })] })] }), _jsxs("div", { className: "flex items-center space-x-2", children: [_jsx("input", { type: "checkbox", id: "sendInvite", checked: createForm.sendInvite, onChange: (e) => setCreateForm(prev => ({ ...prev, sendInvite: e.target.checked })) }), _jsx(Label, { htmlFor: "sendInvite", children: "Enviar invitaci\u00F3n por email" })] })] }), _jsxs("div", { className: "flex justify-end space-x-2 mt-4", children: [_jsx(Button, { variant: "outline", onClick: () => setShowCreateModal(false), children: "Cancelar" }), _jsx(Button, { onClick: createUser, children: "Crear Usuario" })] })] })] }) })), showUserModal && selectedUser && (_jsx("div", { className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50", children: _jsxs(Card, { className: "w-full max-w-md", children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Editar Usuario" }) }), _jsxs(CardContent, { children: [_jsxs("div", { className: "space-y-4", children: [_jsxs("div", { children: [_jsx(Label, { children: "Email" }), _jsx(Input, { type: "email", value: editForm.email, onChange: (e) => setEditForm(prev => ({ ...prev, email: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Tel\u00E9fono" }), _jsx(Input, { type: "tel", value: editForm.phone, onChange: (e) => setEditForm(prev => ({ ...prev, phone: e.target.value })) })] }), _jsxs("div", { children: [_jsx(Label, { children: "Rol" }), _jsxs(Select, { value: editForm.role, onValueChange: (value) => setEditForm(prev => ({ ...prev, role: value })), children: [_jsx(SelectTrigger, { children: _jsx(SelectValue, {}) }), _jsxs(SelectContent, { children: [_jsx(SelectItem, { value: "franchisee", children: "Franquiciado" }), _jsx(SelectItem, { value: "asesor", children: "Asesor" }), _jsx(SelectItem, { value: "admin", children: "Administrador" })] })] })] })] }), _jsxs("div", { className: "flex justify-end space-x-2 mt-4", children: [_jsx(Button, { variant: "outline", onClick: () => setShowUserModal(false), children: "Cancelar" }), _jsx(Button, { onClick: updateUser, children: "Actualizar Usuario" })] })] })] }) }))] }));
+};
+export default AdvancedUserManagement;

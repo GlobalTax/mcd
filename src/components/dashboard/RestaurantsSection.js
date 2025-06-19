@@ -1,0 +1,12 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { FranchiseeRestaurantsTable } from '@/components/FranchiseeRestaurantsTable';
+import { Building, Euro, MapPin } from 'lucide-react';
+export const RestaurantsSection = ({ franchiseeId, franchiseeRestaurants, hasSupabaseRestaurants, allLocalRestaurants }) => {
+    const formatNumber = (value) => {
+        if (value === undefined || value === null || isNaN(value)) {
+            return '0';
+        }
+        return value.toLocaleString('es-ES');
+    };
+    return (_jsxs("div", { className: "space-y-8", children: [_jsxs("div", { className: "bg-white border border-gray-100 rounded-lg overflow-hidden", children: [_jsx("div", { className: "px-6 py-4 border-b border-gray-100", children: _jsx("h3", { className: "text-lg font-medium text-gray-900", children: "Mis Restaurantes" }) }), _jsx(FranchiseeRestaurantsTable, { franchiseeId: franchiseeId, restaurants: franchiseeRestaurants })] }), !hasSupabaseRestaurants && allLocalRestaurants.length > 0 && (_jsxs("div", { className: "bg-amber-50 border border-amber-200 rounded-lg p-6", children: [_jsxs("div", { className: "flex items-center gap-3 mb-4", children: [_jsx(Building, { className: "w-5 h-5 text-amber-600" }), _jsxs("div", { children: [_jsx("h4", { className: "font-medium text-amber-900", children: "Restaurantes de la Herramienta de Valoraci\u00F3n" }), _jsxs("p", { className: "text-sm text-amber-700", children: [allLocalRestaurants.length, " restaurantes disponibles. Contacta a tu asesor para asignaci\u00F3n oficial."] })] })] }), _jsx("div", { className: "grid gap-3 md:grid-cols-2 lg:grid-cols-3", children: allLocalRestaurants.slice(0, 3).map((restaurant) => (_jsx("div", { className: "bg-white rounded-lg p-4 border border-amber-200", children: _jsxs("div", { className: "space-y-2", children: [_jsx("h5", { className: "font-medium text-sm text-gray-900", children: restaurant.name }), _jsxs("div", { className: "flex items-center gap-2 text-xs text-gray-600", children: [_jsx(MapPin, { className: "w-3 h-3" }), _jsx("span", { children: restaurant.location })] }), restaurant.lastYearRevenue && (_jsxs("div", { className: "flex items-center gap-2 text-xs text-green-600", children: [_jsx(Euro, { className: "w-3 h-3" }), _jsxs("span", { children: ["\u20AC", formatNumber(restaurant.lastYearRevenue)] })] }))] }) }, restaurant.id))) }), allLocalRestaurants.length > 3 && (_jsxs("p", { className: "text-sm text-amber-700 mt-3", children: ["+", allLocalRestaurants.length - 3, " restaurantes m\u00E1s"] }))] }))] }));
+};

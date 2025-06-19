@@ -1,8 +1,17 @@
+import { supabase } from './api/index';
+import { RestaurantValuation, ValuationScenario, YearlyValuationData } from '../types/restaurantValuation';
 
-import { supabase } from '@/integrations/supabase/client';
-import { RestaurantValuation, ValuationScenario } from '@/types/restaurantValuation';
-import { convertToYearlyData, convertToRecord } from '@/utils/restaurantValuationConverters';
-import { toast } from 'sonner';
+// Helper function to convert any to YearlyValuationData
+const convertToYearlyData = (data: any): YearlyValuationData[] => {
+  if (!data || !Array.isArray(data)) return [];
+  return data as YearlyValuationData[];
+};
+
+// Helper function to convert any to Record
+const convertToRecord = (data: any): Record<string, any> => {
+  if (!data || typeof data !== 'object') return {};
+  return data as Record<string, any>;
+};
 
 export const fetchValuationsFromDB = async (): Promise<RestaurantValuation[]> => {
   const { data, error } = await supabase
@@ -13,7 +22,7 @@ export const fetchValuationsFromDB = async (): Promise<RestaurantValuation[]> =>
   if (error) throw error;
   
   // Convert Supabase data to our types
-  const typedValuations: RestaurantValuation[] = (data || []).map(item => ({
+  const typedValuations: RestaurantValuation[] = (data || []).map((item: any) => ({
     id: item.id,
     restaurant_id: item.restaurant_id,
     restaurant_name: item.restaurant_name,
@@ -46,19 +55,19 @@ export const fetchScenariosFromDB = async (valuationId: string): Promise<Valuati
   if (error) throw error;
   
   // Convert Supabase data to our types
-  const typedScenarios: ValuationScenario[] = (data || []).map(item => ({
+  const typedScenarios: ValuationScenario[] = (data || []).map((item: any) => ({
     id: item.id,
     valuation_id: item.valuation_id,
     scenario_name: item.scenario_name,
-    scenario_description: item.scenario_description,
-    inflation_rate_modifier: item.inflation_rate_modifier,
-    discount_rate_modifier: item.discount_rate_modifier,
-    growth_rate_modifier: item.growth_rate_modifier,
+    scenario_description: item.scenario_description || '',
+    inflation_rate_modifier: item.inflation_rate_modifier || 0,
+    discount_rate_modifier: item.discount_rate_modifier || 0,
+    growth_rate_modifier: item.growth_rate_modifier || 0,
     yearly_modifications: convertToRecord(item.yearly_modifications),
-    total_present_value: item.total_present_value,
-    projections: item.projections,
-    variance_from_base: item.variance_from_base,
-    variance_percentage: item.variance_percentage,
+    total_present_value: item.total_present_value || 0,
+    projections: item.projections || {},
+    variance_from_base: item.variance_from_base || 0,
+    variance_percentage: item.variance_percentage || 0,
     created_at: item.created_at,
     updated_at: item.updated_at
   }));
@@ -185,15 +194,15 @@ export const saveScenarioToDB = async (
     id: data.id,
     valuation_id: data.valuation_id,
     scenario_name: data.scenario_name,
-    scenario_description: data.scenario_description,
-    inflation_rate_modifier: data.inflation_rate_modifier,
-    discount_rate_modifier: data.discount_rate_modifier,
-    growth_rate_modifier: data.growth_rate_modifier,
+    scenario_description: data.scenario_description || '',
+    inflation_rate_modifier: data.inflation_rate_modifier || 0,
+    discount_rate_modifier: data.discount_rate_modifier || 0,
+    growth_rate_modifier: data.growth_rate_modifier || 0,
     yearly_modifications: convertToRecord(data.yearly_modifications),
-    total_present_value: data.total_present_value,
-    projections: data.projections,
-    variance_from_base: data.variance_from_base,
-    variance_percentage: data.variance_percentage,
+    total_present_value: data.total_present_value || 0,
+    projections: data.projections || {},
+    variance_from_base: data.variance_from_base || 0,
+    variance_percentage: data.variance_percentage || 0,
     created_at: data.created_at,
     updated_at: data.updated_at
   };

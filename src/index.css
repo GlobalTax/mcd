@@ -1,7 +1,12 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 
+ * Tipografía Manrope - Configuración Global
+ * Esta aplicación usa Manrope como fuente principal en todos los elementos
+ * Fuente importada desde Google Fonts con pesos: 200, 300, 400, 500, 600, 700, 800
+ */
 
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
@@ -95,10 +100,26 @@
 
 @layer base {
   * {
-    @apply border-border font-manrope;
+    @apply border-border;
+    font-family: 'Manrope', sans-serif;
   }
 
   body {
-    @apply bg-background text-foreground font-manrope;
+    @apply bg-background text-foreground;
+    font-family: 'Manrope', sans-serif;
+  }
+  
+  html {
+    font-family: 'Manrope', sans-serif;
+  }
+  
+  /* Asegurar que todos los elementos usen Manrope */
+  h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, select, label, a {
+    font-family: 'Manrope', sans-serif !important;
+  }
+  
+  /* Para componentes de terceros que puedan tener sus propias fuentes */
+  [class*="radix-"], [class*="react-"], [class*="ui-"] {
+    font-family: 'Manrope', sans-serif !important;
   }
 }

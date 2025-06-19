@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+export const CostPercentagesSection = ({ formData, onInputChange }) => {
+    return (_jsxs(Card, { children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Costos como Porcentaje de Ventas" }) }), _jsxs(CardContent, { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [_jsxs("div", { children: [_jsx(Label, { htmlFor: "pac_percentage", children: "PAC (%)" }), _jsx(Input, { id: "pac_percentage", type: "number", step: "0.1", value: formData.pac_percentage, onChange: (e) => onInputChange('pac_percentage', parseFloat(e.target.value) || 0) })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "rent_percentage", children: "Alquiler (%)" }), _jsx(Input, { id: "rent_percentage", type: "number", step: "0.1", value: formData.rent_percentage, onChange: (e) => onInputChange('rent_percentage', parseFloat(e.target.value) || 0) })] }), _jsxs("div", { children: [_jsx(Label, { htmlFor: "service_fees_percentage", children: "Tarifas de Servicio (%)" }), _jsx(Input, { id: "service_fees_percentage", type: "number", step: "0.1", value: formData.service_fees_percentage, onChange: (e) => onInputChange('service_fees_percentage', parseFloat(e.target.value) || 0) })] })] })] }));
+};

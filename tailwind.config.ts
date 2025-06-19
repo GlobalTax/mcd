@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,6 +19,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				sans: ['Manrope', 'sans-serif'],
 				'manrope': ['Manrope', 'sans-serif'],
 			},
 			colors: {

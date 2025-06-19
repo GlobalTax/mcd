@@ -12,7 +12,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Calculator, Calendar, BarChart3, Home, Settings, LogOut } from 'lucide-react';
+import { Calculator, Calendar, BarChart3, Home, Settings, LogOut, User, Activity, Bell, GitCompare, FileText, TrendingUp, UserPlus, Shield, BarChart, Lightbulb, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -28,14 +28,81 @@ const menuItems = [
     icon: Calculator,
   },
   {
+    title: "Comparar Valoraciones",
+    url: "/valuation-comparison",
+    icon: GitCompare,
+  },
+  {
     title: "Presupuestos",
-    url: "/annual-budget",
-    icon: Calendar,
+    items: [
+      {
+        title: "Presupuesto Anual",
+        href: "/annual-budget",
+        icon: Calendar,
+        badge: "Nuevo"
+      },
+      {
+        title: "Reportes",
+        href: "/budget-reports",
+        icon: FileText,
+        badge: "Nuevo"
+      }
+    ]
   },
   {
     title: "Análisis",
     url: "/analysis",
     icon: BarChart3,
+  },
+  {
+    title: "Actividad",
+    url: "/activity-history",
+    icon: Activity,
+  },
+  {
+    title: "Notificaciones",
+    url: "/notifications",
+    icon: Bell,
+  },
+  {
+    title: "Administración",
+    items: [
+      {
+        title: "Gestión de Usuarios",
+        href: "/user-management",
+        icon: User
+      },
+      {
+        title: "Gestión Avanzada",
+        href: "/advanced-user-management",
+        icon: Shield,
+        badge: "Nuevo"
+      },
+      {
+        title: "Invitaciones",
+        href: "/user-invitation",
+        icon: UserPlus,
+        badge: "Nuevo"
+      },
+      {
+        title: "Reportes Avanzados",
+        href: "/advanced-reporting",
+        icon: BarChart,
+        badge: "Nuevo"
+      },
+      {
+        title: "Gestión de Mejoras",
+        href: "/improvements",
+        icon: Lightbulb,
+        badge: "Nuevo"
+      },
+      {
+        title: "Auditoría y Compliance",
+        href: "/audit-compliance",
+        icon: Eye,
+        badge: "Nuevo"
+      }
+    ]
   },
 ];
 
@@ -99,6 +166,16 @@ export function AppSidebar() {
           </div>
           
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/profile')}
+              className="flex-1 justify-start px-3"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Mi Perfil
+            </Button>
+            
             <Button
               variant="ghost"
               size="sm"

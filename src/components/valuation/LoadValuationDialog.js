@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+const LoadValuationDialog = ({ isOpen, onOpenChange, valuations, onLoadValuation }) => {
+    return (_jsx(Dialog, { open: isOpen, onOpenChange: onOpenChange, children: _jsxs(DialogContent, { className: "max-w-2xl", children: [_jsx(DialogHeader, { children: _jsx(DialogTitle, { children: "Cargar Valoraci\u00F3n Existente" }) }), _jsx("div", { className: "space-y-3 max-h-96 overflow-y-auto", children: valuations.length === 0 ? (_jsx("p", { className: "text-gray-500 text-center py-4", children: "No hay valoraciones guardadas para este restaurante" })) : (valuations.map((valuation) => (_jsxs("div", { className: "border rounded-lg p-4 hover:bg-gray-50 cursor-pointer", onClick: () => onLoadValuation(valuation), children: [_jsx("h4", { className: "font-medium", children: valuation.valuation_name }), _jsx("p", { className: "text-sm text-gray-600", children: new Date(valuation.valuation_date).toLocaleDateString('es-ES') }), valuation.total_present_value && (_jsxs("p", { className: "text-sm text-green-600 font-medium", children: ["\u20AC", valuation.total_present_value.toLocaleString('es-ES')] }))] }, valuation.id)))) })] }) }));
+};
+export default LoadValuationDialog;

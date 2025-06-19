@@ -1,0 +1,10 @@
+{
+  "template": "vite",
+  "container": {
+    "node": "18"
+  },
+  "sandbox": {
+    "template": "vite",
+    "entry": "src/main.tsx"
+  }
+} 

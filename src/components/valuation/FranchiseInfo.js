@@ -1,0 +1,7 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+const FranchiseInfo = ({ inputs, onInputChange }) => {
+    return (_jsxs(Card, { children: [_jsx(CardHeader, { children: _jsx(CardTitle, { children: "Informaci\u00F3n del Contrato de Franquicia" }) }), _jsx(CardContent, { children: _jsxs("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [_jsxs("div", { children: [_jsx("label", { className: "block text-sm font-medium mb-2", children: "Fecha de cambio" }), _jsx(Input, { type: "date", value: inputs.changeDate, onChange: (e) => onInputChange('changeDate', e.target.value), className: "w-full" })] }), _jsxs("div", { children: [_jsx("label", { className: "block text-sm font-medium mb-2", children: "Fecha finalizaci\u00F3n contrato de franquicia" }), _jsx(Input, { type: "date", value: inputs.franchiseEndDate, max: "2100-12-31", onChange: (e) => onInputChange('franchiseEndDate', e.target.value), className: "w-full" })] }), _jsxs("div", { children: [_jsx("label", { className: "block text-sm font-medium mb-2", children: "A\u00F1os restantes contratos de franquicia" }), _jsx(Input, { type: "number", step: "0.0001", value: inputs.remainingYears, readOnly: true, className: "w-full bg-gray-100", title: "Se calcula autom\u00E1ticamente con precisi\u00F3n de 4 decimales" })] })] }) })] }));
+};
+export default FranchiseInfo;
