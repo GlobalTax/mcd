@@ -62,24 +62,16 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
             </SelectTrigger>
             <SelectContent>
               {restaurants.map((restaurant) => {
-                console.log('Restaurant item:', restaurant);
                 const restaurantName = restaurant.base_restaurant?.restaurant_name || 'Sin nombre';
                 const siteNumber = restaurant.base_restaurant?.site_number || 'Sin número';
-                const franchiseeName = restaurant.base_restaurant?.franchisee_name || 
-                                     restaurant.franchisees?.franchisee_name || 
-                                     'Sin empresa';
+                const franchiseeName = restaurant.base_restaurant?.franchisee_name || 'Sin empresa';
+                const displayText = `${restaurantName} - #${siteNumber} (${franchiseeName})`;
+                
+                console.log(`Restaurant ${restaurant.id}: ${displayText}`);
                 
                 return (
                   <SelectItem key={restaurant.id} value={restaurant.id}>
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-gray-500" />
-                      <span>
-                        {restaurantName} - #{siteNumber}
-                        <span className="text-sm text-gray-600 ml-2">
-                          ({franchiseeName})
-                        </span>
-                      </span>
-                    </div>
+                    {displayText}
                   </SelectItem>
                 );
               })}
