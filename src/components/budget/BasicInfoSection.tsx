@@ -18,6 +18,8 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   restaurants,
   onInputChange
 }) => {
+  console.log('BasicInfoSection - restaurants data:', restaurants);
+
   return (
     <Card>
       <CardHeader>
@@ -59,22 +61,28 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
               <SelectValue placeholder="Seleccionar restaurante y empresa" />
             </SelectTrigger>
             <SelectContent>
-              {restaurants.map((restaurant) => (
-                <SelectItem key={restaurant.id} value={restaurant.id}>
-                  <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4 text-gray-500" />
-                    <span>
-                      {restaurant.base_restaurant?.restaurant_name || 'Sin nombre'} - 
-                      #{restaurant.base_restaurant?.site_number || 'Sin número'}
-                      {restaurant.base_restaurant?.franchisee_name && (
+              {restaurants.map((restaurant) => {
+                console.log('Restaurant item:', restaurant);
+                const restaurantName = restaurant.base_restaurant?.restaurant_name || 'Sin nombre';
+                const siteNumber = restaurant.base_restaurant?.site_number || 'Sin número';
+                const franchiseeName = restaurant.base_restaurant?.franchisee_name || 
+                                     restaurant.franchisees?.franchisee_name || 
+                                     'Sin empresa';
+                
+                return (
+                  <SelectItem key={restaurant.id} value={restaurant.id}>
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-gray-500" />
+                      <span>
+                        {restaurantName} - #{siteNumber}
                         <span className="text-sm text-gray-600 ml-2">
-                          ({restaurant.base_restaurant.franchisee_name})
+                          ({franchiseeName})
                         </span>
-                      )}
-                    </span>
-                  </div>
-                </SelectItem>
-              ))}
+                      </span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
