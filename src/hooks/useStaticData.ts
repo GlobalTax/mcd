@@ -1,149 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Franchisee } from '@/types/auth';
-
-// Tipos para los datos de restaurante
-interface RestaurantData {
-  id: string;
-  base_restaurant: {
-    id: string;
-    restaurant_name: string;
-    site_number: string;
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    restaurant_type: 'traditional' | 'drive_thru' | 'express' | 'mccafe';
-    opening_date: string;
-    square_meters: number;
-    seating_capacity: number;
-  };
-  status: 'active' | 'inactive' | 'pending' | 'closed';
-  last_year_revenue: number;
-  monthly_rent: number;
-  franchise_start_date: string;
-  franchise_end_date: string;
-}
-
-// Datos estáticos predefinidos para fallback rápido
-const STATIC_FRANCHISEE_DATA: Franchisee = {
-  id: 'static-franchisee-001',
-  franchisee_name: 'Franquiciado Principal',
-  company_name: 'Empresa McDonald\'s',
-  total_restaurants: 3,
-  user_id: 'static-user',
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
-};
-
-const STATIC_RESTAURANTS_DATA: RestaurantData[] = [
-  {
-    id: 'rest-001',
-    base_restaurant: {
-      id: 'base-001',
-      restaurant_name: 'McDonald\'s Centro',
-      site_number: '001',
-      address: 'Calle Principal 123',
-      city: 'Madrid',
-      state: 'Madrid',
-      country: 'España',
-      restaurant_type: 'traditional' as const,
-      opening_date: '2020-01-15',
-      square_meters: 250,
-      seating_capacity: 80
-    },
-    status: 'active' as const,
-    last_year_revenue: 850000,
-    monthly_rent: 12000,
-    franchise_start_date: '2020-01-15',
-    franchise_end_date: '2030-01-15'
-  },
-  {
-    id: 'rest-002',
-    base_restaurant: {
-      id: 'base-002',
-      restaurant_name: 'McDonald\'s Norte',
-      site_number: '002',
-      address: 'Avenida Norte 456',
-      city: 'Madrid',
-      state: 'Madrid',
-      country: 'España',
-      restaurant_type: 'drive_thru' as const,
-      opening_date: '2021-03-10',
-      square_meters: 180,
-      seating_capacity: 60
-    },
-    status: 'active' as const,
-    last_year_revenue: 720000,
-    monthly_rent: 10000,
-    franchise_start_date: '2021-03-10',
-    franchise_end_date: '2031-03-10'
-  },
-  {
-    id: 'rest-003',
-    base_restaurant: {
-      id: 'base-003',
-      restaurant_name: 'McDonald\'s Express',
-      site_number: '003',
-      address: 'Plaza Central 789',
-      city: 'Madrid',
-      state: 'Madrid',
-      country: 'España',
-      restaurant_type: 'express' as const,
-      opening_date: '2022-06-20',
-      square_meters: 120,
-      seating_capacity: 40
-    },
-    status: 'active' as const,
-    last_year_revenue: 480000,
-    monthly_rent: 8000,
-    franchise_start_date: '2022-06-20',
-    franchise_end_date: '2032-06-20'
-  }
-];
-
-// Cache con TTL
-interface CacheItem<T> {
-  data: T;
-  timestamp: number;
-  ttl: number;
-}
-
-class DataCache {
-  private cache = new Map<string, CacheItem<any>>();
-  
-  set<T>(key: string, data: T, ttlMinutes: number = 30) {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-      ttl: ttlMinutes * 60 * 1000
-    });
-  }
-  
-  get<T>(key: string): T | null {
-    const item = this.cache.get(key);
-    if (!item) return null;
-    
-    if (Date.now() - item.timestamp > item.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-    
-    return item.data;
-  }
-  
-  clear() {
-    this.cache.clear();
-  }
-}
+import { RestaurantData } from '@/types/staticData';
+import { STATIC_FRANCHISEE_DATA, STATIC_RESTAURANTS_DATA } from '@/data/staticData';
+import { DataCache } from '@/utils/dataCache';
 
 const dataCache = new DataCache();
 
 export const useStaticData = () => {
   const [isUsingCache, setIsUsingCache] = useState(false);
   
-  // Función para obtener datos con fallback inmediato
   const getFranchiseeData = async (userId: string): Promise<Franchisee> => {
     console.log('getFranchiseeData - Starting with immediate fallback');
     
