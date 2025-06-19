@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -35,7 +34,7 @@ const menuItems = [
   },
   {
     title: "Análisis",
-    url: "/profit-loss",
+    url: "/analysis",
     icon: BarChart3,
   },
 ];

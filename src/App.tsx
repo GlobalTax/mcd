@@ -11,6 +11,7 @@ import AdvisorAuthPage from "./pages/AdvisorAuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import RestaurantPage from "./pages/RestaurantPage";
 import ProfitLossPage from "./pages/ProfitLossPage";
+import AnalysisPage from "./pages/AnalysisPage";
 import AdvisorPage from "./pages/AdvisorPage";
 import FranchiseeDetailPage from "./pages/FranchiseeDetailPage";
 import ValuationApp from "./pages/ValuationApp";
@@ -48,10 +49,18 @@ function App() {
                 }
               />
               <Route
-                path="/profit-loss"
+                path="/profit-loss/:siteNumber"
                 element={
                   <ProtectedRoute allowedRoles={['franchisee']}>
                     <ProfitLossPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analysis"
+                element={
+                  <ProtectedRoute allowedRoles={['franchisee']}>
+                    <AnalysisPage />
                   </ProtectedRoute>
                 }
               />
