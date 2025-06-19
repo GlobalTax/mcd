@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ValuationBudgetFormData } from '@/types/budget';
+import { Building } from 'lucide-react';
 
 interface BudgetFormProps {
   restaurants: any[];
@@ -65,7 +66,10 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="w-5 h-5" />
+              Información Básica
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -91,19 +95,29 @@ export const BudgetForm: React.FC<BudgetFormProps> = ({
             </div>
 
             <div className="md:col-span-2">
-              <Label htmlFor="restaurant">Restaurante</Label>
+              <Label htmlFor="restaurant">Restaurante - Empresa</Label>
               <Select
                 value={formData.franchisee_restaurant_id}
                 onValueChange={(value) => handleInputChange('franchisee_restaurant_id', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar restaurante" />
+                  <SelectValue placeholder="Seleccionar restaurante y empresa" />
                 </SelectTrigger>
                 <SelectContent>
                   {restaurants.map((restaurant) => (
                     <SelectItem key={restaurant.id} value={restaurant.id}>
-                      {restaurant.base_restaurants?.restaurant_name || 'Sin nombre'} - 
-                      {restaurant.base_restaurants?.site_number || 'Sin número'}
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-gray-500" />
+                        <span>
+                          {restaurant.base_restaurant?.restaurant_name || 'Sin nombre'} - 
+                          #{restaurant.base_restaurant?.site_number || 'Sin número'}
+                          {restaurant.base_restaurant?.franchisee_name && (
+                            <span className="text-sm text-gray-600 ml-2">
+                              ({restaurant.base_restaurant.franchisee_name})
+                            </span>
+                          )}
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
