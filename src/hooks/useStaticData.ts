@@ -1,9 +1,33 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { Franchisee } from '@/types/auth';
+
+// Tipos para los datos de restaurante
+interface RestaurantData {
+  id: string;
+  base_restaurant: {
+    id: string;
+    restaurant_name: string;
+    site_number: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    restaurant_type: 'traditional' | 'drive_thru' | 'express' | 'mccafe';
+    opening_date: string;
+    square_meters: number;
+    seating_capacity: number;
+  };
+  status: 'active' | 'inactive' | 'pending' | 'closed';
+  last_year_revenue: number;
+  monthly_rent: number;
+  franchise_start_date: string;
+  franchise_end_date: string;
+}
 
 // Datos estáticos predefinidos para fallback rápido
-const STATIC_FRANCHISEE_DATA = {
+const STATIC_FRANCHISEE_DATA: Franchisee = {
   id: 'static-franchisee-001',
   franchisee_name: 'Franquiciado Principal',
   company_name: 'Empresa McDonald\'s',
@@ -13,7 +37,7 @@ const STATIC_FRANCHISEE_DATA = {
   updated_at: new Date().toISOString()
 };
 
-const STATIC_RESTAURANTS_DATA = [
+const STATIC_RESTAURANTS_DATA: RestaurantData[] = [
   {
     id: 'rest-001',
     base_restaurant: {
@@ -120,12 +144,12 @@ export const useStaticData = () => {
   const [isUsingCache, setIsUsingCache] = useState(false);
   
   // Función para obtener datos con fallback inmediato
-  const getFranchiseeData = async (userId: string) => {
+  const getFranchiseeData = async (userId: string): Promise<Franchisee> => {
     console.log('getFranchiseeData - Starting with immediate fallback');
     
     // Verificar cache primero
     const cacheKey = `franchisee-${userId}`;
-    const cached = dataCache.get(cacheKey);
+    const cached = dataCache.get<Franchisee>(cacheKey);
     if (cached) {
       console.log('getFranchiseeData - Using cached data');
       return cached;
@@ -163,7 +187,7 @@ export const useStaticData = () => {
     return STATIC_FRANCHISEE_DATA;
   };
   
-  const getRestaurantsData = async (franchiseeId: string) => {
+  const getRestaurantsData = async (franchiseeId: string): Promise<RestaurantData[]> => {
     console.log('getRestaurantsData - Starting with immediate fallback');
     
     // Si es franchisee estático, retornar datos estáticos
@@ -174,7 +198,7 @@ export const useStaticData = () => {
     
     // Verificar cache
     const cacheKey = `restaurants-${franchiseeId}`;
-    const cached = dataCache.get(cacheKey);
+    const cached = dataCache.get<RestaurantData[]>(cacheKey);
     if (cached) {
       console.log('getRestaurantsData - Using cached restaurant data');
       return cached;
