@@ -144,4 +144,4 @@ export const useActualData = () => {
   };
 };
 
-export { ActualData } from '@/types/actualDataTypes';
+export type { ActualData } from '@/types/actualDataTypes';
