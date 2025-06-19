@@ -13,9 +13,9 @@ export const useFranchiseeFetcher = ({ setFranchisee }: FranchiseeFetcherProps) 
     try {
       console.log('fetchFranchiseeData - Starting for user:', userId);
       
-      // Aumentar timeout a 10 segundos para aprovechar el nuevo plan
+      // Reducir timeout a 6 segundos para fallar más rápido
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Franchisee query timeout')), 10000);
+        setTimeout(() => reject(new Error('Franchisee query timeout')), 6000);
       });
       
       const franchiseePromise = supabase
@@ -34,7 +34,7 @@ export const useFranchiseeFetcher = ({ setFranchisee }: FranchiseeFetcherProps) 
       if (franchiseeError && !franchiseeError.message?.includes('timeout')) {
         console.error('fetchFranchiseeData - Franchisee error details:', franchiseeError);
         
-        // Si no existe el franquiciado, crear uno básico
+        // Si no existe el franquiciado, crear uno básico inmediatamente
         if (franchiseeError.code === 'PGRST116') {
           console.log('fetchFranchiseeData - No franchisee found, creating basic one');
           
@@ -60,7 +60,7 @@ export const useFranchiseeFetcher = ({ setFranchisee }: FranchiseeFetcherProps) 
         return franchiseeData;
       }
 
-      // Si no hay franquiciado, crear uno básico
+      // Si no hay franquiciado, crear uno básico inmediatamente
       console.log('fetchFranchiseeData - No franchisee data, creating basic one');
       const basicFranchisee = {
         id: 'temp-' + userId,
@@ -78,7 +78,7 @@ export const useFranchiseeFetcher = ({ setFranchisee }: FranchiseeFetcherProps) 
     } catch (error) {
       console.error('fetchFranchiseeData - Timeout or error:', error);
       
-      // Crear franquiciado básico en caso de timeout
+      // Crear franquiciado básico inmediatamente en caso de timeout
       const basicFranchisee = {
         id: 'temp-' + userId,
         user_id: userId,

@@ -19,9 +19,9 @@ export const useRestaurantsFetcher = ({ setRestaurants }: RestaurantsFetcherProp
         return [];
       }
       
-      // Aumentar timeout a 10 segundos para aprovechar el nuevo plan
+      // Reducir timeout a 6 segundos para fallar más rápido
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Restaurants query timeout')), 10000);
+        setTimeout(() => reject(new Error('Restaurants query timeout')), 6000);
       });
       
       const restaurantsPromise = supabase
